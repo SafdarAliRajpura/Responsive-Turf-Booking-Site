@@ -7,35 +7,37 @@ import registerBg from '../../assets/images/auth/register-bg.jpg';
 import Toast from '../../components/ui/Toast';
 
 export default function Register({ onRegister, onLoginClick }) {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [focused, setFocused] = useState(null);
     const [toast, setToast] = useState({ message: null, type: 'info' });
+    const [data, setData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    });
 
     const validateForm = () => {
-        if (!name.trim()) {
+        if (!data.name.trim()) {
             setToast({ message: 'Full Name is required!', type: 'error' });
             return false;
         }
-        if (!email) {
+        if (!data.email) {
             setToast({ message: 'Email address is required!', type: 'error' });
             return false;
         }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
             setToast({ message: 'Please enter a valid email address.', type: 'error' });
             return false;
         }
-        if (!password) {
+        if (!data.password) {
             setToast({ message: 'Password is required!', type: 'error' });
             return false;
         }
-        if (password.length < 6) {
+        if (data.password.length < 6) {
             setToast({ message: 'Password must be at least 6 characters.', type: 'error' });
             return false;
         }
-        if (password !== confirmPassword) {
+        if (data.password !== data.confirmPassword) {
             setToast({ message: 'Passwords do not match!', type: 'error' });
             return false;
         }
@@ -45,6 +47,7 @@ export default function Register({ onRegister, onLoginClick }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
+            console.log("Register Data:", data);
             setToast({ message: 'Account Created Successfully! Joining squad...', type: 'success' });
             setTimeout(() => {
                 onRegister();
@@ -117,10 +120,10 @@ export default function Register({ onRegister, onLoginClick }) {
                                 <input
                                     type="text"
                                     placeholder="Full Name"
-                                    value={name}
+                                    value={data.name}
                                     onFocus={() => setFocused('name')}
                                     onBlur={() => setFocused(null)}
-                                    onChange={(e) => setName(e.target.value)}
+                                    onChange={(e) => setData({ ...data, name: e.target.value })}
                                     className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_20px_rgba(57,255,20,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
                                 />
                             </motion.div>
@@ -138,10 +141,10 @@ export default function Register({ onRegister, onLoginClick }) {
                                 <input
                                     type="email"
                                     placeholder="Email Address"
-                                    value={email}
+                                    value={data.email}
                                     onFocus={() => setFocused('email')}
                                     onBlur={() => setFocused(null)}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => setData({ ...data, email: e.target.value })}
                                     className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-blue/50 focus:shadow-[0_0_20px_rgba(0,243,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
                                 />
                             </motion.div>
@@ -159,10 +162,10 @@ export default function Register({ onRegister, onLoginClick }) {
                                 <input
                                     type="password"
                                     placeholder="Password"
-                                    value={password}
+                                    value={data.password}
                                     onFocus={() => setFocused('password')}
                                     onBlur={() => setFocused(null)}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => setData({ ...data, password: e.target.value })}
                                     className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
                                 />
                             </motion.div>
@@ -180,10 +183,10 @@ export default function Register({ onRegister, onLoginClick }) {
                                 <input
                                     type="password"
                                     placeholder="Confirm Password"
-                                    value={confirmPassword}
+                                    value={data.confirmPassword}
                                     onFocus={() => setFocused('confirmPassword')}
                                     onBlur={() => setFocused(null)}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    onChange={(e) => setData({ ...data, confirmPassword: e.target.value })}
                                     className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
                                 />
                             </motion.div>
