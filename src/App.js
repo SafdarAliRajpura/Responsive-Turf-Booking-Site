@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Venue from './pages/Venue';
 import Tournament from './pages/Tournament';
 import Booking from './pages/Booking';
+import Community from './pages/Community';
 
 function App() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ function App() {
       <Route path="/home" element={<Home />} />
       <Route path="/venues" element={<Venue />} />
       <Route path="/tournaments" element={<Tournament />} />
+      <Route path="/community" element={<Community />} />
       <Route path="/book/:id" element={<Booking />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

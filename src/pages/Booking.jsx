@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Calendar as CalendarIcon, Clock, MapPin, IndianRupee,
-    CreditCard, ArrowRight, Check, Shield, Star, Info,
-    Plus, Minus, Trash2, Trophy, ChevronDown, MonitorPlay, ArrowLeft
+    CreditCard, ArrowRight, Star, CheckCircle,
+    Plus, Minus, Trash2, Trophy, ChevronDown, ArrowLeft
 } from 'lucide-react';
 
 // Reuse images
@@ -68,17 +68,9 @@ export default function Booking() {
     const [selectedSport, setSelectedSport] = useState(venue.sports ? venue.sports[0] : "Football");
     const [selectedCourt, setSelectedCourt] = useState('');
     const [cartItem, setCartItem] = useState(null); // null or object
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-    // Helper to generate dates
-    const dates = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
-        return {
-            day: d.toLocaleDateString('en-US', { weekday: 'short' }),
-            date: d.getDate(),
-            fullDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        };
-    });
+
 
     const times = [
         "06:00 AM", "07:00 AM", "08:00 AM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM"
@@ -103,11 +95,73 @@ export default function Booking() {
         setDuration(prev => Math.max(30, Math.min(180, prev + delta)));
     };
 
-    // Calculate total price based on duration
-    const currentPrice = (venue.price * (duration / 60));
+
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black flex flex-col">
+        <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black flex flex-col relative">
+
+            <AnimatePresence>
+                {showPaymentModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            onClick={() => setShowPaymentModal(false)}
+                        />
+
+                        {/* Modal Content */}
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative bg-slate-900 border border-white/10 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center overflow-hidden"
+                        >
+                            {/* Decorative Glow */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-neon-green/20 rounded-full blur-[50px] pointer-events-none" />
+
+                            <div className="relative z-10">
+                                <div className="w-20 h-20 bg-neon-green/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-neon-green/20">
+                                    <CheckCircle className="w-10 h-10 text-neon-green" />
+                                </div>
+
+                                <h2 className="text-2xl font-black italic uppercase text-white mb-2">Booking Confirmed!</h2>
+                                <p className="text-slate-400 mb-8 text-sm">Your slot has been successfully booked. Get ready to play!</p>
+
+                                {cartItem && (
+                                    <div className="bg-white/5 rounded-xl p-4 mb-8 text-left border border-white/5">
+                                        <div className="flex justify-between mb-2">
+                                            <span className="text-slate-400 text-xs">Venue</span>
+                                            <span className="font-bold text-sm text-white">{venue.name}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-2">
+                                            <span className="text-slate-400 text-xs">Sport</span>
+                                            <span className="font-bold text-sm text-white">{selectedSport}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-2">
+                                            <span className="text-slate-400 text-xs">Date</span>
+                                            <span className="font-bold text-sm text-white">{cartItem.date}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-400 text-xs">Time</span>
+                                            <span className="font-bold text-sm text-white">{cartItem.time} ({cartItem.duration})</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => navigate('/home')}
+                                    className="w-full py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                >
+                                    Go to Home
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Background Ambience */}
             <div className="fixed inset-0 pointer-events-none">
@@ -157,22 +211,20 @@ export default function Booking() {
                             <div className="grid md:grid-cols-4 items-center gap-4">
                                 <label className="text-slate-400 font-bold uppercase tracking-wider text-xs md:text-right">Sport</label>
                                 <div className="md:col-span-3">
-                                    <div className="flex flex-wrap gap-2">
-                                        {venue.sports?.map((sport) => (
-                                            <button
-                                                key={sport}
-                                                onClick={() => {
-                                                    setSelectedSport(sport);
-                                                    setSelectedCourt(''); // Reset court when sport changes
-                                                }}
-                                                className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all flex items-center gap-2 ${sport === selectedSport
-                                                    ? 'bg-neon-blue text-black border-neon-blue shadow-[0_0_15px_rgba(0,255,255,0.3)]'
-                                                    : 'bg-slate-950 border-white/10 text-slate-400 hover:text-white hover:border-white/30'
-                                                    }`}
-                                            >
-                                                {sport}
-                                            </button>
-                                        ))}
+                                    <div className="relative">
+                                        <select
+                                            value={selectedSport}
+                                            onChange={(e) => {
+                                                setSelectedSport(e.target.value);
+                                                setSelectedCourt('');
+                                            }}
+                                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white font-bold appearance-none focus:outline-none focus:border-neon-green/50"
+                                        >
+                                            {venue.sports?.map((sport) => (
+                                                <option key={sport} value={sport}>{sport}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                                     </div>
                                 </div>
                             </div>
@@ -317,10 +369,7 @@ export default function Booking() {
                                                 <span className="text-white font-bold">₹{cartItem.price}</span>
                                             </div>
                                             <button
-                                                onClick={() => {
-                                                    alert("Payment Gateway Integration Pending");
-                                                    navigate('/home');
-                                                }}
+                                                onClick={() => setShowPaymentModal(true)}
                                                 className="w-full py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                             >
                                                 Proceed ₹{cartItem.price}

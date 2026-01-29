@@ -43,7 +43,13 @@ const Header = () => {
                     >
                         <span className={isActive('/tournaments') ? 'text-neon-green' : ''}>Tournaments</span>
                     </button>
-                    <button className="hover:text-white transition-colors">Community</button>
+                    <button
+                        onClick={() => navigate('/community')}
+                        className={`transition-colors ${isActive('/community') ? 'text-white' : 'hover:text-white'}`}
+                        style={isActive('/community') ? { textShadow: '0 0 10px rgba(57, 255, 20, 0.5)' } : {}}
+                    >
+                        <span className={isActive('/community') ? 'text-neon-green' : ''}>Community</span>
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-4">

@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-    Zap, Search, MapPin, Star, Filter, ArrowRight,
-    Clock, IndianRupee, Check
+    Search, MapPin, Star, Filter, ArrowRight, IndianRupee
 } from 'lucide-react';
 
 // Images
@@ -49,9 +48,13 @@ const VenueCard = ({ venue, index, onBook }) => (
                 <span className="text-white text-xs font-bold">{venue.rating}</span>
             </div>
             <div className="absolute bottom-4 left-4 z-20">
-                <span className="px-2 py-1 bg-neon-blue/20 border border-neon-blue/30 text-neon-blue text-[10px] font-bold uppercase tracking-wider rounded-md">
-                    {venue.category}
-                </span>
+                <div className="flex gap-2">
+                    {venue.sports.map((sport, i) => (
+                        <span key={i} className="px-2 py-1 bg-neon-blue/20 border border-neon-blue/30 text-neon-blue text-[10px] font-bold uppercase tracking-wider rounded-md">
+                            {sport}
+                        </span>
+                    ))}
+                </div>
             </div>
         </div>
 
@@ -104,7 +107,7 @@ export default function Venue() {
         {
             id: 1,
             name: "Mumbai Football Arena",
-            category: "Football",
+            sports: ["Football"],
             image: footballNight,
             rating: 4.9,
             location: "Andheri West, Mumbai",
@@ -113,8 +116,8 @@ export default function Venue() {
         },
         {
             id: 2,
-            name: "Bengaluru Cricket Nets",
-            category: "Cricket",
+            name: "Bengaluru Sports Hub",
+            sports: ["Cricket", "Football", "Badminton"],
             image: cricketImg,
             rating: 4.7,
             location: "Koramangala, Bengaluru",
@@ -124,7 +127,7 @@ export default function Venue() {
         {
             id: 3,
             name: "Smash Badminton Club",
-            category: "Badminton",
+            sports: ["Badminton"],
             image: badmintonImg,
             rating: 4.8,
             location: "Vasant Kunj, Delhi",
@@ -134,7 +137,7 @@ export default function Venue() {
         {
             id: 4,
             name: "Marina Turf Grounds",
-            category: "Football",
+            sports: ["Football", "Cricket"],
             image: footballImg,
             rating: 4.6,
             location: "Marina Beach, Chennai",
@@ -144,7 +147,7 @@ export default function Venue() {
         {
             id: 5,
             name: "Salt Lake Stadium Practice",
-            category: "Football",
+            sports: ["Football"],
             image: footballNight,
             rating: 4.9,
             location: "Salt Lake, Kolkata",
@@ -155,7 +158,7 @@ export default function Venue() {
 
     const filteredVenues = selectedCategory === 'All'
         ? venues
-        : venues.filter(v => v.category === selectedCategory);
+        : venues.filter(v => v.sports.includes(selectedCategory));
 
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black overflow-x-hidden">
