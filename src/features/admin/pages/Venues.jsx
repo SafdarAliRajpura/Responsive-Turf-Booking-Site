@@ -21,7 +21,7 @@ export default function Venues() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.4 }}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/90 backdrop-blur-md"
                             onClick={() => setShowAddModal(false)}
                         />
 
@@ -29,96 +29,158 @@ export default function Venues() {
                             initial={{ scale: 0.95, opacity: 0, y: 30 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 30 }}
-                            transition={{ duration: 0.4, ease: "easeOut" }}
-                            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide shadow-2xl"
+                            transition={{ duration: 0.5, type: "spring", damping: 25, stiffness: 300 }}
+                            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] z-10 flex flex-col"
                         >
-                            <div className="sticky top-0 bg-slate-900/90 backdrop-blur-md p-6 border-b border-white/5 flex justify-between items-center z-10">
-                                <h2 className="text-2xl font-black italic uppercase text-white">Add New Venue</h2>
+                            {/* Decorative Background Element */}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-neon-green/5 rounded-full blur-[100px] pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-neon-blue/5 rounded-full blur-[100px] pointer-events-none" />
+
+                            {/* Header */}
+                            <div className="relative bg-slate-950/50 backdrop-blur-xl p-6 border-b border-white/5 flex justify-between items-center z-20">
+                                <div>
+                                    <h2 className="text-2xl font-black italic uppercase text-white tracking-wide">Add New Venue</h2>
+                                    <p className="text-xs text-slate-400 font-medium tracking-wider uppercase mt-1">Enter venue details below</p>
+                                </div>
                                 <button
                                     onClick={() => setShowAddModal(false)}
-                                    className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-red-500/20 hover:text-red-500 flex items-center justify-center transition-all border border-white/5 hover:border-red-500/30"
                                 >
-                                    <X className="w-5 h-5 text-slate-400 hover:text-white" />
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            <div className="p-8 space-y-6">
-                                {/* Image Upload */}
-                                <div className="border-2 border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-neon-green/50 hover:bg-white/5 transition-all cursor-pointer group">
-                                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-neon-green group-hover:text-black transition-colors">
-                                        <Upload className="w-8 h-8" />
-                                    </div>
-                                    <p className="font-bold text-white mb-1">Click to upload venue image</p>
-                                    <p className="text-xs">SVG, PNG, JPG or GIF (max. 800x400px)</p>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Venue Name</label>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g. Urban Arena"
-                                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neon-blue/50 font-medium"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Location</label>
-                                        <div className="relative">
-                                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                            <input
-                                                type="text"
-                                                placeholder="e.g. Andheri West, Mumbai"
-                                                className="w-full bg-slate-950 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-neon-blue/50 font-medium"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hourly Price (₹)</label>
-                                        <div className="relative">
-                                            <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                            <input
-                                                type="number"
-                                                placeholder="1200"
-                                                className="w-full bg-slate-950 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-neon-blue/50 font-medium"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Status</label>
-                                        <select className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neon-blue/50 font-medium appearance-none">
-                                            <option>Active</option>
-                                            <option>Maintenance</option>
-                                            <option>Closed</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sports Available</label>
-                                    <div className="flex flex-wrap gap-3">
-                                        {['Football', 'Cricket', 'Badminton', 'Tennis', 'Basketball'].map((sport) => (
-                                            <label key={sport} className="flex items-center gap-2 bg-slate-950 border border-white/10 px-4 py-2 rounded-xl cursor-pointer hover:border-white/30 transition-colors">
-                                                <input type="checkbox" className="rounded border-slate-700 bg-slate-800 text-neon-green focus:ring-0" />
-                                                <span className="text-sm font-bold text-slate-300">{sport}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="pt-6 border-t border-white/5 flex justify-end gap-4">
-                                    <button
-                                        onClick={() => setShowAddModal(false)}
-                                        className="px-6 py-3 rounded-xl font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                            {/* Scrollable Content */}
+                            <div className="flex-1 overflow-y-auto scrollbar-hide p-8 relative z-20">
+                                <div className="space-y-8">
+                                    {/* Image Upload */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="relative group cursor-pointer"
                                     >
-                                        Cancel
-                                    </button>
-                                    <button className="px-8 py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl hover:bg-white hover:scale-105 transition-all shadow-lg shadow-neon-green/20">
-                                        Create Venue
-                                    </button>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-neon-green/20 to-neon-blue/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <div className="relative border-2 border-dashed border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center bg-slate-950/50 group-hover:bg-slate-950/80 transition-all group-hover:border-neon-green/30">
+                                            <div className="w-20 h-20 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition-transform duration-300">
+                                                <Upload className="w-8 h-8 text-neon-green" />
+                                            </div>
+                                            <p className="font-bold text-white text-lg mb-2">Upload Venue Image</p>
+                                            <p className="text-sm text-slate-500">Drag & drop or click to browse</p>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Form Fields */}
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.2 }}
+                                            className="space-y-2"
+                                        >
+                                            <label className="text-xs font-bold text-neon-blue uppercase tracking-widest ml-1">Venue Name</label>
+                                            <div className="relative group">
+                                                <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-blue to-cyan-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. Urban Arena"
+                                                    className="relative w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none placeholder-slate-600 font-bold transition-all"
+                                                />
+                                            </div>
+                                        </motion.div>
+
+                                        <motion.div
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.2 }}
+                                            className="space-y-2"
+                                        >
+                                            <label className="text-xs font-bold text-neon-blue uppercase tracking-widest ml-1">Location</label>
+                                            <div className="relative group">
+                                                <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-blue to-cyan-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
+                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-neon-blue transition-colors" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. Andheri West, Mumbai"
+                                                    className="relative w-full bg-slate-900 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none placeholder-slate-600 font-bold transition-all"
+                                                />
+                                            </div>
+                                        </motion.div>
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.3 }}
+                                            className="space-y-2"
+                                        >
+                                            <label className="text-xs font-bold text-neon-green uppercase tracking-widest ml-1">Hourly Price (₹)</label>
+                                            <div className="relative group">
+                                                <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-green to-emerald-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
+                                                <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-neon-green transition-colors" />
+                                                <input
+                                                    type="number"
+                                                    placeholder="1200"
+                                                    className="relative w-full bg-slate-900 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none placeholder-slate-600 font-bold transition-all"
+                                                />
+                                            </div>
+                                        </motion.div>
+
+                                        <motion.div
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.3 }}
+                                            className="space-y-2"
+                                        >
+                                            <label className="text-xs font-bold text-neon-green uppercase tracking-widest ml-1">Venue Status</label>
+                                            <div className="relative group">
+                                                <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-green to-emerald-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
+                                                <select className="relative w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none font-bold appearance-none cursor-pointer">
+                                                    <option>Active</option>
+                                                    <option>Maintenance</option>
+                                                    <option>Closed</option>
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <div className="w-2 h-2 border-r-2 border-b-2 border-white/50 rotate-45 transform -translate-y-1"></div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    </div>
+
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.4 }}
+                                        className="space-y-3"
+                                    >
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Sports Available</label>
+                                        <div className="flex flex-wrap gap-3">
+                                            {['Football', 'Cricket', 'Badminton', 'Tennis', 'Basketball', 'Swimming'].map((sport, i) => (
+                                                <label key={sport} className="relative group cursor-pointer inline-block">
+                                                    <input type="checkbox" className="peer sr-only" />
+                                                    <div className="px-5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-400 text-sm font-bold transition-all peer-checked:bg-white peer-checked:text-black peer-checked:border-white peer-checked:shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:border-white/30 hover:bg-white/5">
+                                                        {sport}
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </motion.div>
                                 </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="p-6 border-t border-white/5 bg-slate-950/50 backdrop-blur-xl flex justify-end gap-3 z-20">
+                                <button
+                                    onClick={() => setShowAddModal(false)}
+                                    className="px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button className="relative px-8 py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl overflow-hidden hover:scale-105 transition-transform group">
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                    <span className="relative z-10 flex items-center gap-2">Create Venue <Plus className="w-5 h-5" /></span>
+                                </button>
                             </div>
                         </motion.div>
                     </div>
