@@ -30,9 +30,9 @@ const FilterTag = ({ label, active, onClick }) => (
 
 const VenueCard = ({ venue, index, onBook }) => (
     <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 }}
+        transition={{ delay: index * 0.15, duration: 0.6, ease: "easeOut" }}
         className="group relative bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-neon-green/30 transition-all duration-300"
     >
         {/* Image Section */}
@@ -178,8 +178,9 @@ export default function Venue() {
                 <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
                     <div className="w-full md:w-1/2">
                         <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
                             className="text-4xl md:text-5xl font-black italic uppercase mb-6"
                         >
                             Find Your <br />
@@ -189,7 +190,7 @@ export default function Venue() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
+                            transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
                             className="relative group"
                         >
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-green to-neon-blue rounded-2xl opacity-30 group-hover:opacity-100 transition duration-500 blur" />
@@ -210,7 +211,7 @@ export default function Venue() {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
+                        transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
                         className="flex gap-2"
                     >
                         {['All', 'Football', 'Cricket', 'Badminton'].map((cat) => (

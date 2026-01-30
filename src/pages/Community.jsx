@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
     Users, MessageSquare, Calendar, Trophy,
-    ArrowRight, Heart, Share2, MessageCircle
+    Heart, Share2, MessageCircle
 } from 'lucide-react';
 
 import Header from '../components/common/Header';

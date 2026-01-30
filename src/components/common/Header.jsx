@@ -57,7 +57,10 @@ const Header = () => {
                         <Bell className="w-5 h-5" />
                         <span className="absolute top-2 right-2 w-2 h-2 bg-neon-pink rounded-full animate-pulse" />
                     </button>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px]">
+                    <button
+                        onClick={() => navigate('/admin')}
+                        className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px] transition-transform hover:scale-105"
+                    >
                         <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
                             <img
                                 src={userAvatarImg}
@@ -65,7 +68,7 @@ const Header = () => {
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                    </div>
+                    </button>
                     <button className="md:hidden text-white">
                         <Menu className="w-6 h-6" />
                     </button>

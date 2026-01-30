@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-    Trophy, Calendar, MapPin, Users, ArrowRight,
-    Search, Filter, Star, Clock, IndianRupee, Crown,
-    Target, Flame, Shield, ChevronRight
+    Trophy, Calendar, MapPin, ArrowRight,
+    Search, IndianRupee, Crown, Target
 } from 'lucide-react';
 
 // Reusing existing images for visual consistency
@@ -20,9 +19,9 @@ import Footer from '../components/common/Footer';
 const TournamentCard = ({ tournament, index, onRegister }) => (
     <motion.div
         layout
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 }}
+        transition={{ delay: index * 0.15, duration: 0.6, ease: "easeOut" }}
         className="group relative bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-neon-green/30 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_30px_rgba(57,255,20,0.1)]"
     >
         {/* Image & Status Overlay */}
@@ -250,8 +249,9 @@ export default function Tournament() {
                     {/* Left Content */}
                     <div className="w-full lg:w-1/2 relative z-10">
                         <motion.div
-                            initial={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
                             className="flex items-center gap-3 mb-6"
                         >
                             <span className="p-2 bg-neon-yellow/10 rounded-lg border border-neon-yellow/20 text-neon-yellow animate-pulse">
@@ -261,9 +261,9 @@ export default function Tournament() {
                         </motion.div>
 
                         <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
+                            transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
                             className="text-6xl md:text-8xl font-black italic uppercase leading-[0.9] mb-8 tracking-tighter"
                         >
                             GLORY <br />
@@ -273,7 +273,7 @@ export default function Tournament() {
                         <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
+                            transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
                             className="text-slate-400 text-xl max-w-lg leading-relaxed mb-10 border-l-4 border-neon-yellow/30 pl-6"
                         >
                             Join the city's fiercest tournaments. Prove your skills, climb the leaderboard, and take home the grand prize.
@@ -282,7 +282,7 @@ export default function Tournament() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.3 }}
+                            transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
                             className="flex gap-8 items-center"
                         >
                             <div>
@@ -305,7 +305,7 @@ export default function Tournament() {
                     <motion.div
                         initial={{ opacity: 0, x: 50, rotate: -2 }}
                         animate={{ opacity: 1, x: 0, rotate: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
+                        transition={{ duration: 1.2, delay: 0.4, ease: "easeOut" }}
                         className="w-full lg:w-1/2 relative"
                     >
                         {/* Decorative Blob Behind */}

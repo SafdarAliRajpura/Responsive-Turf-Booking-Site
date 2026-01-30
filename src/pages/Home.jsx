@@ -48,9 +48,9 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
 
 const FeatureCard = ({ title, desc, image, delay }) => (
     <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay, duration: 0.8 }}
+        transition={{ delay, duration: 0.8, ease: "easeOut" }}
         whileHover={{ scale: 1.02 }}
         className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer"
     >
@@ -92,7 +92,7 @@ export default function Home() {
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 1 }}
+                            transition={{ duration: 1, ease: "easeOut" }}
                         >
                             <span className="inline-block py-1 px-3 rounded-full bg-white/5 border border-white/10 text-neon-green text-xs font-bold tracking-widest uppercase mb-6">
                                 The Future of Sports
@@ -110,7 +110,7 @@ export default function Home() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
+                            transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
                             className="flex flex-wrap gap-4"
                         >
                             <div className="flex-1 bg-slate-900/80 border border-white/10 rounded-2xl p-2 flex items-center max-w-sm focus-within:border-neon-green/50 transition-colors">
@@ -129,7 +129,7 @@ export default function Home() {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 0.8 }}
+                            transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
                             className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4"
                         >
                             <StatCard icon={Trophy} label="Tournaments" value="12 Live" color="neon-yellow" />
@@ -140,9 +140,9 @@ export default function Home() {
 
                     <div className="lg:w-1/2 relative">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.8, rotate: 6 }}
+                            initial={{ opacity: 0, scale: 0.9, rotate: 6 }}
                             animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
                             className="relative z-10 rounded-[3rem] overflow-hidden border-8 border-slate-900/50 shadow-2xl shadow-neon-blue/20"
                         >
                             <img
@@ -256,11 +256,14 @@ export default function Home() {
                         ].map((item, i) => (
                             <motion.div
                                 key={i}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: i * 0.1 }}
-                                whileHover={{ y: -5 }}
+                                transition={{
+                                    opacity: { delay: i * 0.15, duration: 0.6, ease: "easeOut" },
+                                    y: { delay: i * 0.15, duration: 0.6, ease: "easeOut", type: "spring", stiffness: 100 }
+                                }}
+                                whileHover={{ y: -5, transition: { duration: 0.2 } }}
                                 className="bg-slate-900/40 backdrop-blur-sm border border-white/5 p-8 rounded-3xl hover:bg-slate-900/60 hover:border-white/10 transition-all group"
                             >
                                 <div className={`w-14 h-14 rounded-2xl ${item.bgClass} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
@@ -280,8 +283,8 @@ export default function Home() {
 
                     <motion.div
                         whileInView={{ opacity: 1, scale: 1 }}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
                         className="relative z-10 max-w-2xl mx-auto"
                     >
                         <h2 className="text-5xl font-black text-white mb-6">READY TO <span className="text-neon-green">DOMINATE?</span></h2>
