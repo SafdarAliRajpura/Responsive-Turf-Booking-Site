@@ -1,10 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Star, MoreVertical, Plus, IndianRupee, X, Image as ImageIcon, Upload } from 'lucide-react';
+import { MapPin, Star, MoreVertical, Plus, IndianRupee, X, Upload } from 'lucide-react';
 import footballImg from '../../../assets/images/home/night-football.jpg';
 
 export default function Venues() {
     const [showAddModal, setShowAddModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const fileInputRef = useRef(null);
+
+    const handleImageUpload = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSelectedImage(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const [venues] = useState([
         { id: 1, name: "Mumbai Football Arena", location: "Andheri West", price: "1200", rating: "4.9", sports: ["Football"], status: "Active" },
         { id: 2, name: "Bengaluru Sports Hub", location: "Koramangala", price: "800", rating: "4.7", sports: ["Cricket", "Football"], status: "Active" },
@@ -59,14 +77,37 @@ export default function Venues() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1 }}
                                         className="relative group cursor-pointer"
+                                        onClick={handleImageUpload}
                                     >
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                            accept="image/*"
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-r from-neon-green/20 to-neon-blue/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                        <div className="relative border-2 border-dashed border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center bg-slate-950/50 group-hover:bg-slate-950/80 transition-all group-hover:border-neon-green/30">
-                                            <div className="w-20 h-20 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition-transform duration-300">
-                                                <Upload className="w-8 h-8 text-neon-green" />
-                                            </div>
-                                            <p className="font-bold text-white text-lg mb-2">Upload Venue Image</p>
-                                            <p className="text-sm text-slate-500">Drag & drop or click to browse</p>
+
+                                        <div className="relative border-2 border-dashed border-white/10 rounded-2xl h-64 flex flex-col items-center justify-center bg-slate-950/50 group-hover:bg-slate-950/80 transition-all group-hover:border-neon-green/30 overflow-hidden">
+                                            {selectedImage ? (
+                                                <div className="relative w-full h-full">
+                                                    <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                                                        <div className="flex flex-col items-center text-white">
+                                                            <Upload className="w-8 h-8 mb-2" />
+                                                            <span className="font-bold text-sm">Change Image</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="w-20 h-20 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition-transform duration-300">
+                                                        <Upload className="w-8 h-8 text-neon-green" />
+                                                    </div>
+                                                    <p className="font-bold text-white text-lg mb-2">Upload Venue Image</p>
+                                                    <p className="text-sm text-slate-500">Drag & drop or click to browse</p>
+                                                </>
+                                            )}
                                         </div>
                                     </motion.div>
 

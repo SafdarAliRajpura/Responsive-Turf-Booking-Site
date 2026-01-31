@@ -5,6 +5,7 @@ import {
     Trophy, Calendar, MapPin, ArrowRight,
     Search, IndianRupee, Crown, Target
 } from 'lucide-react';
+import { TypeAnimation } from 'react-type-animation';
 
 // Reusing existing images for visual consistency
 import footballNight from '../assets/images/home/football-night-new.jpg';
@@ -267,7 +268,22 @@ export default function Tournament() {
                             className="text-6xl md:text-8xl font-black italic uppercase leading-[0.9] mb-8 tracking-tighter"
                         >
                             GLORY <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-orange-500 to-red-600 drop-shadow-[0_0_15px_rgba(255,165,0,0.5)]">AWAITS.</span>
+                            <span className="inline-block min-w-[400px] text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-orange-500 to-red-600 drop-shadow-[0_0_15px_rgba(255,165,0,0.5)]">
+                                <TypeAnimation
+                                    sequence={[
+                                        'AWAITS.',
+                                        2000,
+                                        'CALLS.',
+                                        2000,
+                                        'IS HERE.',
+                                        2000
+                                    ]}
+                                    wrapper="span"
+                                    speed={50}
+                                    repeat={Infinity}
+                                    cursor={false}
+                                />
+                            </span>
                         </motion.h1>
 
                         <motion.p
@@ -311,9 +327,9 @@ export default function Tournament() {
                         {/* Decorative Blob Behind */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-neon-yellow/20 to-neon-orange/20 blur-[80px] rounded-full pointer-events-none" />
 
-                        <div className="relative z-10 bg-slate-900 border border-white/10 rounded-[2.5rem] p-4 shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 group">
+                        <div className="relative z-10 bg-slate-900 border border-white/10 rounded-[2.5rem] p-4 shadow-2xl transition-all duration-500 group">
                             <div className="relative rounded-[2rem] overflow-hidden aspect-[4/3]">
-                                <img src={footballNight} alt="Featured" className="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-transform duration-700" />
+                                <img src={footballNight} alt="Featured" className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-700" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
 
                                 <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl flex items-center gap-2">

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Search, MapPin, Star, Filter, ArrowRight, IndianRupee
 } from 'lucide-react';
+import { TypeAnimation } from 'react-type-animation';
 
 // Images
 import footballImg from '../assets/images/home/night-football.jpg';
@@ -184,7 +185,22 @@ export default function Venue() {
                             className="text-4xl md:text-5xl font-black italic uppercase mb-6"
                         >
                             Find Your <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-emerald-500">Perfect Pitch</span>
+                            <span className="inline-block min-w-[300px] text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-emerald-500">
+                                <TypeAnimation
+                                    sequence={[
+                                        'Perfect Pitch',
+                                        2000,
+                                        'Winning Ground',
+                                        2000,
+                                        'Home Turf',
+                                        2000
+                                    ]}
+                                    wrapper="span"
+                                    speed={50}
+                                    repeat={Infinity}
+                                    cursor={false}
+                                />
+                            </span>
                         </motion.h1>
 
                         <motion.div

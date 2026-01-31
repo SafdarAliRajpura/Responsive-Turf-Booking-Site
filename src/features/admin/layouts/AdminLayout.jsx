@@ -12,8 +12,8 @@ const SidebarItem = ({ icon: Icon, label, path, active, onClick }) => (
     <button
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${active
-                ? 'bg-neon-green/10 text-neon-green border border-neon-green/20'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            ? 'bg-neon-green/10 text-neon-green border border-neon-green/20'
+            : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
     >
         <Icon className={`w-5 h-5 ${active ? 'fill-current' : 'group-hover:scale-110 transition-transform'}`} />
@@ -78,7 +78,7 @@ export default function AdminLayout() {
 
                 <div className="mt-auto p-6 border-t border-white/5">
                     <button
-                        onClick={() => navigate('/home')}
+                        onClick={() => navigate('/login')}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut className="w-5 h-5" />

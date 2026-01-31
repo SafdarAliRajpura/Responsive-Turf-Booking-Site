@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { TypeAnimation } from 'react-type-animation';
+import SplitText from '../components/common/SplitText';
 import {
     Trophy, Users, Search,
     MapPin, Star, ArrowRight,
@@ -45,6 +47,8 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
         </div>
     </motion.div>
 );
+
+
 
 const FeatureCard = ({ title, desc, image, delay }) => (
     <motion.div
@@ -99,7 +103,24 @@ export default function Home() {
                             </span>
                             <h1 className="text-6xl md:text-8xl font-black leading-none mb-6">
                                 GAME <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-emerald-600">ON.</span>
+                                <span className="inline-block min-w-[9ch] text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-emerald-600">
+                                    <TypeAnimation
+                                        sequence={[
+                                            'ON.',
+                                            2000,
+                                            'READY.',
+                                            2000,
+                                            'STARTED.',
+                                            2000,
+                                            'LIVE.',
+                                            2000
+                                        ]}
+                                        wrapper="span"
+                                        speed={50}
+                                        repeat={Infinity}
+                                        cursor={false}
+                                    />
+                                </span>
                             </h1>
                             <p className="text-lg text-slate-400 max-w-md leading-relaxed">
                                 Book premium turfs, join tournaments, and track your stats.
@@ -185,7 +206,11 @@ export default function Home() {
                 <div className="mb-24">
                     <div className="flex items-end justify-between mb-12">
                         <div>
-                            <h2 className="text-4xl font-black text-white mb-2">WHAT'S YOUR <span className="text-neon-blue">GAME?</span></h2>
+                            {/* <h2 className="text-4xl font-black text-white mb-2">WHAT'S YOUR <span className="text-neon-blue">GAME?</span></h2> */}
+                            <div className="flex items-center gap-2 text-4xl font-black text-white mb-2">
+                                <SplitText>WHAT'S YOUR</SplitText>
+                                <span className="text-neon-blue inline-flex"><SplitText>GAME?</SplitText></span>
+                            </div>
                             <p className="text-slate-400">Explore premium facilities curated for pros.</p>
                         </div>
                         <button className="hidden md:flex items-center gap-2 text-white hover:text-neon-green transition-colors font-bold uppercase tracking-wide text-sm border-b border-transparent hover:border-neon-green pb-1">
@@ -219,7 +244,11 @@ export default function Home() {
                 <div className="mb-24">
                     <div className="text-center mb-16">
                         <span className="text-neon-pink font-bold tracking-widest uppercase text-xs mb-4 block">The TurfX Advantage</span>
-                        <h2 className="text-4xl md:text-5xl font-black text-white mb-6">WHY <span className="text-neon-green">CHOOSE US?</span></h2>
+                        {/* <h2 className="text-4xl md:text-5xl font-black text-white mb-6">WHY <span className="text-neon-green">CHOOSE US?</span></h2> */}
+                        <div className="flex justify-center flex-wrap gap-3 text-4xl md:text-5xl font-black text-white mb-6">
+                            <SplitText>WHY</SplitText>
+                            <span className="text-neon-green inline-flex"><SplitText>CHOOSE US?</SplitText></span>
+                        </div>
                         <p className="text-slate-400 max-w-2xl mx-auto text-lg">We're not just a booking platform. We're your ecosystem for sports excellence.</p>
                     </div>
 
@@ -287,7 +316,11 @@ export default function Home() {
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="relative z-10 max-w-2xl mx-auto"
                     >
-                        <h2 className="text-5xl font-black text-white mb-6">READY TO <span className="text-neon-green">DOMINATE?</span></h2>
+                        {/* <h2 className="text-5xl font-black text-white mb-6">READY TO <span className="text-neon-green">DOMINATE?</span></h2> */}
+                        <div className="flex justify-center flex-wrap gap-3 text-5xl font-black text-white mb-6">
+                            <SplitText>READY TO</SplitText>
+                            <span className="text-neon-green inline-flex"><SplitText>DOMINATE?</SplitText></span>
+                        </div>
                         <p className="text-slate-300 text-lg mb-8">Join thousands of players booking the best turfs in the city. Don't just watch the game, be the game.</p>
                         <div className="flex items-center justify-center gap-4">
                             <button onClick={() => navigate('/venues')} className="px-8 py-4 bg-neon-green text-black font-black uppercase tracking-wider rounded-2xl hover:bg-white hover:scale-105 transition-all shadow-[0_0_20px_rgba(57,255,20,0.3)]">

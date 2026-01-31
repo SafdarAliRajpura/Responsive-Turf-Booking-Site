@@ -4,6 +4,8 @@ import {
     Users, MessageSquare, Calendar, Trophy,
     Heart, Share2, MessageCircle
 } from 'lucide-react';
+import { TypeAnimation } from 'react-type-animation';
+import SplitText from '../components/common/SplitText';
 
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
@@ -96,7 +98,24 @@ export default function Community() {
                         transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                         className="text-5xl md:text-7xl font-black italic uppercase mb-6 tracking-tight"
                     >
-                        Connect. <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-purple-500">Compete.</span> Conquer.
+                        <span className="block mb-2"><SplitText>Connect.</SplitText></span>
+                        <div className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-purple-500 inline-block min-w-[300px]">
+                            <TypeAnimation
+                                sequence={[
+                                    'Compete.',
+                                    2000,
+                                    'Collaborate.',
+                                    2000,
+                                    'Challenge.',
+                                    2000
+                                ]}
+                                wrapper="span"
+                                speed={50}
+                                repeat={Infinity}
+                                cursor={false}
+                            />
+                        </div>
+                        <span className="block mt-2"><SplitText>Conquer.</SplitText></span>
                     </motion.h1>
 
                     <motion.p

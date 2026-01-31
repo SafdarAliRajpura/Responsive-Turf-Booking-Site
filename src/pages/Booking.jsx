@@ -6,6 +6,8 @@ import {
     CreditCard, ArrowRight, Star, CheckCircle,
     Plus, Minus, Trash2, Trophy, ChevronDown, ArrowLeft
 } from 'lucide-react';
+import { TypeAnimation } from 'react-type-animation';
+import SplitText from '../components/common/SplitText';
 
 // Reuse images
 import footballNight from '../assets/images/home/football-night-new.jpg';
@@ -129,7 +131,20 @@ export default function Booking() {
                                     <CheckCircle className="w-10 h-10 text-neon-green" />
                                 </div>
 
-                                <h2 className="text-2xl font-black italic uppercase text-white mb-2">Booking Confirmed!</h2>
+                                <h2 className="text-2xl font-black italic uppercase text-white mb-2">
+                                    <TypeAnimation
+                                        sequence={[
+                                            'Booking Confirmed!',
+                                            1000,
+                                            'See You There!',
+                                            1000
+                                        ]}
+                                        wrapper="span"
+                                        speed={50}
+                                        repeat={Infinity}
+                                        cursor={false}
+                                    />
+                                </h2>
                                 <p className="text-slate-400 mb-8 text-sm">Your slot has been successfully booked. Get ready to play!</p>
 
                                 {cartItem && (
@@ -187,7 +202,7 @@ export default function Booking() {
                         </div>
                         <span className="text-xs font-bold uppercase tracking-wider">Back</span>
                     </button>
-                    <h1 className="text-3xl font-black italic uppercase text-white mb-2">{venue.name}</h1>
+                    <h1 className="text-3xl font-black italic uppercase text-white mb-2"><SplitText>{venue.name}</SplitText></h1>
                     <div className="flex items-center gap-2 text-slate-400">
                         <MapPin className="w-4 h-4 text-neon-pink" />
                         <span>{venue.location}</span>
