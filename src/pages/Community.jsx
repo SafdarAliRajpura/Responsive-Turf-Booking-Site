@@ -81,51 +81,151 @@ export default function Community() {
             <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
 
                 {/* Hero Section */}
-                <div className="text-center mb-16">
+                {/* Hero Section */}
+                {/* Hero Section */}
+                <div className="relative mb-24 grid lg:grid-cols-2 gap-12 items-center">
+                    {/* Background Blob */}
+                    <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[800px] h-[500px] bg-neon-blue/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+
+                    {/* Left Column: Content */}
+                    <div className="relative z-10 flex flex-col items-start text-left">
+                        <motion.div
+                            initial={{ opacity: 0, x: -30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 border border-white/10 mb-8 backdrop-blur-md shadow-lg shadow-neon-blue/10"
+                        >
+                            <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-neon-green"></span>
+                            </span>
+                            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Community Live Hub</span>
+                        </motion.div>
+
+                        <motion.h1
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                            className="text-5xl md:text-7xl font-black italic uppercase mb-6 tracking-tighter leading-tight"
+                        >
+                            <span className="block mb-2 drop-shadow-2xl"><SplitText>Connect.</SplitText></span>
+                            <div className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-violet-500 to-purple-500 inline-block min-w-[300px] drop-shadow-[0_0_30px_rgba(100,100,255,0.4)]">
+                                <TypeAnimation
+                                    sequence={[
+                                        'Compete.',
+                                        2000,
+                                        'Collaborate.',
+                                        2000,
+                                        'Challenge.',
+                                        2000
+                                    ]}
+                                    wrapper="span"
+                                    speed={50}
+                                    repeat={Infinity}
+                                    cursor={false}
+                                />
+                            </div>
+                            <span className="block mt-2 drop-shadow-2xl"><SplitText>Conquer.</SplitText></span>
+                        </motion.h1>
+
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                            className="text-slate-400 max-w-xl text-xl mb-10 leading-relaxed font-light"
+                        >
+                            Join the ultimate sports ecosystem. Find reliable teammates, discuss pro strategies, and participate in exclusive city-wide events.
+                        </motion.p>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
+                            className="flex items-center gap-6"
+                        >
+                            <button className="px-8 py-4 bg-white text-black font-black uppercase tracking-wider rounded-2xl hover:bg-neon-blue hover:text-white transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-neon-blue/40 hover:-translate-y-1">
+                                Start Discussion
+                            </button>
+                            <div className="flex -space-x-4">
+                                {[1, 2, 3, 4].map((i) => (
+                                    <div key={i} className="w-12 h-12 rounded-full border-4 border-slate-950 bg-slate-800 overflow-hidden relative">
+                                        <img src={userAvatarImg} alt="User" className="w-full h-full object-cover opacity-80" />
+                                    </div>
+                                ))}
+                                <div className="w-12 h-12 rounded-full border-4 border-slate-950 bg-slate-800 flex items-center justify-center text-xs font-bold text-white z-10">
+                                    2k+
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* Right Column: Community Visual */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6"
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+                        className="relative hidden lg:flex items-center justify-center min-h-[500px]"
                     >
-                        <Users className="w-4 h-4 text-neon-green" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Community Hub</span>
-                    </motion.div>
+                        {/* Tactical Squad Visual Container */}
+                        <div className="relative w-full max-w-sm mx-auto">
+                            {/* Abstract Ambient Glow */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-neon-blue/20 rounded-full blur-[100px] opacity-20 pointer-events-none" />
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                        className="text-5xl md:text-7xl font-black italic uppercase mb-6 tracking-tight"
-                    >
-                        <span className="block mb-2"><SplitText>Connect.</SplitText></span>
-                        <div className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-purple-500 inline-block min-w-[300px]">
-                            <TypeAnimation
-                                sequence={[
-                                    'Compete.',
-                                    2000,
-                                    'Collaborate.',
-                                    2000,
-                                    'Challenge.',
-                                    2000
-                                ]}
-                                wrapper="span"
-                                speed={50}
-                                repeat={Infinity}
-                                cursor={false}
-                            />
-                        </div>
-                        <span className="block mt-2"><SplitText>Conquer.</SplitText></span>
-                    </motion.h1>
+                            {/* Main Glass Card */}
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className="relative bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[30px] p-8 shadow-2xl overflow-hidden group hover:border-white/20 transition-colors"
+                            >
+                                {/* Subtle Noise Texture */}
+                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-                        className="text-slate-400 max-w-2xl mx-auto text-lg mb-8"
-                    >
-                        Join the ultimate sports community. Find teammates, discuss strategies, and participate in exclusive events.
-                    </motion.p>
+                                {/* Header Section */}
+                                <div className="mb-8 relative z-10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="relative flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-neon-green"></span>
+                                        </span>
+                                        <span className="text-xs font-bold text-neon-green uppercase tracking-wider">Live Pulse</span>
+                                    </div>
+                                    <h2 className="text-4xl font-black text-white tracking-tight">
+                                        1,204
+                                    </h2>
+                                    <p className="text-sm text-slate-400 font-medium mt-1">Active Ballers Online</p>
+                                </div>
+
+                                {/* Activity Feed List */}
+                                <div className="space-y-6 relative z-10">
+                                    {[
+                                        { icon: Trophy, color: "text-neon-yellow", title: "City League Final", subtitle: "Match starting in 5m" },
+                                        { icon: Users, color: "text-neon-blue", title: "Thunder FC", subtitle: "Recruiting 2 players" },
+                                        { icon: MessageCircle, color: "text-neon-pink", title: "Hot Discussion", subtitle: "Best turf boots 2024?" }
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex items-center gap-4 group/item">
+                                            <div className={`w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5 group-hover/item:border-white/20 transition-colors ${item.color}`}>
+                                                <item.icon className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-white leading-none mb-1 group-hover/item:text-neon-blue transition-colors">{item.title}</h4>
+                                                <p className="text-xs text-slate-500 font-medium">{item.subtitle}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Bottom Action */}
+                                <div className="mt-10 pt-6 border-t border-white/5 relative z-10">
+                                    <button className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-2xl text-xs font-bold text-white uppercase tracking-widest transition-all flex items-center justify-center gap-2 group/btn">
+                                        Join The Action <Share2 className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
+
+                                {/* Decorative Gradient Overlay */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-bl-[100px] pointer-events-none opacity-50" />
+                            </motion.div>
+                        </div>                    </motion.div>
                 </div>
 
                 <div className="grid lg:grid-cols-12 gap-8">
@@ -220,8 +320,8 @@ export default function Community() {
                     </div>
                 </div>
 
-            </main>
+            </main >
             <Footer />
-        </div>
+        </div >
     );
 }

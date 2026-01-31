@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Calendar, MapPin, Users, Plus, IndianRupee, MoreVertical } from 'lucide-react';
+import { Trophy, Calendar, Plus, MoreVertical } from 'lucide-react';
 import trophyImg from '../../../assets/images/home/cricket.jpg';
 
 export default function Tournaments() {
@@ -38,8 +38,8 @@ export default function Tournaments() {
                         <div className="flex-1">
                             <div className="flex justify-between items-start mb-2">
                                 <div className={`inline-block px-2 py-1 rounded-lg text-[10px] uppercase font-bold tracking-wider mb-2 ${t.status === 'Open' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
-                                        t.status === 'Filling Fast' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
-                                            'bg-slate-700 text-slate-400 border border-white/5'
+                                    t.status === 'Filling Fast' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
+                                        'bg-slate-700 text-slate-400 border border-white/5'
                                     }`}>
                                     {t.status}
                                 </div>
