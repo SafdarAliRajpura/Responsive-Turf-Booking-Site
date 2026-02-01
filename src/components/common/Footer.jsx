@@ -21,7 +21,8 @@ const Footer = () => {
                 { name: "Home", path: "/home" },
                 { name: "Venues", path: "/venues" },
                 { name: "Tournaments", path: "/tournaments" },
-                { name: "Community", path: "/community" }
+                { name: "Community", path: "/community" },
+                { name: "Partner with Us", path: "/partner/register" }
             ]
         },
         {
