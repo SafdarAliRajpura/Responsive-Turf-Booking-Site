@@ -62,7 +62,10 @@ export default function PartnerLayout() {
                     </div>
 
                     <div className="mb-6">
-                        <button className="w-full py-3 bg-neon-purple text-white font-bold rounded-xl hover:bg-fuchsia-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-neon-purple/20">
+                        <button
+                            onClick={() => navigate('/partner/turfs/add')}
+                            className="w-full py-3 bg-neon-purple text-white font-bold rounded-xl hover:bg-fuchsia-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-neon-purple/20"
+                        >
                             <Plus className="w-4 h-4" /> Add New Turf
                         </button>
                     </div>

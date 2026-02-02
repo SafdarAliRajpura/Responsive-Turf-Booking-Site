@@ -7,11 +7,21 @@ import Register from './features/auth/Register';
 import PartnerLogin from './features/partner/auth/PartnerLogin';
 import PartnerRegister from './features/partner/auth/PartnerRegister';
 import PartnerDashboard from './features/partner/pages/Dashboard';
+import PartnerTurfs from './features/partner/pages/Turfs';
+import PartnerAddTurf from './features/partner/pages/AddTurf';
+import PartnerBookings from './features/partner/pages/Bookings';
+import PartnerAnalytics from './features/partner/pages/Analytics';
+import PartnerSettings from './features/partner/pages/Settings';
 import PartnerLayout from './features/partner/layouts/PartnerLayout';
 import Home from './pages/Home';
 
 import Venue from './pages/Venue';
 import Tournament from './pages/Tournament';
+import TournamentRegistration from './pages/TournamentRegistration';
+import Contact from './pages/Contact';
+import HelpCenter from './pages/HelpCenter';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import Booking from './pages/Booking';
 import Community from './pages/Community';
 import AdminLayout from './features/admin/layouts/AdminLayout';
@@ -35,16 +45,21 @@ function App() {
       <Route path="/partner/register" element={<PartnerRegister />} />
       <Route path="/partner" element={<PartnerLayout />}>
         <Route path="dashboard" element={<PartnerDashboard />} />
-        {/* Placeholder routes for now to prevent 404s if sidebar is clicked */}
-        <Route path="turfs" element={<div className="p-10 text-center"><h1 className="text-2xl text-white">Manage Turfs (Coming Soon)</h1></div>} />
-        <Route path="bookings" element={<div className="p-10 text-center"><h1 className="text-2xl text-white">Manage Bookings (Coming Soon)</h1></div>} />
-        <Route path="analytics" element={<div className="p-10 text-center"><h1 className="text-2xl text-white">Analytics (Coming Soon)</h1></div>} />
-        <Route path="settings" element={<div className="p-10 text-center"><h1 className="text-2xl text-white">Settings (Coming Soon)</h1></div>} />
+        <Route path="turfs" element={<PartnerTurfs />} />
+        <Route path="turfs/add" element={<PartnerAddTurf />} />
+        <Route path="bookings" element={<PartnerBookings />} />
+        <Route path="analytics" element={<PartnerAnalytics />} />
+        <Route path="settings" element={<PartnerSettings />} />
       </Route>
 
       <Route path="/home" element={<Home />} />
       <Route path="/venues" element={<Venue />} />
       <Route path="/tournaments" element={<Tournament />} />
+      <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/help-center" element={<HelpCenter />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/community" element={<Community />} />
       <Route path="/book/:id" element={<Booking />} />
 

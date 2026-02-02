@@ -28,10 +28,10 @@ const Footer = () => {
         {
             title: "Support",
             links: [
-                { name: "Help Center", path: "#" },
-                { name: "Terms of Service", path: "#" },
-                { name: "Privacy Policy", path: "#" },
-                { name: "Contact Us", path: "#" }
+                { name: "Help Center", path: "/help-center" },
+                { name: "Terms of Service", path: "/terms" },
+                { name: "Privacy Policy", path: "/privacy" },
+                { name: "Contact Us", path: "/contact" }
             ]
         }
     ];

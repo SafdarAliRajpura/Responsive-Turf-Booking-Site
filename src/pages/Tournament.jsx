@@ -384,7 +384,7 @@ export default function Tournament() {
                                 key={tournament.id}
                                 tournament={tournament}
                                 index={index}
-                                onRegister={(id) => navigate(`/book/${id}`)}
+                                onRegister={(id) => navigate(`/tournaments/${id}/register`)}
                             />
                         ))}
                     </div>
