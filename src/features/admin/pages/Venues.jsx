@@ -3,10 +3,73 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Star, MoreVertical, Plus, IndianRupee, X, Upload } from 'lucide-react';
 import footballImg from '../../../assets/images/home/night-football.jpg';
 
+import Toast from '../../../components/ui/Toast';
+
 export default function Venues() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [toast, setToast] = useState({ message: null, type: 'info' });
     const fileInputRef = useRef(null);
+
+    const [formData, setFormData] = useState({
+        name: '',
+        location: '',
+        price: '',
+        status: 'Active',
+        sports: []
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSportChange = (sport) => {
+        setFormData(prev => {
+            const sports = prev.sports.includes(sport)
+                ? prev.sports.filter(s => s !== sport)
+                : [...prev.sports, sport];
+            return { ...prev, sports };
+        });
+    };
+
+    const validateForm = () => {
+        if (!formData.name.trim()) return "Venue Name is required.";
+        if (formData.name.trim().length < 3) return "Venue Name must be at least 3 characters.";
+
+        if (!formData.location.trim()) return "Location is required.";
+
+        if (!formData.price) return "Hourly Price is required.";
+        if (Number(formData.price) <= 0) return "Price must be a positive number.";
+
+        if (formData.sports.length === 0) return "Select at least one sport.";
+
+        if (!selectedImage) return "Please upload a venue image.";
+
+        return null;
+    };
+
+    const handleSubmit = () => {
+        const error = validateForm();
+        if (error) {
+            setToast({ message: error, type: 'error' });
+            return;
+        }
+
+        const submissionData = {
+            ...formData,
+            image: selectedImage
+        };
+
+        console.log("New Venue Data:", submissionData);
+        setToast({ message: "Venue added successfully!", type: 'success' });
+
+        setTimeout(() => {
+            setShowAddModal(false);
+            setFormData({ name: '', location: '', price: '', status: 'Active', sports: [] });
+            setSelectedImage(null);
+        }, 1500);
+    };
 
     const handleImageUpload = () => {
         fileInputRef.current.click();
@@ -123,6 +186,9 @@ export default function Venues() {
                                             <div className="relative group">
                                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-blue to-cyan-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
                                                 <input
+                                                    name="name"
+                                                    value={formData.name}
+                                                    onChange={handleInputChange}
                                                     type="text"
                                                     placeholder="e.g. Urban Arena"
                                                     className="relative w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none placeholder-slate-600 font-bold transition-all"
@@ -141,6 +207,9 @@ export default function Venues() {
                                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-blue to-cyan-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
                                                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-neon-blue transition-colors" />
                                                 <input
+                                                    name="location"
+                                                    value={formData.location}
+                                                    onChange={handleInputChange}
                                                     type="text"
                                                     placeholder="e.g. Andheri West, Mumbai"
                                                     className="relative w-full bg-slate-900 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none placeholder-slate-600 font-bold transition-all"
@@ -161,6 +230,9 @@ export default function Venues() {
                                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-green to-emerald-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
                                                 <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-neon-green transition-colors" />
                                                 <input
+                                                    name="price"
+                                                    value={formData.price}
+                                                    onChange={handleInputChange}
                                                     type="number"
                                                     placeholder="1200"
                                                     className="relative w-full bg-slate-900 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none placeholder-slate-600 font-bold transition-all"
@@ -177,10 +249,15 @@ export default function Venues() {
                                             <label className="text-xs font-bold text-neon-green uppercase tracking-widest ml-1">Venue Status</label>
                                             <div className="relative group">
                                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-green to-emerald-500 rounded-xl opacity-0 group-focus-within:opacity-50 transition duration-500 blur" />
-                                                <select className="relative w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none font-bold appearance-none cursor-pointer">
-                                                    <option>Active</option>
-                                                    <option>Maintenance</option>
-                                                    <option>Closed</option>
+                                                <select
+                                                    name="status"
+                                                    value={formData.status}
+                                                    onChange={handleInputChange}
+                                                    className="relative w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none font-bold appearance-none cursor-pointer"
+                                                >
+                                                    <option value="Active">Active</option>
+                                                    <option value="Maintenance">Maintenance</option>
+                                                    <option value="Closed">Closed</option>
                                                 </select>
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                                     <div className="w-2 h-2 border-r-2 border-b-2 border-white/50 rotate-45 transform -translate-y-1"></div>
@@ -199,7 +276,12 @@ export default function Venues() {
                                         <div className="flex flex-wrap gap-3">
                                             {['Football', 'Cricket', 'Badminton', 'Tennis', 'Basketball', 'Swimming'].map((sport, i) => (
                                                 <label key={sport} className="relative group cursor-pointer inline-block">
-                                                    <input type="checkbox" className="peer sr-only" />
+                                                    <input
+                                                        type="checkbox"
+                                                        className="peer sr-only"
+                                                        checked={formData.sports.includes(sport)}
+                                                        onChange={() => handleSportChange(sport)}
+                                                    />
                                                     <div className="px-5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-400 text-sm font-bold transition-all peer-checked:bg-white peer-checked:text-black peer-checked:border-white peer-checked:shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:border-white/30 hover:bg-white/5">
                                                         {sport}
                                                     </div>
@@ -218,7 +300,10 @@ export default function Venues() {
                                 >
                                     Cancel
                                 </button>
-                                <button className="relative px-8 py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl overflow-hidden hover:scale-105 transition-transform group">
+                                <button
+                                    onClick={handleSubmit}
+                                    className="relative px-8 py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl overflow-hidden hover:scale-105 transition-transform group"
+                                >
                                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center gap-2">Create Venue <Plus className="w-5 h-5" /></span>
                                 </button>
@@ -299,6 +384,12 @@ export default function Venues() {
                     </motion.div>
                 ))}
             </div>
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, message: null })}
+            />
         </div>
     );
 }

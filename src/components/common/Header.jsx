@@ -50,6 +50,13 @@ const Header = () => {
                     >
                         <span className={isActive('/community') ? 'text-neon-green' : ''}>Community</span>
                     </button>
+                    <button
+                        onClick={() => navigate('/bookings')}
+                        className={`transition-colors ${isActive('/bookings') ? 'text-white' : 'hover:text-white'}`}
+                        style={isActive('/bookings') ? { textShadow: '0 0 10px rgba(57, 255, 20, 0.5)' } : {}}
+                    >
+                        <span className={isActive('/bookings') ? 'text-neon-green' : ''}>My Bookings</span>
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -58,8 +65,8 @@ const Header = () => {
                         <span className="absolute top-2 right-2 w-2 h-2 bg-neon-pink rounded-full animate-pulse" />
                     </button>
                     <button
-                        onClick={() => navigate('/admin')}
-                        className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px] transition-transform hover:scale-105"
+                        onClick={() => navigate('/bookings')}
+                        className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px] transition-transform hover:scale-105 group relative"
                     >
                         <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
                             <img
@@ -67,6 +74,10 @@ const Header = () => {
                                 alt="User"
                                 className="w-full h-full object-cover"
                             />
+                        </div>
+                        {/* Simple tooltip for desktop */}
+                        <div className="absolute top-12 right-0 bg-slate-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10">
+                            My Bookings
                         </div>
                     </button>
                     <button className="md:hidden text-white">

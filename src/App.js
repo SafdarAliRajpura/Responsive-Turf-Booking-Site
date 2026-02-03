@@ -18,6 +18,7 @@ import Home from './pages/Home';
 import Venue from './pages/Venue';
 import Tournament from './pages/Tournament';
 import TournamentRegistration from './pages/TournamentRegistration';
+import MyBookings from './pages/MyBookings';
 import Contact from './pages/Contact';
 import HelpCenter from './pages/HelpCenter';
 import TermsOfService from './pages/TermsOfService';
@@ -56,6 +57,7 @@ function App() {
       <Route path="/venues" element={<Venue />} />
       <Route path="/tournaments" element={<Tournament />} />
       <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
+      <Route path="/bookings" element={<MyBookings />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/help-center" element={<HelpCenter />} />
       <Route path="/terms" element={<TermsOfService />} />

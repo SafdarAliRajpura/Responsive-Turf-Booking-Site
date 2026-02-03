@@ -169,10 +169,10 @@ export default function Booking() {
                                 )}
 
                                 <button
-                                    onClick={() => navigate('/home')}
+                                    onClick={() => navigate('/bookings')}
                                     className="w-full py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                                 >
-                                    Go to Home
+                                    Go to My Bookings
                                 </button>
                             </div>
                         </motion.div>

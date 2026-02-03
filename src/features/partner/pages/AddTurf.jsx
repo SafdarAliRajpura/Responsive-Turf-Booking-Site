@@ -72,12 +72,21 @@ export default function AddTurf() {
     };
 
     const validateForm = () => {
-        if (!formData.turfName) return "Turf Name is required.";
-        if (!formData.description) return "Description is required.";
+        if (!formData.turfName.trim()) return "Turf Name is required.";
+        if (!formData.description.trim()) return "Description is required.";
+        if (formData.description.trim().length < 10) return "Description must be at least 10 characters.";
+
         if (!formData.hourlyRate) return "Hourly Rate is required.";
-        if (!formData.address) return "Address is required.";
-        if (!formData.city) return "City is required.";
+        if (Number(formData.hourlyRate) <= 0) return "Hourly Rate must be a positive number.";
+
+        if (!formData.address.trim()) return "Address is required.";
+        if (!formData.city.trim()) return "City is required.";
+
         if (!formData.pincode) return "Pincode is required.";
+        if (!/^\d{6}$/.test(formData.pincode)) return "Pincode must be a valid 6-digit number.";
+
+        if (amenities.length === 0) return "Please select at least one amenity.";
+
         return null; // No errors
     };
 
