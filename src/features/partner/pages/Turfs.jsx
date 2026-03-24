@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Plus, MapPin, IndianRupee, MoreVertical, Edit, Power } from 'lucide-react';
@@ -62,11 +62,37 @@ const TurfCard = ({ turf, index }) => (
 
 export default function Turfs() {
     const navigate = useNavigate();
-    const turfs = [
-        { id: 1, name: "Neon Arena Main", location: "Andheri West, Mumbai", price: "1,200", status: "Active", image: turf1 },
-        { id: 2, name: "Sky Badminton Court", location: "Juhu, Mumbai", price: "800", status: "Active", image: turf2 },
-        { id: 3, name: "Box Cricket Zone", location: "Bandra, Mumbai", price: "1,500", status: "Maintenance", image: turf3 },
-    ];
+    const [turfs, setTurfs] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchTurfs = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/venues');
+            const data = await res.json();
+            if (data.success) {
+                // In a real app, you would filter by partner's owner ID here. 
+                // Since this is a local setup without auth-persistence on backend, we grab all.
+                const mapped = data.data.map(v => ({
+                    id: v._id,
+                    name: v.name,
+                    location: v.location,
+                    price: v.price.toString(),
+                    status: v.status || "Active",
+                    image: (v.images && v.images.length > 0) ? v.images[0] : (v.image || turf1)
+                }));
+                // Latest goes first visually
+                setTurfs(mapped.reverse());
+            }
+        } catch (err) {
+            console.error("Error fetching partner turfs", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTurfs();
+    }, []);
 
     return (
         <div className="space-y-8">
@@ -86,9 +112,21 @@ export default function Turfs() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {turfs.map((turf, index) => (
-                    <TurfCard key={turf.id} turf={turf} index={index} />
-                ))}
+                {loading ? (
+                    <div className="col-span-full py-12 text-center text-neon-purple font-bold tracking-widest uppercase text-sm">
+                        <div className="w-8 h-8 mx-auto border-4 border-slate-800 border-t-neon-purple rounded-full animate-spin mb-4" />
+                        Fetching Your Properties...
+                    </div>
+                ) : turfs.length === 0 ? (
+                    <div className="col-span-full py-20 text-center text-slate-500 bg-slate-900/50 border border-white/5 rounded-3xl">
+                        <p className="font-bold text-lg mb-2">No Turfs Managed</p>
+                        <p className="text-sm">Click 'Add New Turf' to start listing your venues.</p>
+                    </div>
+                ) : (
+                    turfs.map((turf, index) => (
+                        <TurfCard key={turf.id} turf={turf} index={index} />
+                    ))
+                )}
             </div>
         </div>
     );

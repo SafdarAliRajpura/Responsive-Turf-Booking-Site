@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Github, Twitter, Briefcase } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import loginBg from '../../../assets/images/auth/login-bg.jpg';
@@ -14,6 +14,7 @@ export default function PartnerLogin() {
         email: '',
         password: ''
     });
+    const [isLoading, setIsLoading] = useState(false);
 
     const validateForm = () => {
         if (!data.email) {
@@ -31,14 +32,42 @@ export default function PartnerLogin() {
         return true;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            console.log("Partner Login Credentials:", data);
-            setToast({ message: 'Login Successful! Welcome back, Partner.', type: 'success' });
-            setTimeout(() => {
-                navigate('/partner/dashboard');
-            }, 1000);
+            setIsLoading(true);
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: data.email, password: data.password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    
+                    // Basic role guard logic (optional but helpful if you only want partners to log in here)
+                    if (result.data.role !== 'partner' && result.data.role !== 'admin') {
+                        setToast({ message: 'Access Denied. Partner accounts only.', type: 'error' });
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    localStorage.setItem('turf_user', JSON.stringify(result.data));
+                    setToast({ message: 'Login Successful! Welcome back, Partner.', type: 'success' });
+                    setTimeout(() => {
+                        navigate('/partner/dashboard');
+                    }, 1000);
+                } else {
+                    setToast({ message: result.message || 'Invalid Credentials', type: 'error' });
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                setToast({ message: 'Failed to connect to server.', type: 'error' });
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -146,7 +175,8 @@ export default function PartnerLogin() {
                                 className="group relative w-full py-4 bg-gradient-to-r from-neon-blue to-cyan-600 rounded-xl font-bold text-black text-lg shadow-[0_0_20px_rgba(0,243,255,0.3)] hover:shadow-[0_0_40px_rgba(0,243,255,0.5)] transition-all duration-300 overflow-hidden mt-4"
                             >
                                 <span className="relative z-10 flex items-center justify-center gap-2">
-                                    ACCESS DASHBOARD <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    {isLoading ? 'VERIFYING...' : 'ACCESS DASHBOARD'} 
+                                    {!isLoading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                                 </span>
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                             </motion.button>

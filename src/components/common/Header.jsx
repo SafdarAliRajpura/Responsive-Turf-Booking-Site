@@ -7,6 +7,11 @@ const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Get user data from local storage
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+    const userProfilePic = user?.user_profile || userAvatarImg;
+
     const isActive = (path) => location.pathname === path;
 
     return (
@@ -65,19 +70,19 @@ const Header = () => {
                         <span className="absolute top-2 right-2 w-2 h-2 bg-neon-pink rounded-full animate-pulse" />
                     </button>
                     <button
-                        onClick={() => navigate('/bookings')}
+                        onClick={() => navigate('/profile')}
                         className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px] transition-transform hover:scale-105 group relative"
                     >
                         <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
                             <img
-                                src={userAvatarImg}
+                                src={userProfilePic}
                                 alt="User"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover bg-white"
                             />
                         </div>
                         {/* Simple tooltip for desktop */}
-                        <div className="absolute top-12 right-0 bg-slate-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10">
-                            My Bookings
+                        <div className="absolute top-12 right-0 bg-slate-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-50">
+                            {user ? `${user.first_name} ${user.last_name}` : 'Profile'}
                         </div>
                     </button>
                     <button className="md:hidden text-white">

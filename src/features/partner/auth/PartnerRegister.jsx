@@ -15,8 +15,11 @@ export default function PartnerRegister() {
         ownerName: '',
         email: '',
         phone: '',
-        password: ''
+        password: '',
+        confirmPassword: '',
+        profilePic: 'https://api.dicebear.com/7.x/micah/svg?seed=42&backgroundColor=0f172a'
     });
+    const [isLoading, setIsLoading] = useState(false);
 
     const validateForm = () => {
         if (!data.businessName.trim()) return handleError('Business Name is required!');
@@ -26,6 +29,7 @@ export default function PartnerRegister() {
         if (!data.phone) return handleError('Phone Number is required!');
         if (!data.password) return handleError('Password is required!');
         if (data.password.length < 6) return handleError('Password must be at least 6 characters.');
+        if (data.password !== data.confirmPassword) return handleError('Passwords do not match!');
         return true;
     };
 
@@ -34,14 +38,45 @@ export default function PartnerRegister() {
         return false;
     };
 
-    const handleSubmit = (e) => {
+
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            console.log("Partner Registration Data:", data);
-            setToast({ message: 'Application Submitted! Welcome aboard.', type: 'success' });
-            setTimeout(() => {
-                navigate('/partner/login');
-            }, 1500);
+            setIsLoading(true);
+            try {
+                // Since we might be sending a file later, we should ideally use FormData
+                // But for now, conforming to our existing JSON payload structure (without real image upload)
+                const payload = {
+                    name: `${data.businessName} - ${data.ownerName}`,
+                    email: data.email,
+                    phone: data.phone,
+                    password: data.password,
+                    role: 'partner',
+                    // Assuming profilePic upload logic is handled elsewhere or mapped to a base64 string
+                    // user_profile: base64Image
+                };
+
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    setToast({ message: 'Application Submitted! Welcome aboard.', type: 'success' });
+                    setTimeout(() => navigate('/partner/login'), 1500);
+                } else {
+                    handleError(result.message || 'Registration failed');
+                }
+            } catch (error) {
+                console.error("Registration Error:", error);
+                handleError('Something went wrong checking connectivity');
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -96,6 +131,33 @@ export default function PartnerRegister() {
 
                         {/* Form */}
                         <form onSubmit={handleSubmit} className="space-y-5 relative z-20">
+
+                            {/* Avatar Selection Slider */}
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.45 }}
+                                className="mb-8"
+                            >
+                                <label className="block text-center text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+                                    Select Your Partner Avatar
+                                </label>
+                                {/* Hide scrollbar cleanly via inline styles and standard non-standard tags */}
+                                <div className="flex gap-6 overflow-x-auto py-6 px-4 snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                    <style>{`
+                                        .flex.gap-6::-webkit-scrollbar { display: none; }
+                                    `}</style>
+                                    {Array.from({length: 12}, (_, i) => `https://api.dicebear.com/7.x/micah/svg?seed=${i + 42}&backgroundColor=0f172a`).map((avatarUrl, index) => (
+                                        <div 
+                                            key={index} 
+                                            onClick={() => setData({ ...data, profilePic: avatarUrl })}
+                                            className={`flex-shrink-0 snap-center cursor-pointer transition-all duration-300 w-20 h-20 rounded-full border-4 ${data.profilePic === avatarUrl ? 'border-neon-green scale-110 shadow-[0_0_20px_rgba(57,255,20,0.4)]' : 'border-transparent opacity-50 hover:opacity-100 hover:scale-105'} bg-slate-800 overflow-hidden`}
+                                        >
+                                            <img src={avatarUrl} alt={`Avatar option ${index + 1}`} className="w-full h-full object-cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
 
                             {/* Business Name & Owner Name Row */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,26 +244,48 @@ export default function PartnerRegister() {
                                 />
                             </motion.div>
 
-                            {/* Password Input */}
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.8, delay: 0.7 }}
-                                className="group relative"
-                            >
-                                <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 ${focused === 'password' ? 'text-neon-pink' : 'text-slate-500'}`}>
-                                    <Lock className="w-5 h-5" />
-                                </div>
-                                <input
-                                    type="password"
-                                    placeholder="Create Password"
-                                    value={data.password}
-                                    onFocus={() => setFocused('password')}
-                                    onBlur={() => setFocused(null)}
-                                    onChange={(e) => setData({ ...data, password: e.target.value })}
-                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
-                                />
-                            </motion.div>
+                            {/* Password Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.7 }}
+                                    className="group relative"
+                                >
+                                    <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 ${focused === 'password' ? 'text-neon-pink' : 'text-slate-500'}`}>
+                                        <Lock className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        placeholder="Create Password"
+                                        value={data.password}
+                                        onFocus={() => setFocused('password')}
+                                        onBlur={() => setFocused(null)}
+                                        onChange={(e) => setData({ ...data, password: e.target.value })}
+                                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
+                                    />
+                                </motion.div>
+
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.75 }}
+                                    className="group relative"
+                                >
+                                    <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 ${focused === 'confirmPassword' ? 'text-neon-pink' : 'text-slate-500'}`}>
+                                        <Lock className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        placeholder="Confirm Password"
+                                        value={data.confirmPassword}
+                                        onFocus={() => setFocused('confirmPassword')}
+                                        onBlur={() => setFocused(null)}
+                                        onChange={(e) => setData({ ...data, confirmPassword: e.target.value })}
+                                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
+                                    />
+                                </motion.div>
+                            </div>
 
                             {/* Submit Button */}
                             <motion.button
@@ -214,7 +298,8 @@ export default function PartnerRegister() {
                                 className="group relative w-full py-4 bg-gradient-to-r from-neon-green to-emerald-600 rounded-xl font-bold text-black text-lg shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:shadow-[0_0_40px_rgba(57,255,20,0.5)] transition-all duration-300 overflow-hidden mt-4"
                             >
                                 <span className="relative z-10 flex items-center justify-center gap-2">
-                                    REGISTER BUSINESS <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    {isLoading ? 'PROCESSING...' : 'REGISTER BUSINESS'} 
+                                    {!isLoading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                                 </span>
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                             </motion.button>

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Calendar as CalendarIcon, Clock, MapPin, IndianRupee,
     CreditCard, ArrowRight, Star, CheckCircle,
-    Plus, Minus, Trash2, Trophy, ChevronDown, ArrowLeft
+    Plus, Minus, Trash2, Trophy, ChevronDown, ArrowLeft, MessageSquare, Send
 } from 'lucide-react';
 import { TypeAnimation } from 'react-type-animation';
 import SplitText from '../components/common/SplitText';
@@ -16,79 +16,142 @@ import carbonFibrePattern from '../assets/images/common/carbon-fibre.png';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 
-const venues = {
-    1: {
-        name: "Mumbai Football Arena",
-        location: "Andheri West, Mumbai",
-        price: 1200,
-        image: footballNight,
-        category: "Football", // Primary category
-        sports: ["Football"], // Available sports
-        rating: "4.9",
-        courts: {
-            "Football": ["Turf A (5v5)", "Turf B (7v7)", "Turf C (Pro)"]
-        }
-    },
-    2: {
-        name: "Bengaluru Sports Hub", // Renamed for multiple sports
-        location: "Koramangala, Bengaluru",
-        price: 800,
-        image: footballNight,
-        category: "Multi-Sport",
-        sports: ["Cricket", "Football", "Badminton"],
-        rating: "4.7",
-        courts: {
-            "Cricket": ["Net 1 (Pace)", "Net 2 (Spin)", "Net 3 (Match)"],
-            "Football": ["Futsal Court 1", "Futsal Court 2"],
-            "Badminton": ["Court 1 (Wooden)", "Court 2 (Synthetic)"]
-        }
-    },
-    // Fallback for others
-    default: {
-        name: "Generic Arena",
-        location: "City Center",
-        price: 1000,
-        image: footballNight,
-        category: "Sports",
-        sports: ["Football"],
-        rating: "4.5",
-        courts: {
-            "Football": ["Court 1", "Court 2"]
-        }
-    }
-};
-
 export default function Booking() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const venue = venues[id] || venues[1];
+
+    const [venue, setVenue] = useState(null);
+    const [loadingVenue, setLoadingVenue] = useState(true);
+    const [bookedSlots, setBookedSlots] = useState([]);
+    
+    // Reviews State
+    const [reviews, setReviews] = useState([]);
+    const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+    const [submittingReview, setSubmittingReview] = useState(false);
 
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTime, setSelectedTime] = useState(null);
     const [duration, setDuration] = useState(60); // in minutes
-    // Initialize sports
-    const [selectedSport, setSelectedSport] = useState(venue.sports ? venue.sports[0] : "Football");
+    // Initialize sports (will be updated once venue loads)
+    const [selectedSport, setSelectedSport] = useState("Football");
     const [selectedCourt, setSelectedCourt] = useState('');
     const [cartItem, setCartItem] = useState(null); // null or object
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+    useEffect(() => {
+        const fetchVenue = async () => {
+            try {
+                // Determine if it's a legacy static ID or a Mongo ID
+                if (id === '1' || id === '2') {
+                    // Fallback local dummy for static ID
+                    setVenue({
+                        name: id === '1' ? "Mumbai Football Arena" : "Bengaluru Sports Hub",
+                        location: "City Center",
+                        price: 1000,
+                        sports: ["Football"],
+                        rating: "4.9",
+                        courts: { "Football": ["Turf A (5v5)", "Turf B (7v7)"] }
+                    });
+                    setLoadingVenue(false);
+                    return;
+                }
 
+                const res = await fetch(`http://localhost:5000/api/venues/${id}`);
+                const data = await res.json();
+                
+                if (data.success && data.data) {
+                    const v = data.data;
+                    const mappedVenue = {
+                        name: v.name,
+                        location: v.location,
+                        price: v.price,
+                        sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
+                        rating: v.rating || 4.5,
+                        courts: {
+                            "Football": ["Turf A (5v5)", "Turf B (7v7)", "Turf C (Pro)"],
+                            "Cricket": ["Net 1 (Pace)", "Net 2 (Spin)", "Net 3 (Match)"],
+                            "Badminton": ["Court 1 (Wooden)", "Court 2 (Synthetic)"]
+                        }
+                    };
+                    setVenue(mappedVenue);
+                    setSelectedSport(mappedVenue.sports[0]); // auto-select first sport
+                } else {
+                    console.error("Venue not found in DB");
+                }
+            } catch (err) {
+                console.error("Error fetching single venue:", err);
+            } finally {
+                setLoadingVenue(false);
+            }
+        };
+
+        const fetchBookingsForVanue = async () => {
+             try {
+                 const res = await fetch('http://localhost:5000/api/bookings');
+                 const data = await res.json();
+                 if (data.success) {
+                     // Get active bookings
+                     const activeBookings = data.data.filter(b => b.status !== 'Cancelled' && b.status !== 'Rejected');
+                     setBookedSlots(activeBookings);
+                 }
+             } catch(err) {
+                 console.error("Error fetching booked slots:", err);
+             }
+        };
+
+        fetchVenue();
+        fetchBookingsForVanue();
+    }, [id]);
+
+    useEffect(() => {
+        if (!venue || id === '1' || id === '2') return;
+        const fetchReviews = async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/reviews/${id}`);
+                const data = await res.json();
+                if (data.success) {
+                    setReviews(data.data);
+                }
+            } catch(e) {
+                console.error("Failed to load reviews:", e);
+            }
+        };
+        fetchReviews();
+    }, [venue, id]);
 
     const times = [
         "06:00 AM", "07:00 AM", "08:00 AM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM"
     ];
+
+    if (loadingVenue) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
+                <div className="w-12 h-12 border-4 border-slate-700 border-t-neon-green rounded-full animate-spin" />
+                <p className="tracking-widest uppercase text-xs font-bold text-neon-green">Initializing Booking Engine...</p>
+            </div>
+        );
+    }
+
+    if (!venue) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
+                <p className="tracking-widest uppercase text-lg font-bold text-red-500">Venue Not Found</p>
+                <button onClick={() => navigate(-1)} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">Go Back</button>
+            </div>
+        );
+    }
 
     const toggleAddToCart = () => {
         if (cartItem) {
             setCartItem(null); // Remove
         } else {
             setCartItem({
-                venue: venue.name,
-                court: selectedCourt,
-                date: new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
-                time: selectedTime,
-                duration: `${Math.floor(duration / 60)}h ${duration % 60 > 0 ? (duration % 60) + 'm' : ''}`,
-                price: (venue.price * (duration / 60))
+                turfName: venue.name,
+                sport: selectedSport,
+                date: new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                timeSlot: `${selectedTime} (${selectedCourt}) - ${Math.floor(duration / 60)}h ${duration % 60 > 0 ? (duration % 60) + 'm' : ''}`,
+                price: (venue.price * (duration / 60)),
+                status: 'pending'
             });
         }
     };
@@ -97,7 +160,110 @@ export default function Booking() {
         setDuration(prev => Math.max(30, Math.min(180, prev + delta)));
     };
 
+    const processBooking = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cartItem)
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Update local booked slots so it locks out immediately without refresh
+                setBookedSlots(prev => [...prev, data.data]);
+                setShowPaymentModal(true);
+            }
+        } catch(e) {
+            console.error("Booking failed:", e);
+        }
+    };
 
+    const submitReview = async () => {
+        if (!newReview.comment.trim()) return;
+        setSubmittingReview(true);
+        try {
+            const res = await fetch('http://localhost:5000/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    venueId: id,
+                    user: 'Awesome User', // Default dummy user for MVP since no hard auth
+                    rating: newReview.rating,
+                    comment: newReview.comment
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setReviews(prev => [data.data, ...prev]);
+                setNewReview({ rating: 5, comment: '' });
+                
+                // Update local venue rating dynamically (MVP visual trick)
+                const newTotal = (parseFloat(venue.rating) * (reviews.length || 1) + newReview.rating) / ((reviews.length || 1) + 1);
+                setVenue(prev => ({ ...prev, rating: newTotal.toFixed(1) }));
+            }
+        } catch (e) {
+            console.error("Failed to post review", e);
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
+    const parseTimeToMinutes = (timeStr) => {
+        if (!timeStr) return 0;
+        const [time, modifier] = timeStr.trim().split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (hours === 12) hours = 0;
+        if (modifier === 'PM') hours += 12;
+        return hours * 60 + (minutes || 0);
+    };
+
+    const isSlotBooked = (t) => {
+        if (!selectedCourt) return false;
+        const formattedDate = new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        
+        return bookedSlots.some(b => {
+             if (b.turfName !== venue.name || b.sport !== selectedSport || b.date !== formattedDate) return false;
+             if (!b.timeSlot.includes(selectedCourt)) return false;
+             
+             const bTimeStr = b.timeSlot.substring(0, 8);
+             const bStartMins = parseTimeToMinutes(bTimeStr);
+             let bDurMins = 60;
+             const match = b.timeSlot.match(/- (\d+)h(?: (\d+)m)?/);
+             if (match) {
+                 bDurMins = parseInt(match[1] || 0) * 60 + parseInt(match[2] || 0);
+             }
+             const bEndMins = bStartMins + bDurMins;
+             
+             const targetMins = parseTimeToMinutes(t);
+             // Return true if this button time falls within ANY booked slot runtime
+             return targetMins >= bStartMins && targetMins < bEndMins;
+        });
+    };
+
+    const hasActiveConflict = () => {
+        if (!selectedTime || !selectedCourt) return false;
+        const formattedDate = new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        
+        const myStartMins = parseTimeToMinutes(selectedTime);
+        const myEndMins = myStartMins + duration; // local duration state is in mins
+
+        return bookedSlots.some(b => {
+            if (b.turfName !== venue.name || b.sport !== selectedSport || b.date !== formattedDate) return false;
+            if (!b.timeSlot.includes(selectedCourt)) return false;
+
+            const bTimeStr = b.timeSlot.substring(0, 8);
+            const bStartMins = parseTimeToMinutes(bTimeStr);
+            let bDurMins = 60;
+            const match = b.timeSlot.match(/- (\d+)h(?: (\d+)m)?/);
+            if (match) {
+                bDurMins = parseInt(match[1] || 0) * 60 + parseInt(match[2] || 0);
+            }
+            const bEndMins = bStartMins + bDurMins;
+
+            // They overlap if the highest start is STRICTLY LESS than the lowest end
+            return Math.max(myStartMins, bStartMins) < Math.min(myEndMins, bEndMins);
+        });
+    };
 
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black flex flex-col relative">
@@ -151,19 +317,19 @@ export default function Booking() {
                                     <div className="bg-white/5 rounded-xl p-4 mb-8 text-left border border-white/5">
                                         <div className="flex justify-between mb-2">
                                             <span className="text-slate-400 text-xs">Venue</span>
-                                            <span className="font-bold text-sm text-white">{venue.name}</span>
+                                            <span className="font-bold text-sm text-white">{cartItem.turfName}</span>
                                         </div>
                                         <div className="flex justify-between mb-2">
                                             <span className="text-slate-400 text-xs">Sport</span>
-                                            <span className="font-bold text-sm text-white">{selectedSport}</span>
+                                            <span className="font-bold text-sm text-white">{cartItem.sport}</span>
                                         </div>
                                         <div className="flex justify-between mb-2">
                                             <span className="text-slate-400 text-xs">Date</span>
                                             <span className="font-bold text-sm text-white">{cartItem.date}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-400 text-xs">Time</span>
-                                            <span className="font-bold text-sm text-white">{cartItem.time} ({cartItem.duration})</span>
+                                            <span className="text-slate-400 text-xs">Time Slot</span>
+                                            <span className="font-bold text-sm text-white">{cartItem.timeSlot}</span>
                                         </div>
                                     </div>
                                 )}
@@ -260,22 +426,52 @@ export default function Booking() {
                                 </div>
                             </div>
 
+                            {/* Court Selector */}
+                            <div className="grid md:grid-cols-4 items-center gap-4">
+                                <label className="text-slate-400 font-bold uppercase tracking-wider text-xs md:text-right">Court</label>
+                                <div className="md:col-span-3 relative">
+                                    <select
+                                        value={selectedCourt}
+                                        onChange={(e) => {
+                                            setSelectedCourt(e.target.value);
+                                            setSelectedTime(null); // Reset time when court changes
+                                        }}
+                                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white font-medium appearance-none focus:outline-none focus:border-neon-green/50"
+                                    >
+                                        <option value="">-- Select Court First to See Available Times --</option>
+                                        {venue.courts[selectedSport]?.map((court) => (
+                                            <option key={court} value={court}>{court}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                                </div>
+                            </div>
+
                             {/* Time Selector */}
                             <div className="grid md:grid-cols-4 items-start gap-4">
                                 <label className="text-slate-400 font-bold uppercase tracking-wider text-xs md:text-right mt-3">Start Time</label>
                                 <div className="md:col-span-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                    {times.map((t, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => setSelectedTime(t)}
-                                            className={`px-2 py-2.5 rounded-lg border text-xs font-bold transition-all ${selectedTime === t
-                                                ? 'bg-neon-green text-black border-neon-green shadow-[0_0_10px_rgba(57,255,20,0.3)]'
-                                                : 'bg-slate-950 border-white/10 text-slate-400 hover:text-white hover:border-white/30'
+                                    {times.map((t, i) => {
+                                        const booked = isSlotBooked(t);
+                                        return (
+                                            <button
+                                                key={i}
+                                                disabled={booked || !selectedCourt}
+                                                onClick={() => setSelectedTime(t)}
+                                                className={`px-2 py-2.5 rounded-lg border text-xs font-bold transition-all ${
+                                                    booked
+                                                    ? 'bg-slate-900 border-red-500/30 text-red-500/50 cursor-not-allowed line-through'
+                                                    : !selectedCourt
+                                                    ? 'bg-slate-950 border-white/5 text-slate-600 cursor-not-allowed'
+                                                    : selectedTime === t
+                                                    ? 'bg-neon-green text-black border-neon-green shadow-[0_0_10px_rgba(57,255,20,0.3)]'
+                                                    : 'bg-slate-950 border-white/10 text-slate-400 hover:text-white hover:border-white/30'
                                                 }`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
+                                            >
+                                                {booked ? 'Booked' : t}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -301,32 +497,23 @@ export default function Booking() {
                                 </div>
                             </div>
 
-                            {/* Court Selector */}
-                            <div className="grid md:grid-cols-4 items-center gap-4">
-                                <label className="text-slate-400 font-bold uppercase tracking-wider text-xs md:text-right">Court</label>
-                                <div className="md:col-span-3 relative">
-                                    <select
-                                        value={selectedCourt}
-                                        onChange={(e) => setSelectedCourt(e.target.value)}
-                                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white font-medium appearance-none focus:outline-none focus:border-neon-green/50"
-                                    >
-                                        <option value="">-- Select Court --</option>
-                                        {venue.courts[selectedSport]?.map((court) => (
-                                            <option key={court} value={court}>{court}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                                </div>
-                            </div>
+                            {/* Blank line to balance UI removal of old court selector chunk */}
 
                             {/* Add to Cart Button */}
-                            <div className="md:pl-[25%]">
+                            <div className="md:pl-[25%] mt-4">
+                                {hasActiveConflict() && (
+                                    <p className="text-red-500 font-bold mb-4 flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /> 
+                                        Conflict Detected: Your {duration / 60}h duration overlaps with an existing booking. Reduce duration or pick another time.
+                                    </p>
+                                )}
                                 <button
-                                    className={`w-full py-4 rounded-xl font-black uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 ${selectedTime && selectedCourt && !cartItem
-                                        ? 'bg-white text-black hover:bg-neon-green hover:shadow-neon-green/20'
-                                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                    className={`w-full py-4 rounded-xl font-black uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 ${
+                                        selectedTime && selectedCourt && !cartItem && !hasActiveConflict()
+                                        ? 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_20px_rgba(57,255,20,0.3)]'
+                                        : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
                                         }`}
-                                    disabled={!selectedTime || !selectedCourt || cartItem}
+                                    disabled={!selectedTime || !selectedCourt || cartItem || hasActiveConflict()}
                                     onClick={toggleAddToCart}
                                 >
                                     {cartItem ? 'Added to Cart' : 'Add to Cart'} <ArrowRight className="w-5 h-5" />
@@ -358,10 +545,11 @@ export default function Booking() {
                                                 <div className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity" onClick={() => setCartItem(null)}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </div>
-                                                <p className="font-bold text-white text-sm mb-1">{cartItem.court}</p>
+                                                <p className="font-bold text-white text-sm mb-1">{cartItem.turfName}</p>
                                                 <div className="text-slate-400 text-xs space-y-1">
+                                                    <p className="flex items-center gap-2"><Trophy className="w-3 h-3" /> {cartItem.sport}</p>
                                                     <p className="flex items-center gap-2"><CalendarIcon className="w-3 h-3" /> {cartItem.date}</p>
-                                                    <p className="flex items-center gap-2"><Clock className="w-3 h-3" /> {cartItem.time} ({cartItem.duration})</p>
+                                                    <p className="flex items-center gap-2"><Clock className="w-3 h-3" /> {cartItem.timeSlot}</p>
                                                 </div>
                                                 <div className="mt-3 pt-3 border-t border-white/5 flex items-center text-neon-green font-bold">
                                                     <IndianRupee className="w-3 h-3" /> {cartItem.price}
@@ -386,7 +574,7 @@ export default function Booking() {
                                                 <span className="text-white font-bold">₹{cartItem.price}</span>
                                             </div>
                                             <button
-                                                onClick={() => setShowPaymentModal(true)}
+                                                onClick={processBooking}
                                                 className="w-full py-3 bg-neon-green text-black font-black uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                             >
                                                 Proceed ₹{cartItem.price}
@@ -398,6 +586,85 @@ export default function Booking() {
                         </div>
                     </div>
 
+                </div>
+
+                {/* Reviews Section */}
+                <div className="mt-12 bg-slate-900 border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-neon-yellow/5 rounded-full blur-[100px] pointer-events-none" />
+                    
+                    <h2 className="text-3xl font-black italic uppercase text-white mb-8 flex items-center gap-2">
+                        <MessageSquare className="w-8 h-8 text-neon-yellow" /> Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-orange-400">Reviews</span>
+                    </h2>
+
+                    <div className="grid lg:grid-cols-12 gap-12">
+                        {/* Feed */}
+                        <div className="lg:col-span-8 space-y-6">
+                            {reviews.length === 0 ? (
+                                <div className="text-center py-12 bg-slate-950/50 rounded-2xl border border-white/5 border-dashed">
+                                    <Star className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                                    <p className="text-slate-400 font-bold">No reviews yet. Be the first to review!</p>
+                                </div>
+                            ) : (
+                                reviews.map((rev) => (
+                                    <motion.div 
+                                        key={rev._id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="bg-slate-950 p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-colors"
+                                    >
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-neon-blue/20 flex items-center justify-center text-neon-blue font-black border border-neon-blue/30">
+                                                    {rev.user.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-white font-bold">{rev.user}</h4>
+                                                    <p className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString()}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'text-neon-yellow fill-neon-yellow' : 'text-slate-700'}`} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <p className="text-slate-300 text-sm leading-relaxed">{rev.comment}</p>
+                                    </motion.div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Input Form */}
+                        <div className="lg:col-span-4">
+                            <div className="sticky top-24 bg-slate-950 border border-white/5 p-6 rounded-2xl">
+                                <h3 className="text-xl font-bold text-white mb-6">Write a Review</h3>
+                                <div className="mb-6 flex justify-center gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button 
+                                            key={star}
+                                            onClick={() => setNewReview(prev => ({ ...prev, rating: star }))}
+                                            className="transition-transform hover:scale-125 focus:outline-none"
+                                        >
+                                            <Star className={`w-8 h-8 ${newReview.rating >= star ? 'text-neon-yellow fill-neon-yellow drop-shadow-[0_0_10px_rgba(255,255,0,0.5)]' : 'text-slate-700'}`} />
+                                        </button>
+                                    ))}
+                                </div>
+                                <textarea
+                                    value={newReview.comment}
+                                    onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
+                                    placeholder="Share your experience playing here..."
+                                    className="w-full bg-slate-900 border border-white/10 rounded-xl p-4 text-white text-sm focus:border-neon-yellow focus:outline-none resize-none h-32 mb-4"
+                                />
+                                <button
+                                    onClick={submitReview}
+                                    disabled={submittingReview || !newReview.comment.trim()}
+                                    className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${!newReview.comment.trim() ? 'bg-slate-800 text-slate-500' : 'bg-neon-yellow text-black hover:bg-white hover:shadow-[0_0_15px_rgba(255,255,0,0.4)]'}`}
+                                >
+                                    {submittingReview ? 'Posting...' : <><Send className="w-4 h-4" /> Post Review</>}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </main>

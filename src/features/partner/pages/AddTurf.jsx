@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -47,6 +47,8 @@ export default function AddTurf() {
 
     const [amenities, setAmenities] = useState([]);
     const [dragActive, setDragActive] = useState(false);
+    const [files, setFiles] = useState([]);
+    const fileInputRef = useRef(null);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -71,6 +73,34 @@ export default function AddTurf() {
         }
     };
 
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const newFiles = Array.from(e.dataTransfer.files);
+            setFiles(prev => [...prev, ...newFiles]);
+        }
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const newFiles = Array.from(e.target.files);
+            setFiles(prev => [...prev, ...newFiles]);
+        }
+    };
+
+    const removeFile = (indexToRemove) => {
+        setFiles(files.filter((_, index) => index !== indexToRemove));
+    };
+
+    const getBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
     const validateForm = () => {
         if (!formData.turfName.trim()) return "Turf Name is required.";
         if (!formData.description.trim()) return "Description is required.";
@@ -90,7 +120,7 @@ export default function AddTurf() {
         return null; // No errors
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const error = validateForm();
@@ -99,16 +129,47 @@ export default function AddTurf() {
             return;
         }
 
+        // Convert first file to base64 so it stores cleanly in DB
+        let imageString = "http://localhost:5000/uploads/venue_default.jpg";
+        if (files.length > 0) {
+            try {
+                imageString = await getBase64(files[0]);
+            } catch (err) {
+                console.error("Image conversion failed", err);
+            }
+        }
+
+        // Map to Venue schema
         const submissionData = {
-            ...formData,
+            name: formData.turfName,
+            location: `${formData.address}, ${formData.city}, ${formData.pincode}`,
+            price: Number(formData.hourlyRate),
+            sports: [formData.category.split(' ')[0]],
             amenities,
-            // In a real app, images would be handled here
+            status: 'Active',
+            rating: 5.0,
+            distance: '1.2 km', 
+            image: imageString,
+            images: files.length > 0 ? [imageString] : []
         };
 
-        console.log("Turf Registration Data:", submissionData);
-
-        setToast({ message: "Turf created successfully!", type: 'success' });
-        setTimeout(() => navigate('/partner/turfs'), 1500);
+        try {
+            const res = await fetch('http://localhost:5000/api/venues', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(submissionData)
+            });
+            const data = await res.json();
+            if (data.success) {
+                setToast({ message: "Turf created successfully in Live DB!", type: 'success' });
+                setTimeout(() => navigate('/partner/turfs'), 1500);
+            } else {
+                setToast({ message: "Failed to create turf", type: 'error' });
+            }
+        } catch (err) {
+            console.error("Error creating turf:", err);
+            setToast({ message: "Network Error", type: 'error' });
+        }
     };
 
     const availableAmenities = [
@@ -297,28 +358,56 @@ export default function AddTurf() {
                     </h2>
 
                     <div
-                        className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${dragActive
+                        className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 cursor-pointer ${dragActive
                             ? 'border-neon-purple bg-neon-purple/5 scale-[1.01]'
                             : 'border-white/10 hover:border-white/20 hover:bg-white/5'
                             }`}
                         onDragEnter={handleDrag}
                         onDragLeave={handleDrag}
                         onDragOver={handleDrag}
-                        onDrop={handleDrag}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current.click()}
                     >
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
                         <div className="flex flex-col items-center justify-center gap-4">
-                            <div className="w-16 h-16 rounded-full bg-slate-950 flex items-center justify-center border border-white/10 shadow-xl">
+                            <div className="w-16 h-16 rounded-full bg-slate-950 flex items-center justify-center border border-white/10 shadow-xl pointer-events-none">
                                 <Upload className="w-8 h-8 text-slate-400" />
                             </div>
-                            <div>
+                            <div className="pointer-events-none">
                                 <p className="text-white font-bold text-lg">Click to Upload or Drag & Drop</p>
                                 <p className="text-slate-500 text-sm mt-1">SVG, PNG, JPG or GIF (max. 5MB)</p>
                             </div>
-                            <button type="button" className="px-6 py-2 bg-white text-black text-sm font-bold rounded-xl mt-2 hover:bg-slate-200 transition-colors">
+                            <button type="button" className="px-6 py-2 bg-white text-black text-sm font-bold rounded-xl mt-2 hover:bg-slate-200 transition-colors pointer-events-none">
                                 Browse Files
                             </button>
                         </div>
                     </div>
+
+                    {files.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
+                            {files.map((file, idx) => (
+                                <div key={idx} className="relative group rounded-xl overflow-hidden border border-white/10 bg-slate-950 aspect-video">
+                                    <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            type="button" 
+                                            onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                                            className="px-3 py-1 bg-red-500 text-white font-bold rounded-lg text-xs"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </motion.div>
 
                 {/* Form Actions */}

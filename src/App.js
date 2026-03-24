@@ -25,6 +25,7 @@ import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Booking from './pages/Booking';
 import Community from './pages/Community';
+import Profile from './pages/Profile';
 import AdminLayout from './features/admin/layouts/AdminLayout';
 import AdminDashboard from './features/admin/pages/Dashboard';
 import AdminUsers from './features/admin/pages/Users';
@@ -64,6 +65,7 @@ function App() {
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/community" element={<Community />} />
       <Route path="/book/:id" element={<Booking />} />
+      <Route path="/profile" element={<Profile />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>

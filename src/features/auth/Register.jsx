@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, Github, Twitter } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Github, Twitter, Eye, EyeOff, Phone, Shield, CheckCircle2 } from 'lucide-react';
 
 import registerBg from '../../assets/images/auth/register-bg.jpg';
 
@@ -8,13 +8,25 @@ import Toast from '../../components/ui/Toast';
 
 export default function Register({ onRegister, onLoginClick }) {
     const [focused, setFocused] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [selectedAvatar, setSelectedAvatar] = useState(0);
     const [toast, setToast] = useState({ message: null, type: 'info' });
     const [data, setData] = useState({
         name: '',
         email: '',
+        phone: '',
         password: '',
         confirmPassword: ''
     });
+
+    const avatars = [
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka&backgroundColor=c0aede",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Jocelyn&backgroundColor=d1d4f9",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Robert&backgroundColor=ffdfbf",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Eliza&backgroundColor=b6e3f4"
+    ];
 
     const validateForm = () => {
         if (!data.name.trim()) {
@@ -27,6 +39,10 @@ export default function Register({ onRegister, onLoginClick }) {
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
             setToast({ message: 'Please enter a valid email address.', type: 'error' });
+            return false;
+        }
+        if (!data.phone) {
+            setToast({ message: 'Phone Number is required!', type: 'error' });
             return false;
         }
         if (!data.password) {
@@ -44,14 +60,41 @@ export default function Register({ onRegister, onLoginClick }) {
         return true;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            console.log("Register Data:", data);
-            setToast({ message: 'Account Created Successfully! Joining squad...', type: 'success' });
-            setTimeout(() => {
-                onRegister();
-            }, 1500);
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: data.name,
+                        email: data.email,
+                        phone: data.phone,
+                        password: data.password,
+                        user_profile: avatars[selectedAvatar]
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    setToast({ message: 'Account Created Successfully! Joining squad...', type: 'success' });
+                    // Optional: Save token locally
+                    if(result.data && result.data.token) {
+                        localStorage.setItem('token', result.data.token);
+                        localStorage.setItem('user', JSON.stringify(result.data));
+                    }
+                    setTimeout(() => {
+                        onRegister();
+                    }, 1500);
+                } else {
+                    setToast({ message: result.message || 'Registration failed!', type: 'error' });
+                }
+            } catch (error) {
+                console.error("Register error:", error);
+                setToast({ message: 'Server error. Please try again.', type: 'error' });
+            }
         }
     };
 
@@ -77,22 +120,14 @@ export default function Register({ onRegister, onLoginClick }) {
                     <div className="relative backdrop-blur-2xl bg-slate-900/50 border border-white/10 rounded-[2rem] p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
 
                         {/* Header */}
-                        <div className="text-center mb-8">
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
-                                className="w-16 h-16 bg-gradient-to-tr from-neon-blue to-neon-green rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-neon-green transform -rotate-3"
-                            >
-                                <User className="w-8 h-8 text-black" strokeWidth={2.5} />
-                            </motion.div>
+                        <div className="mb-8">
                             <motion.h2
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                                className="text-4xl font-black text-white mb-2 tracking-tight"
+                                className="text-4xl font-black text-white mb-2 tracking-tight uppercase"
                             >
-                                JOIN THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-neon-blue">SQUAD</span>
+                                CLAIM YOUR SPOT
                             </motion.h2>
                             <motion.p
                                 initial={{ opacity: 0 }}
@@ -100,9 +135,36 @@ export default function Register({ onRegister, onLoginClick }) {
                                 transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
                                 className="text-slate-400 font-medium"
                             >
-                                Create your legend.
+                                Join the Pro league. Access elite arenas.
                             </motion.p>
                         </div>
+
+                        {/* Avatars */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, delay: 0.45, ease: "easeOut" }}
+                            className="mb-8"
+                        >
+                            <p className="text-sm font-bold text-white mb-3">Choose Your Player</p>
+                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                                {avatars.map((avatar, index) => (
+                                    <button
+                                        key={index}
+                                        type="button"
+                                        onClick={() => setSelectedAvatar(index)}
+                                        className={`relative w-16 h-16 rounded-full flex-shrink-0 border-2 transition-all ${selectedAvatar === index ? 'border-neon-green scale-110' : 'border-transparent opacity-70 hover:opacity-100 mx-1'}`}
+                                    >
+                                        <img src={avatar} alt={`Avatar ${index}`} className="w-full h-full rounded-full object-cover bg-white" />
+                                        {selectedAvatar === index && (
+                                            <div className="absolute -bottom-1 -right-1 bg-slate-900 rounded-full">
+                                                <CheckCircle2 className="w-5 h-5 text-neon-green" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
 
                         {/* Form */}
                         <form onSubmit={handleSubmit} className="space-y-5 relative z-20">
@@ -149,6 +211,27 @@ export default function Register({ onRegister, onLoginClick }) {
                                 />
                             </motion.div>
 
+                            {/* Phone Input */}
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.8, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                                className="group relative"
+                            >
+                                <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 ${focused === 'phone' ? 'text-neon-blue' : 'text-slate-500'}`}>
+                                    <Phone className="w-5 h-5" />
+                                </div>
+                                <input
+                                    type="tel"
+                                    placeholder="Phone Number"
+                                    value={data.phone}
+                                    onFocus={() => setFocused('phone')}
+                                    onBlur={() => setFocused(null)}
+                                    onChange={(e) => setData({ ...data, phone: e.target.value })}
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-blue/50 focus:shadow-[0_0_20px_rgba(0,243,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
+                                />
+                            </motion.div>
+
                             {/* Password Input */}
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
@@ -160,14 +243,21 @@ export default function Register({ onRegister, onLoginClick }) {
                                     <Lock className="w-5 h-5" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="Password"
                                     value={data.password}
                                     onFocus={() => setFocused('password')}
                                     onBlur={() => setFocused(null)}
                                     onChange={(e) => setData({ ...data, password: e.target.value })}
-                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-12 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </motion.div>
 
                             {/* Confirm Password Input */}
@@ -178,17 +268,24 @@ export default function Register({ onRegister, onLoginClick }) {
                                 className="group relative"
                             >
                                 <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 ${focused === 'confirmPassword' ? 'text-neon-pink' : 'text-slate-500'}`}>
-                                    <Lock className="w-5 h-5" />
+                                    <Shield className="w-5 h-5" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showConfirmPassword ? "text" : "password"}
                                     placeholder="Confirm Password"
                                     value={data.confirmPassword}
                                     onFocus={() => setFocused('confirmPassword')}
                                     onBlur={() => setFocused(null)}
                                     onChange={(e) => setData({ ...data, confirmPassword: e.target.value })}
-                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-12 text-white placeholder-slate-600 focus:outline-none focus:border-neon-pink/50 focus:shadow-[0_0_20px_rgba(255,0,255,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </motion.div>
 
                             {/* Submit Button */}
@@ -199,10 +296,10 @@ export default function Register({ onRegister, onLoginClick }) {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 type="submit"
-                                className="group relative w-full py-4 bg-gradient-to-r from-neon-green to-emerald-600 rounded-xl font-bold text-black text-lg shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:shadow-[0_0_40px_rgba(57,255,20,0.5)] transition-all duration-300 overflow-hidden mt-4"
+                                className="group relative w-full py-4 bg-neon-green rounded-xl font-bold text-black text-lg shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:shadow-[0_0_40px_rgba(57,255,20,0.5)] transition-all duration-300 overflow-hidden mt-4 uppercase border-none"
                             >
                                 <span className="relative z-10 flex items-center justify-center gap-2">
-                                    CREATE ACCOUNT <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    CREATE PRO ACCOUNT
                                 </span>
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                             </motion.button>

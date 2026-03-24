@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Github, Twitter } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Github, Twitter, Eye, EyeOff } from 'lucide-react';
 
 import loginBg from '../../assets/images/auth/login-bg.jpg';
 
@@ -8,6 +8,7 @@ import Toast from '../../components/ui/Toast';
 
 export default function Login({ onLogin, onRegisterClick }) {
     const [focused, setFocused] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
     const [toast, setToast] = useState({ message: null, type: 'info' });
     const [data, setData] = useState({
         email: '',
@@ -34,14 +35,38 @@ export default function Login({ onLogin, onRegisterClick }) {
         return true;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            console.log("Login Credentials:", data);
-            setToast({ message: 'Login Successful! Welcome back.', type: 'success' });
-            setTimeout(() => {
-                onLogin();
-            }, 1000);
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: data.email,
+                        password: data.password
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    setToast({ message: 'Login Successful! Welcome back.', type: 'success' });
+                    // Optional: Save token locally
+                    if(result.data && result.data.token) {
+                        localStorage.setItem('token', result.data.token);
+                        localStorage.setItem('user', JSON.stringify(result.data));
+                    }
+                    setTimeout(() => {
+                        onLogin();
+                    }, 1000);
+                } else {
+                    setToast({ message: result.message || 'Invalid credentials', type: 'error' });
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                setToast({ message: 'Server error. Please try again.', type: 'error' });
+            }
         }
     };
 
@@ -129,14 +154,21 @@ export default function Login({ onLogin, onRegisterClick }) {
                                     <Lock className="w-5 h-5" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="Password"
                                     value={data.password}
                                     onFocus={() => setFocused('password')}
                                     onBlur={() => setFocused(null)}
                                     onChange={(e) => setData({ ...data, password: e.target.value })}
-                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_20px_rgba(57,255,20,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-12 text-white placeholder-slate-600 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_20px_rgba(57,255,20,0.1)] transition-all durations-300 transform group-hover:scale-[1.01]"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </motion.div>
 
                             <motion.button

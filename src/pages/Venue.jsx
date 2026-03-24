@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-    Search, MapPin, Star, Filter, ArrowRight, IndianRupee
+    Search, MapPin, Star, Filter, ArrowRight, IndianRupee, ChevronLeft, ChevronRight, Navigation
 } from 'lucide-react';
 import { TypeAnimation } from 'react-type-animation';
+import { AnimatePresence } from 'framer-motion';
 
 // Images
 import footballImg from '../assets/images/home/night-football.jpg';
@@ -29,133 +30,173 @@ const FilterTag = ({ label, active, onClick }) => (
     </button>
 );
 
-const VenueCard = ({ venue, index, onBook }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.15, duration: 0.6, ease: "easeOut" }}
-        className="group relative bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-neon-green/30 transition-all duration-300"
-    >
-        {/* Image Section */}
-        <div className="relative h-48 overflow-hidden">
-            <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent transition-colors z-10" />
-            <img
-                src={venue.image}
-                alt={venue.name}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-            />
-            <div className="absolute top-4 right-4 z-20 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10">
-                <Star className="w-3 h-3 text-neon-yellow fill-current" />
-                <span className="text-white text-xs font-bold">{venue.rating}</span>
-            </div>
-            <div className="absolute bottom-4 left-4 z-20">
-                <div className="flex gap-2">
-                    {venue.sports.map((sport, i) => (
-                        <span key={i} className="px-2 py-1 bg-neon-blue/20 border border-neon-blue/30 text-neon-blue text-[10px] font-bold uppercase tracking-wider rounded-md">
-                            {sport}
-                        </span>
+const VenueCard = ({ venue, index, onBook }) => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    // Provide some fallback images to create a carousel effect if venue only has one image
+    const images = venue.images || [
+        venue.image,
+        footballImg,
+        cricketImg
+    ];
+
+    // Auto-play carousel
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % images.length);
+        }, 5000 + (index * 1000)); // stagger the intervals slightly so they don't all flip at the same time
+        return () => clearInterval(timer);
+    }, [images.length, index]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.15, duration: 0.6, ease: "easeOut" }}
+            className="group relative bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-neon-green/30 transition-all duration-300"
+        >
+            {/* Image Carousel Section */}
+            <div className="relative h-56 overflow-hidden bg-slate-950">
+                <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent transition-colors z-10 pointer-events-none" />
+                
+                <AnimatePresence>
+                    <motion.img
+                        key={currentImageIndex}
+                        src={images[currentImageIndex]}
+                        alt={venue.name}
+                        initial={{ opacity: 0, scale: 1.02 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.2, ease: "easeInOut" }}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                </AnimatePresence>
+
+                {/* Left/Right manual controls (Optional, but good for interactive feel) */}
+                <div className="absolute inset-0 z-20 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev - 1 + images.length) % images.length) }}
+                        className="p-1 rounded-full bg-black/40 text-white hover:bg-neon-green hover:text-black mt-4 backdrop-blur transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev + 1) % images.length) }}
+                        className="p-1 rounded-full bg-black/40 text-white hover:bg-neon-green hover:text-black mt-4 backdrop-blur transition-colors"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Rating & Distance Overlay (Frosted Glass) */}
+                <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+                    <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 shadow-lg flex items-center gap-1.5 transform hover:scale-105 transition-transform">
+                        <Star className="w-4 h-4 text-neon-yellow fill-current" />
+                        <span className="text-white text-sm font-black tracking-wide">{venue.rating}</span>
+                    </div>
+                </div>
+
+                <div className="absolute top-4 left-4 z-20 flex flex-col items-start gap-2">
+                    <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-1.5">
+                        <Navigation className="w-3.5 h-3.5 text-neon-blue" />
+                        <span className="text-white font-mono text-xs font-bold">{venue.distance || "2.5 km"}</span>
+                    </div>
+                </div>
+
+                <div className="absolute bottom-4 left-4 z-20">
+                    <div className="flex gap-2">
+                        {venue.sports.map((sport, i) => (
+                            <span key={i} className="px-2 py-1 bg-black/40 backdrop-blur border border-neon-blue/30 text-neon-blue text-[10px] font-bold uppercase tracking-wider rounded-md shadow-lg shadow-black/50">
+                                {sport}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Carousel Indicators */}
+                <div className="absolute bottom-4 right-4 z-20 flex gap-1">
+                    {images.map((_, i) => (
+                        <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'bg-neon-green w-3' : 'bg-white/50'}`} />
                     ))}
                 </div>
             </div>
-        </div>
 
-        {/* Content Section */}
-        <div className="p-6">
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-neon-green transition-colors">{venue.name}</h3>
-                    <div className="flex items-center gap-1 text-slate-400 text-sm">
-                        <MapPin className="w-3 h-3" />
-                        <span>{venue.location}</span>
+            {/* Content Section */}
+            <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-neon-green transition-colors">{venue.name}</h3>
+                        <div className="flex items-center gap-1 text-slate-400 text-sm">
+                            <MapPin className="w-3 h-3" />
+                            <span>{venue.location}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Amenities */}
-            <div className="flex flex-wrap gap-2 mb-6">
-                {venue.amenities.map((amenity, i) => (
-                    <span key={i} className="text-[10px] text-slate-500 bg-white/5 px-2 py-1 rounded-md border border-white/5">
-                        {amenity}
-                    </span>
-                ))}
-            </div>
-
-            {/* Price & Action */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                <div>
-                    <span className="text-slate-400 text-xs uppercase tracking-wider">Per Hour</span>
-                    <div className="flex items-center text-white font-bold text-lg">
-                        <IndianRupee className="w-4 h-4 text-neon-green" />
-                        {venue.price}
-                    </div>
+                {/* Amenities */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                    {venue.amenities.map((amenity, i) => (
+                        <span key={i} className="text-[10px] text-slate-500 bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                            {amenity}
+                        </span>
+                    ))}
                 </div>
-                <button
-                    onClick={() => onBook(venue.id)}
-                    className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-neon-green transition-colors flex items-center gap-2 group/btn"
-                >
-                    Book Now <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </button>
+
+                {/* Price & Action */}
+                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <div>
+                        <span className="text-slate-400 text-xs uppercase tracking-wider">Per Hour</span>
+                        <div className="flex items-center text-white font-bold text-lg">
+                            <IndianRupee className="w-4 h-4 text-neon-green" />
+                            {venue.price}
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => onBook(venue.id)}
+                        className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-neon-green transition-colors flex items-center gap-2 group/btn shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(57,255,20,0.3)]"
+                    >
+                        Book Now <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                </div>
             </div>
-        </div>
-    </motion.div>
-);
+        </motion.div>
+    );
+};
 
 export default function Venue() {
     const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [venues, setVenues] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const venues = [
-        {
-            id: 1,
-            name: "Mumbai Football Arena",
-            sports: ["Football"],
-            image: footballNight,
-            rating: 4.9,
-            location: "Andheri West, Mumbai",
-            price: "1200",
-            amenities: ["5v5", "Floodlights", "Showers", "Parking"]
-        },
-        {
-            id: 2,
-            name: "Bengaluru Sports Hub",
-            sports: ["Cricket", "Football", "Badminton"],
-            image: cricketImg,
-            rating: 4.7,
-            location: "Koramangala, Bengaluru",
-            price: "800",
-            amenities: ["Net Practice", "Bowling Machine", "Video Analysis"]
-        },
-        {
-            id: 3,
-            name: "Smash Badminton Club",
-            sports: ["Badminton"],
-            image: badmintonImg,
-            rating: 4.8,
-            location: "Vasant Kunj, Delhi",
-            price: "600",
-            amenities: ["Wooden Court", "AC", "Equipment Rental"]
-        },
-        {
-            id: 4,
-            name: "Marina Turf Grounds",
-            sports: ["Football", "Cricket"],
-            image: footballImg,
-            rating: 4.6,
-            location: "Marina Beach, Chennai",
-            price: "1000",
-            amenities: ["7v7", "Turf", "Changing Rooms"]
-        },
-        {
-            id: 5,
-            name: "Salt Lake Stadium Practice",
-            sports: ["Football"],
-            image: footballNight,
-            rating: 4.9,
-            location: "Salt Lake, Kolkata",
-            price: "1500",
-            amenities: ["5v5", "Night Vision", "Cafe", "Pro Shop"]
-        }
-    ];
+    useEffect(() => {
+        const fetchVenues = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/api/venues');
+                const data = await res.json();
+                if (data.success) {
+                    const mappedVenues = data.data.filter(v => v.status?.toUpperCase() === 'ACTIVE').map((v) => ({
+                        id: v._id,
+                        name: v.name,
+                        sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
+                        image: (v.images && v.images.length > 0) ? v.images[0] : (v.image || footballNight),
+                        images: (v.images && v.images.length > 0) ? v.images : [v.image || footballNight, footballImg, cricketImg],
+                        rating: v.rating || 4.5,
+                        distance: v.distance || "2.5 km",
+                        location: v.location,
+                        price: v.price,
+                        amenities: v.amenities && v.amenities.length > 0 ? v.amenities : ["Parking", "Washroom"]
+                    }));
+                    setVenues(mappedVenues);
+                }
+            } catch (err) {
+                console.error("Error fetching venues:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchVenues();
+    }, []);
 
     const filteredVenues = selectedCategory === 'All'
         ? venues
@@ -242,23 +283,32 @@ export default function Venue() {
                 </div>
 
                 {/* Venues Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredVenues.map((venue, index) => (
-                        <VenueCard
-                            key={venue.id}
-                            venue={venue}
-                            index={index}
-                            onBook={(id) => navigate(`/book/${id}`)}
-                        />
-                    ))}
-                </div>
-
-                {/* Empty State */}
-                {filteredVenues.length === 0 && (
+                {loading ? (
                     <div className="text-center py-20 text-slate-500">
-                        <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        <p>No venues found matching your criteria.</p>
+                        <div className="w-12 h-12 border-4 border-slate-700 border-t-neon-green rounded-full animate-spin mx-auto mb-4" />
+                        <p className="tracking-widest uppercase text-xs font-bold text-neon-green">Fetching Live Venues...</p>
                     </div>
+                ) : (
+                    <>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredVenues.map((venue, index) => (
+                                <VenueCard
+                                    key={venue.id}
+                                    venue={venue}
+                                    index={index}
+                                    onBook={(id) => navigate(`/book/${id}`)}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Empty State */}
+                        {filteredVenues.length === 0 && (
+                            <div className="text-center py-20 text-slate-500">
+                                <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                <p>No venues found matching your criteria.</p>
+                            </div>
+                        )}
+                    </>
                 )}
 
             </main>

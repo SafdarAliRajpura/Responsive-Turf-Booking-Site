@@ -1,68 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, IndianRupee, CheckCircle, XCircle, ArrowRight, History, PlayCircle } from 'lucide-react';
+import { Calendar, MapPin, IndianRupee, CheckCircle, ArrowRight, History, PlayCircle } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import { useNavigate } from 'react-router-dom';
 
-// Mock Data
-const bookingsData = [
-    {
-        id: 'BK-7829',
-        venue: 'Neon Sports Arena',
-        location: 'Andheri West, Mumbai',
-        date: '2024-11-20',
-        time: '18:00 - 19:00',
-        price: '1200',
-        status: 'Upcoming',
-        sport: 'Football',
-        image: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: 'BK-9932',
-        venue: 'Smash Badminton Court',
-        location: 'Vasant Kunj, Delhi',
-        date: '2024-11-25',
-        time: '07:00 - 08:00',
-        price: '600',
-        status: 'Upcoming',
-        sport: 'Badminton',
-        image: 'https://images.unsplash.com/photo-1626224583764-847890e058f5?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: 'BK-5541',
-        venue: 'Urban Cricket Box',
-        location: 'Koramangala, Bangalore',
-        date: '2024-10-15',
-        time: '20:00 - 21:00',
-        price: '1500',
-        status: 'Completed',
-        sport: 'Cricket',
-        image: 'https://images.unsplash.com/photo-1531415074968-0f5h42499697?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: 'BK-1120',
-        venue: 'Sky Tennis Academy',
-        location: 'Juhu, Mumbai',
-        date: '2024-09-28',
-        time: '06:00 - 08:00',
-        price: '2000',
-        status: 'Cancelled',
-        sport: 'Tennis',
-        image: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: 'BK-3321',
-        venue: 'Pro Swimming Complex',
-        location: 'Powai, Mumbai',
-        date: '2024-09-20',
-        time: '17:00 - 18:00',
-        price: '800',
-        status: 'Completed',
-        sport: 'Swimming',
-        image: 'https://images.unsplash.com/photo-1600965962102-9d260a71890d?auto=format&fit=crop&q=80&w=800'
-    }
-];
+const dummyImage = 'https://images.unsplash.com/photo-1552667466-07770ae110d0?auto=format&fit=crop&q=80&w=800';
 
 const ReceiptModal = ({ booking, onClose }) => {
     return (
@@ -145,9 +88,12 @@ const ReceiptModal = ({ booking, onClose }) => {
 
 const BookingCard = ({ booking, onViewReceipt }) => {
     const statusColors = {
+        'Pending': 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
         'Upcoming': 'bg-neon-blue/20 text-neon-blue border-neon-blue/30',
+        'Confirmed': 'bg-neon-green/20 text-neon-green border-neon-green/30',
         'Completed': 'bg-neon-green/20 text-neon-green border-neon-green/30',
-        'Cancelled': 'bg-red-500/20 text-red-500 border-red-500/30'
+        'Cancelled': 'bg-red-500/20 text-red-500 border-red-500/30',
+        'Rejected': 'bg-red-500/20 text-red-500 border-red-500/30'
     };
 
     return (
@@ -244,11 +190,43 @@ const BookingCard = ({ booking, onViewReceipt }) => {
 export default function MyBookings() {
     const [activeTab, setActiveTab] = useState('upcoming');
     const [selectedBooking, setSelectedBooking] = useState(null);
+    const [bookingsData, setBookingsData] = useState([]);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const fetchBookings = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/api/bookings');
+                const data = await res.json();
+                if (data.success) {
+                    const mapped = data.data.map(b => ({
+                        id: b._id,
+                        venue: b.turfName,
+                        location: 'Location Unavailable', // Or fetch venue details
+                        date: b.date,
+                        time: b.timeSlot,
+                        price: b.price,
+                        status: b.status,
+                        sport: b.sport,
+                        image: dummyImage
+                    }));
+                    setBookingsData(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to load user bookings:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBookings();
+    }, []);
+
     const filteredBookings = bookingsData.filter(booking => {
-        if (activeTab === 'upcoming') return booking.status === 'Upcoming';
-        if (activeTab === 'history') return booking.status !== 'Upcoming';
+        // Pending, Confirmed go to Upcoming. Cancelled, Rejected, Completed go to History
+        const isUpcoming = ['Upcoming', 'Pending', 'Confirmed'].includes(booking.status);
+        if (activeTab === 'upcoming') return isUpcoming;
+        if (activeTab === 'history') return !isUpcoming;
         return true;
     });
 
@@ -317,7 +295,10 @@ export default function MyBookings() {
 
                     {/* Bookings List */}
                     <div className="space-y-6">
-                        <AnimatePresence mode="popLayout">
+                        {loading ? (
+                            <div className="text-center py-20 text-neon-green font-bold">Loading your active bookings...</div>
+                        ) : (
+                            <AnimatePresence mode="popLayout">
                             {filteredBookings.length > 0 ? (
                                 filteredBookings.map((booking) => (
                                     <BookingCard
@@ -348,6 +329,7 @@ export default function MyBookings() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                        )}
                     </div>
 
                 </div>

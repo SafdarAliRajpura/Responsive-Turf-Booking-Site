@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { Share2, Download } from 'lucide-react';
+import { Share2, Download, FileText, Loader2, CheckCircle } from 'lucide-react';
 
 const data = [
     { name: 'Mon', revenue: 4000, bookings: 24 },
@@ -33,6 +33,21 @@ const StatCard = ({ title, value, change, isGood }) => (
 );
 
 export default function Analytics() {
+    const [isGenerating, setIsGenerating] = React.useState(false);
+    const [isGenerated, setIsGenerated] = React.useState(false);
+
+    const handleGenerateInvoice = () => {
+        setIsGenerating(true);
+        setIsGenerated(false);
+        // Simulate PDF generation and download
+        setTimeout(() => {
+            setIsGenerating(false);
+            setIsGenerated(true);
+            // reset state after 3s
+            setTimeout(() => setIsGenerated(false), 3000);
+        }, 2000);
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -44,8 +59,20 @@ export default function Analytics() {
                     <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-white/10 rounded-xl text-slate-300 hover:text-white hover:border-white/20 text-sm font-bold transition-colors">
                         <Share2 className="w-4 h-4" /> Share
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-neon-purple text-white rounded-xl font-bold hover:bg-fuchsia-600 transition-colors shadow-lg shadow-neon-purple/20 text-sm">
-                        <Download className="w-4 h-4" /> Export Report
+                    <button 
+                        onClick={handleGenerateInvoice}
+                        disabled={isGenerating}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all shadow-lg text-sm relative overflow-hidden ${
+                            isGenerated ? 'bg-emerald-500 text-black shadow-emerald-500/20' : 'bg-neon-purple text-white hover:bg-fuchsia-600 shadow-neon-purple/20'
+                        }`}
+                    >
+                        {isGenerating ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                        ) : isGenerated ? (
+                            <><CheckCircle className="w-4 h-4" /> Invoice Ready!</>
+                        ) : (
+                            <><FileText className="w-4 h-4" /> Auto Invoice</>
+                        )}
                     </button>
                 </div>
             </div>
