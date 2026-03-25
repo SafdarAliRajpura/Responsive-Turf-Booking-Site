@@ -54,10 +54,16 @@ export default function PartnerLogin() {
                         return;
                     }
 
-                    localStorage.setItem('turf_user', JSON.stringify(result.data));
-                    setToast({ message: 'Login Successful! Welcome back, Partner.', type: 'success' });
+                    localStorage.setItem('token', result.data.token);
+                    localStorage.setItem('user', JSON.stringify(result.data));
+                    localStorage.setItem('turf_user', JSON.stringify(result.data)); // Keep for backward compatibility if any
+                    setToast({ message: 'Login Successful! Welcome back.', type: 'success' });
                     setTimeout(() => {
-                        navigate('/partner/dashboard');
+                        if (result.data.role === 'admin') {
+                            navigate('/admin');
+                        } else {
+                            navigate('/partner/dashboard');
+                        }
                     }, 1000);
                 } else {
                     setToast({ message: result.message || 'Invalid Credentials', type: 'error' });

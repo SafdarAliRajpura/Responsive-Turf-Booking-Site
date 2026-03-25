@@ -1,5 +1,5 @@
 // src/App.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Onboarding from './features/onboarding/Onboarding';
 import Login from './features/auth/Login';
@@ -33,13 +33,38 @@ import AdminVenues from './features/admin/pages/Venues';
 import AdminTournaments from './features/admin/pages/Tournaments';
 import AdminBookings from './features/admin/pages/Bookings';
 
+// Role Guard for Restricted User Interface Access
+const PublicUserGuard = ({ children }) => {
+  const navigate = useNavigate();
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+  
+  useEffect(() => {
+    if (user) {
+      if (user.role.toLowerCase() === 'admin') {
+        navigate('/admin');
+      } else if (user.role.toLowerCase() === 'partner') {
+        navigate('/partner/dashboard');
+      }
+    }
+  }, [user, navigate]);
+
+  return children;
+};
+
 function App() {
   const navigate = useNavigate();
 
   return (
     <Routes>
       <Route path="/" element={<Onboarding onComplete={() => navigate('/login')} />} />
-      <Route path="/login" element={<Login onLogin={() => navigate('/home')} onRegisterClick={() => navigate('/register')} />} />
+      <Route path="/login" element={<Login onLogin={(user) => {
+        if (user && user.role && user.role.toLowerCase() === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/home');
+        }
+      }} onRegisterClick={() => navigate('/register')} />} />
       <Route path="/register" element={<Register onRegister={() => navigate('/home')} onLoginClick={() => navigate('/login')} />} />
 
       {/* Partner Routes */}
@@ -54,18 +79,19 @@ function App() {
         <Route path="settings" element={<PartnerSettings />} />
       </Route>
 
-      <Route path="/home" element={<Home />} />
-      <Route path="/venues" element={<Venue />} />
-      <Route path="/tournaments" element={<Tournament />} />
-      <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
-      <Route path="/bookings" element={<MyBookings />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/help-center" element={<HelpCenter />} />
-      <Route path="/terms" element={<TermsOfService />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/community" element={<Community />} />
-      <Route path="/book/:id" element={<Booking />} />
-      <Route path="/profile" element={<Profile />} />
+      {/* Protected User UI Routes - Blocked for Admins/Partners */}
+      <Route path="/home" element={<PublicUserGuard><Home /></PublicUserGuard>} />
+      <Route path="/venues" element={<PublicUserGuard><Venue /></PublicUserGuard>} />
+      <Route path="/tournaments" element={<PublicUserGuard><Tournament /></PublicUserGuard>} />
+      <Route path="/tournaments/:id/register" element={<PublicUserGuard><TournamentRegistration /></PublicUserGuard>} />
+      <Route path="/bookings" element={<PublicUserGuard><MyBookings /></PublicUserGuard>} />
+      <Route path="/contact" element={<PublicUserGuard><Contact /></PublicUserGuard>} />
+      <Route path="/help-center" element={<PublicUserGuard><HelpCenter /></PublicUserGuard>} />
+      <Route path="/terms" element={<PublicUserGuard><TermsOfService /></PublicUserGuard>} />
+      <Route path="/privacy" element={<PublicUserGuard><PrivacyPolicy /></PublicUserGuard>} />
+      <Route path="/community" element={<PublicUserGuard><Community /></PublicUserGuard>} />
+      <Route path="/book/:id" element={<PublicUserGuard><Booking /></PublicUserGuard>} />
+      <Route path="/profile" element={<PublicUserGuard><Profile /></PublicUserGuard>} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>

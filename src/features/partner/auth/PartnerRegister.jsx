@@ -53,8 +53,7 @@ export default function PartnerRegister() {
                     phone: data.phone,
                     password: data.password,
                     role: 'partner',
-                    // Assuming profilePic upload logic is handled elsewhere or mapped to a base64 string
-                    // user_profile: base64Image
+                    user_profile: data.profilePic
                 };
 
                 const response = await fetch('http://localhost:5000/api/auth/register', {
@@ -67,6 +66,11 @@ export default function PartnerRegister() {
 
                 if (response.ok && result.success) {
                     setToast({ message: 'Application Submitted! Welcome aboard.', type: 'success' });
+                    // Store token automatically if registration logs them in natively (backend returns token)
+                    if(result.data && result.data.token) {
+                        localStorage.setItem('token', result.data.token);
+                        localStorage.setItem('user', JSON.stringify(result.data));
+                    }
                     setTimeout(() => navigate('/partner/login'), 1500);
                 } else {
                     handleError(result.message || 'Registration failed');

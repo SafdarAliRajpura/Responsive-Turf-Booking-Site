@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Zap, Menu, Bell } from 'lucide-react';
+import { Zap, Menu, Bell, LogOut, LayoutDashboard, User as UserIcon } from 'lucide-react';
 import userAvatarImg from '../../assets/images/common/user-avatar.jpg';
 
 const Header = () => {
@@ -69,22 +69,55 @@ const Header = () => {
                         <Bell className="w-5 h-5" />
                         <span className="absolute top-2 right-2 w-2 h-2 bg-neon-pink rounded-full animate-pulse" />
                     </button>
-                    <button
-                        onClick={() => navigate('/profile')}
-                        className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px] transition-transform hover:scale-105 group relative"
-                    >
-                        <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
-                            <img
-                                src={userProfilePic}
-                                alt="User"
-                                className="w-full h-full object-cover bg-white"
-                            />
+                    <div className="group relative">
+                        <button
+                            className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px] transition-transform hover:scale-105"
+                        >
+                            <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
+                                <img
+                                    src={userProfilePic}
+                                    alt="User"
+                                    className="w-full h-full object-cover bg-white"
+                                />
+                            </div>
+                        </button>
+                        
+                        {/* Dropdown Menu */}
+                        <div className="absolute right-0 top-12 w-48 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
+                            <div className="p-4 border-b border-white/5 bg-white/5">
+                                <p className="text-sm font-bold text-white truncate">{user ? `${user.first_name} ${user.last_name}` : 'Guest User'}</p>
+                                <p className="text-[10px] text-neon-green uppercase font-black tracking-widest mt-1">{user?.role || 'Visitor'}</p>
+                            </div>
+                            <div className="p-2 space-y-1">
+                                {user && (
+                                    <>
+                                        <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                                            <UserIcon className="w-4 h-4" /> Profile
+                                        </button>
+                                        {(user.role === 'partner' || user.role === 'admin') && (
+                                            <button onClick={() => navigate(user.role === 'admin' ? '/admin' : '/partner/dashboard')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neon-blue hover:text-white hover:bg-neon-blue/10 rounded-xl transition-colors">
+                                                <LayoutDashboard className="w-4 h-4" /> Dashboard
+                                            </button>
+                                        )}
+                                        <button 
+                                            onClick={() => {
+                                                localStorage.clear();
+                                                window.location.href = '/home';
+                                            }}
+                                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-white hover:bg-red-500/10 rounded-xl transition-colors"
+                                        >
+                                            <LogOut className="w-4 h-4" /> Logout
+                                        </button>
+                                    </>
+                                )}
+                                {!user && (
+                                    <button onClick={() => navigate('/login')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neon-green hover:text-white hover:bg-neon-green/10 rounded-xl transition-colors">
+                                        <LogOut className="w-4 h-4" /> Login
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        {/* Simple tooltip for desktop */}
-                        <div className="absolute top-12 right-0 bg-slate-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-50">
-                            {user ? `${user.first_name} ${user.last_name}` : 'Profile'}
-                        </div>
-                    </button>
+                    </div>
                     <button className="md:hidden text-white">
                         <Menu className="w-6 h-6" />
                     </button>

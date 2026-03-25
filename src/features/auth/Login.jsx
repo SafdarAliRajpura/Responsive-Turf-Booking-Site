@@ -58,7 +58,7 @@ export default function Login({ onLogin, onRegisterClick }) {
                         localStorage.setItem('user', JSON.stringify(result.data));
                     }
                     setTimeout(() => {
-                        onLogin();
+                        onLogin(result.data);
                     }, 1000);
                 } else {
                     setToast({ message: result.message || 'Invalid credentials', type: 'error' });

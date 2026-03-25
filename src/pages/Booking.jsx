@@ -50,6 +50,7 @@ export default function Booking() {
                         price: 1000,
                         sports: ["Football"],
                         rating: "4.9",
+                        slots: ["06:00 AM", "07:00 AM", "08:00 PM"],
                         courts: { "Football": ["Turf A (5v5)", "Turf B (7v7)"] }
                     });
                     setLoadingVenue(false);
@@ -61,17 +62,31 @@ export default function Booking() {
                 
                 if (data.success && data.data) {
                     const v = data.data;
+                    
+                    let parsedCourts = {};
+                    if (v.courts && v.courts.length > 0) {
+                        v.courts.forEach(c => {
+                            // Safely extract the primary sport name (e.g. Football from "Football (5v5)")
+                            const sportName = c.category ? c.category.split(' ')[0] : 'Football';
+                            if (!parsedCourts[sportName]) parsedCourts[sportName] = [];
+                            parsedCourts[sportName].push(`${c.name} (${c.category}) - ₹${c.price}/hr`);
+                        });
+                    } else {
+                        // Fallback purely for legacy turfs without courts array
+                        parsedCourts = {
+                            "Football": ["Turf A (5v5) - ₹1200/hr", "Turf B (7v7) - ₹1500/hr"],
+                            "Cricket": ["Net 1 (Pace) - ₹800/hr"]
+                        };
+                    }
+
                     const mappedVenue = {
                         name: v.name,
                         location: v.location,
                         price: v.price,
                         sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
                         rating: v.rating || 4.5,
-                        courts: {
-                            "Football": ["Turf A (5v5)", "Turf B (7v7)", "Turf C (Pro)"],
-                            "Cricket": ["Net 1 (Pace)", "Net 2 (Spin)", "Net 3 (Match)"],
-                            "Badminton": ["Court 1 (Wooden)", "Court 2 (Synthetic)"]
-                        }
+                        slots: v.slots || [],
+                        courts: parsedCourts
                     };
                     setVenue(mappedVenue);
                     setSelectedSport(mappedVenue.sports[0]); // auto-select first sport
@@ -119,7 +134,7 @@ export default function Booking() {
         fetchReviews();
     }, [venue, id]);
 
-    const times = [
+    const times = venue?.slots && venue.slots.length > 0 ? venue.slots : [
         "06:00 AM", "07:00 AM", "08:00 AM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM"
     ];
 
@@ -145,12 +160,18 @@ export default function Booking() {
         if (cartItem) {
             setCartItem(null); // Remove
         } else {
+            let courtHourlyPrice = venue.price;
+            if (selectedCourt && selectedCourt.includes('₹')) {
+                const match = selectedCourt.match(/₹(\d+)\/hr/);
+                if (match) courtHourlyPrice = Math.round(Number(match[1]));
+            }
+            
             setCartItem({
                 turfName: venue.name,
                 sport: selectedSport,
                 date: new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-                timeSlot: `${selectedTime} (${selectedCourt}) - ${Math.floor(duration / 60)}h ${duration % 60 > 0 ? (duration % 60) + 'm' : ''}`,
-                price: (venue.price * (duration / 60)),
+                timeSlot: `${selectedTime} (${selectedCourt}) - 1h`,
+                price: courtHourlyPrice,
                 status: 'pending'
             });
         }
@@ -164,7 +185,10 @@ export default function Booking() {
         try {
             const res = await fetch('http://localhost:5000/api/bookings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify(cartItem)
             });
             const data = await res.json();
@@ -182,12 +206,24 @@ export default function Booking() {
         if (!newReview.comment.trim()) return;
         setSubmittingReview(true);
         try {
+            let realUserName = 'Guest';
+            try {
+                const lsUser = localStorage.getItem('user');
+                if (lsUser) {
+                    const parsed = JSON.parse(lsUser);
+                    realUserName = parsed.name || parsed.user?.name || parsed.email?.split('@')[0] || 'Turf Enthusiast';
+                }
+            } catch(e) {}
+
             const res = await fetch('http://localhost:5000/api/reviews', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify({
                     venueId: id,
-                    user: 'Awesome User', // Default dummy user for MVP since no hard auth
+                    user: realUserName,
                     rating: newReview.rating,
                     comment: newReview.comment
                 })
@@ -472,28 +508,6 @@ export default function Booking() {
                                             </button>
                                         );
                                     })}
-                                </div>
-                            </div>
-
-                            {/* Duration Selector */}
-                            <div className="grid md:grid-cols-4 items-center gap-4">
-                                <label className="text-slate-400 font-bold uppercase tracking-wider text-xs md:text-right">Duration</label>
-                                <div className="md:col-span-3 flex items-center gap-4">
-                                    <button
-                                        onClick={() => handleDurationChange(-30)}
-                                        className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors"
-                                    >
-                                        <Minus className="w-4 h-4" />
-                                    </button>
-                                    <div className="text-xl font-bold text-white w-32 text-center">
-                                        {Math.floor(duration / 60)}h {duration % 60 > 0 && `${duration % 60}m`}
-                                    </div>
-                                    <button
-                                        onClick={() => handleDurationChange(30)}
-                                        className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-white hover:bg-neon-green hover:text-black hover:border-neon-green transition-colors"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                    </button>
                                 </div>
                             </div>
 

@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MoreVertical, Shield, User, Ban, CheckCircle, Building2 } from 'lucide-react';
 import userAvatar from '../../../assets/images/common/user-avatar.jpg';
+import Toast from '../../../components/ui/Toast';
 
 export default function Users() {
+    const [toast, setToast] = useState({ message: null, type: 'info' });
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('User'); // 'User' or 'Partner'
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,22 +28,31 @@ export default function Users() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/users');
+                const response = await fetch('http://localhost:5000/api/users', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
                 const data = await response.json();
                 if (data.success) {
-                    setUsers(data.data.map(user => ({
+                    const filteredData = data.data.filter(u => u.role !== 'admin');
+                    setUsers(filteredData.map(user => ({
                         id: user._id,
                         name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown User',
                         email: user.email,
                         profile: user.user_profile || null,
-                        role: user.role === 'admin' ? 'Admin' : (user.role === 'partner' ? 'Partner' : 'User'),
-                        status: user.isBanned ? 'Banned' : 'Active', // Dynamically mapping to Banned if true
+                        role: user.role === 'partner' ? 'Partner' : 'User',
+                        status: user.isBanned ? 'Banned' : 'Active',
                         joined: new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
                         mobileNumber: user.mobileNumber || 'N/A'
                     })));
+                } else {
+                    console.warn("Fetch failed:", data.message);
+                    setToast({ message: data.message || "Unauthorized access.", type: 'error' });
                 }
             } catch (error) {
                 console.error("Error fetching users:", error);
+                setToast({ message: "Network error or Server issue", type: 'error' });
             } finally {
                 setLoading(false);
             }
@@ -53,6 +65,9 @@ export default function Users() {
         try {
             const response = await fetch(`http://localhost:5000/api/users/${userId}/ban`, {
                 method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
             });
             const data = await response.json();
             if (data.success) {
@@ -60,11 +75,11 @@ export default function Users() {
                     u.id === userId ? { ...u, status: data.data.isBanned ? 'Banned' : 'Active' } : u
                 ));
             } else {
-                alert(data.message || 'Failed to toggle ban status');
+                setToast({ message: data.message || 'Failed to toggle ban status', type: 'error' });
             }
         } catch (error) {
             console.error('Error toggling ban status:', error);
-            alert('Something went wrong!');
+            setToast({ message: 'Something went wrong!', type: 'error' });
         }
         setActiveDropdown(null);
         setBanConfirmation(null);
@@ -81,11 +96,22 @@ export default function Users() {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-black text-white">USER MANAGEMENT</h1>
-                    <p className="text-slate-400">Manage user access and roles.</p>
+                    <p className="text-slate-400 font-medium">Manage access for your sports community.</p>
                 </div>
-                <button className="px-4 py-2 bg-neon-green text-black font-bold rounded-xl hover:bg-white transition-colors">
-                    + Add New User
-                </button>
+                <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
+                    <button 
+                        onClick={() => setFilter('User')}
+                        className={`px-6 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all ${filter === 'User' ? 'bg-neon-green text-black shadow-lg shadow-neon-green/20' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        <User className="w-4 h-4" /> Regular Users
+                    </button>
+                    <button 
+                        onClick={() => setFilter('Partner')}
+                        className={`px-6 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all ${filter === 'Partner' ? 'bg-neon-blue text-black shadow-lg shadow-neon-blue/20' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        <Building2 className="w-4 h-4" /> Business Partners
+                    </button>
+                </div>
             </div>
 
             {/* Filters */}
@@ -94,15 +120,10 @@ export default function Users() {
                     <Search className="w-5 h-5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                         type="text"
-                        placeholder="Search users..."
+                        placeholder={`Search ${filter}s...`}
                         className="w-full bg-slate-950 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white focus:border-neon-green/50 focus:outline-none"
                     />
                 </div>
-                <select className="bg-slate-950 border border-white/10 rounded-xl px-4 py-2 text-slate-300 focus:outline-none">
-                    <option>All Roles</option>
-                    <option>Admin</option>
-                    <option>User</option>
-                </select>
                 <select className="bg-slate-950 border border-white/10 rounded-xl px-4 py-2 text-slate-300 focus:outline-none">
                     <option>All Status</option>
                     <option>Active</option>
@@ -123,7 +144,7 @@ export default function Users() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {users.map((user, index) => (
+                        {users.filter(u => u.role === filter).map((user, index) => (
                             <motion.tr
                                 key={user.id}
                                 initial={{ opacity: 0, y: 10 }}
@@ -132,13 +153,19 @@ export default function Users() {
                                 className="hover:bg-white/5 transition-colors"
                             >
                                 <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 overflow-hidden">
-                                            <img src={user.profile || userAvatar} alt="" className="w-full h-full object-cover bg-white" />
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 overflow-hidden border border-white/10 p-[1.5px] ${filter === 'Partner' ? 'rounded-2xl transition-all duration-300' : 'rounded-full'}`}>
+                                            <div className="w-full h-full overflow-hidden rounded-[inherit] bg-white">
+                                                <img 
+                                                    src={user.profile || userAvatar} 
+                                                    alt="" 
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                                />
+                                            </div>
                                         </div>
                                         <div>
-                                            <p className="font-bold text-white text-sm">{user.name}</p>
-                                            <p className="text-xs text-slate-500">{user.email}</p>
+                                            <p className="font-black text-white text-sm tracking-tight uppercase italic">{user.name}</p>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{user.email}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -236,10 +263,12 @@ export default function Users() {
                         </div>
                         
                         <div className="p-8 flex flex-col items-center">
-                            <div className="w-32 h-32 rounded-full border-4 border-slate-800 shadow-xl overflow-hidden mb-6 relative group">
-                                <img src={selectedUser.profile || userAvatar} alt="Profile" className="w-full h-full object-cover bg-white" />
+                            <div className={`w-32 h-32 border-4 border-slate-800 shadow-2xl overflow-hidden mb-6 relative group ${selectedUser.role === 'Partner' ? 'rounded-[2rem]' : 'rounded-full'}`}>
+                                <div className="w-full h-full overflow-hidden bg-white">
+                                    <img src={selectedUser.profile || userAvatar} alt="Profile" className="w-full h-full object-cover" />
+                                </div>
                                 <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center transition-all cursor-pointer">
-                                    <span className="text-xs text-white uppercase font-bold tracking-wider">View</span>
+                                    <span className="text-xs text-white uppercase font-bold tracking-wider">View Full</span>
                                 </div>
                             </div>
                             
@@ -360,6 +389,11 @@ export default function Users() {
                 )}
             </AnimatePresence>
 
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, message: null })}
+            />
         </div>
     );
 }

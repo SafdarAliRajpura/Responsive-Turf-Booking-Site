@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Trophy, User, Mail, Phone,
     ArrowLeft, CheckCircle, Plus, Trash2, IndianRupee
@@ -33,25 +33,47 @@ const InputField = ({ icon: Icon, label, value, onChange, placeholder, type = "t
 );
 
 export default function TournamentRegistration() {
-    // const { id } = useParams(); // ID would be used for API fetch
+    const { id } = useParams();
     const navigate = useNavigate();
     const [toast, setToast] = useState({ message: null, type: 'info' });
+    const [loading, setLoading] = useState(true);
 
-    // Mock Tournament Data (would be fetched)
-    const tournament = {
-        name: "Mumbai Corporate Cup 2024",
-        fee: 4000,
+    const [tournament, setTournament] = useState({
+        name: "Loading...",
+        fee: 0,
         minPlayers: 5,
-        maxPlayers: 8
-    };
+        maxPlayers: 11
+    });
 
     const [formData, setFormData] = useState({
         teamName: '',
         captainName: '',
         email: '',
         phone: '',
-        players: ['', '', '', '', ''] // Start with min 5 players
+        players: ['', '', '', '', ''] 
     });
+
+    useEffect(() => {
+        const fetchTournament = async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/tournaments/${id}`);
+                const data = await res.json();
+                if (data.success) {
+                    setTournament({
+                        name: data.data.name,
+                        fee: data.data.entryFee,
+                        minPlayers: data.data.format.includes('5v5') ? 5 : (data.data.format.includes('7v7') ? 7 : 11),
+                        maxPlayers: data.data.format.includes('5v5') ? 8 : (data.data.format.includes('7v7') ? 10 : 15)
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching tournament:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTournament();
+    }, [id]);
 
     const [focused, setFocused] = useState(null);
 
@@ -78,10 +100,9 @@ export default function TournamentRegistration() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Basic Validation
         if (!formData.teamName || !formData.captainName || !formData.email || !formData.phone) {
             setToast({ message: "Please fill in all team details.", type: 'error' });
             return;
@@ -92,12 +113,35 @@ export default function TournamentRegistration() {
             return;
         }
 
-        console.log("Registration Submitted:", formData);
-        setToast({ message: "Registration Successful! See you on the field.", type: 'success' });
+        try {
+            const response = await fetch(`http://localhost:5000/api/tournaments/${id}/register`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    teamName: formData.teamName,
+                    captainName: formData.captainName,
+                    email: formData.email,
+                    contactNumber: formData.phone,
+                    players: formData.players
+                })
+            });
 
-        setTimeout(() => {
-            navigate('/tournaments');
-        }, 1500);
+            const result = await response.json();
+            if (result.success) {
+                setToast({ message: "Registration Successful! See you on the field.", type: 'success' });
+                setTimeout(() => {
+                    navigate('/tournaments');
+                }, 1500);
+            } else {
+                setToast({ message: result.message || "Registration failed", type: 'error' });
+            }
+        } catch (error) {
+            console.error("Registration error:", error);
+            setToast({ message: "Failed to connect to server", type: 'error' });
+        }
     };
 
     return (

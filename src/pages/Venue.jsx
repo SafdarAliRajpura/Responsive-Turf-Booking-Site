@@ -133,6 +133,19 @@ const VenueCard = ({ venue, index, onBook }) => {
                     </div>
                 </div>
 
+                {/* Partner Identity Card (Small Version for Users) */}
+                {venue.owner && (
+                    <div className="flex items-center gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-white/5">
+                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shrink-0">
+                             <img src={venue.owner.avatar || 'https://api.dicebear.com/7.x/micah/svg?seed=Safdar'} alt="Partner" className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-neon-blue uppercase tracking-widest leading-none mb-1">Partner</p>
+                            <p className="text-sm font-black text-white italic lowercase tracking-tight">{venue.owner.name}</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Amenities */}
                 <div className="flex flex-wrap gap-2 mb-6">
                     {venue.amenities.map((amenity, i) => (
@@ -175,7 +188,7 @@ export default function Venue() {
                 const res = await fetch('http://localhost:5000/api/venues');
                 const data = await res.json();
                 if (data.success) {
-                    const mappedVenues = data.data.filter(v => v.status?.toUpperCase() === 'ACTIVE').map((v) => ({
+                    const mappedVenues = data.data.filter(v => !v.status || v.status.toUpperCase() === 'ACTIVE').map((v) => ({
                         id: v._id,
                         name: v.name,
                         sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
@@ -185,7 +198,11 @@ export default function Venue() {
                         distance: v.distance || "2.5 km",
                         location: v.location,
                         price: v.price,
-                        amenities: v.amenities && v.amenities.length > 0 ? v.amenities : ["Parking", "Washroom"]
+                        amenities: v.amenities && v.amenities.length > 0 ? v.amenities : ["Parking", "Washroom"],
+                        owner: v.owner ? {
+                             name: `${v.owner.first_name} ${v.owner.last_name}`,
+                             avatar: v.owner.user_profile
+                        } : null
                     }));
                     setVenues(mappedVenues);
                 }

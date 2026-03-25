@@ -69,12 +69,28 @@ const BookingRow = ({ id, turf, customer, time, status, amount }) => (
 );
 
 export default function Dashboard() {
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+
     return (
         <div className="space-y-8">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-black text-white mb-2">DASHBOARD</h1>
-                <p className="text-slate-400">Overview of your business performance.</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-black text-white mb-1 uppercase tracking-tight">
+                        Welcome, <span className="text-neon-purple">{user?.first_name || 'Partner'}</span>
+                    </h1>
+                    <p className="text-slate-400">Overview of your business performance.</p>
+                </div>
+                <div className="hidden md:flex items-center gap-4 bg-slate-900/50 p-2 pr-6 rounded-2xl border border-white/5">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 bg-white">
+                         <img src={user?.user_profile || 'https://api.dicebear.com/7.x/micah/svg?seed=42'} alt="Avatar" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-white leading-tight">{user?.first_name} {user?.last_name}</p>
+                        <p className="text-[10px] text-neon-purple font-black tracking-widest uppercase">Verified Partner</p>
+                    </div>
+                </div>
             </div>
 
             {/* Stats Grid */}

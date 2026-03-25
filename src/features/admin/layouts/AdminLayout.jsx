@@ -31,6 +31,18 @@ export default function AdminLayout() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    React.useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            navigate('/login');
+            return;
+        }
+        const user = JSON.parse(userStr);
+        if (user.role && user.role.toLowerCase() !== 'admin') {
+            navigate('/home'); // Redirect to home if NOT admin
+        }
+    }, [navigate]);
+
     const sidebarItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
         { icon: Users, label: 'Users', path: '/admin/users' },
@@ -78,17 +90,25 @@ export default function AdminLayout() {
 
                 <div className="mt-auto p-6 border-t border-white/5">
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => {
+                            localStorage.removeItem('user');
+                            localStorage.removeItem('token');
+                            navigate('/login');
+                        }}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut className="w-5 h-5" />
-                        <span className="font-bold text-sm">Exit Admin</span>
+                        <span className="font-bold text-sm">Logout Admin</span>
                     </button>
 
                     <div className="mt-6 flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-white/5">
-                        <img src={userAvatarImg} alt="Admin" className="w-10 h-10 rounded-lg border border-white/10" />
-                        <div>
-                            <p className="text-sm font-bold text-white">Admin User</p>
+                        <img 
+                            src={JSON.parse(localStorage.getItem('user'))?.user_profile || userAvatarImg} 
+                            alt="Admin" 
+                            className="w-10 h-10 rounded-lg border border-white/10 bg-white" 
+                        />
+                        <div className="overflow-hidden">
+                            <p className="text-sm font-bold text-white truncate">{JSON.parse(localStorage.getItem('user'))?.first_name || 'Admin'}</p>
                             <p className="text-[10px] text-slate-500 uppercase tracking-wider">Super Admin</p>
                         </div>
                     </div>

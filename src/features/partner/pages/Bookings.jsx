@@ -26,7 +26,11 @@ export default function Bookings() {
     useEffect(() => {
         const fetchBookings = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/bookings');
+                const res = await fetch('http://localhost:5000/api/bookings', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
                 const data = await res.json();
                 if (data.success) {
                     const mapped = data.data.map(b => ({
@@ -57,7 +61,10 @@ export default function Bookings() {
         try {
             const res = await fetch(`http://localhost:5000/api/bookings/${id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify({ status: newStatus })
             });
             const data = await res.json();

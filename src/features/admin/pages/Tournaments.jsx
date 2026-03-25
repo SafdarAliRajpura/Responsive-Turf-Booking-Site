@@ -1,14 +1,38 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Calendar, Plus, MoreVertical } from 'lucide-react';
 import trophyImg from '../../../assets/images/home/cricket.jpg';
 
 export default function Tournaments() {
-    const [tournaments] = useState([
-        { id: 1, name: "Mumbai Corporate Cup", status: "Open", filled: 12, total: 16, prize: "50,000", date: "Aug 15" },
-        { id: 2, name: "Pro Cricket League", status: "Filling Fast", filled: 8, total: 20, prize: "1,00,000", date: "Sept 01" },
-        { id: 3, name: "Monsoon Football Blast", status: "Closed", filled: 16, total: 16, prize: "30,000", date: "July 20" },
-    ]);
+    const [tournaments, setTournaments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchTournaments = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/tournaments');
+            const data = await res.json();
+            if (data.success) {
+                const mapped = data.data.map(t => ({
+                    id: t._id,
+                    name: t.name,
+                    status: t.status,
+                    filled: t.registeredTeams || 0,
+                    total: t.totalSlots,
+                    prize: t.prizePool,
+                    date: t.date 
+                }));
+                setTournaments(mapped);
+            }
+        } catch (err) {
+            console.error("Error fetching admin tournaments:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTournaments();
+    }, []);
 
     return (
         <div className="space-y-6">

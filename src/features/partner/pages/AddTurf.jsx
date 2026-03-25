@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     MapPin, Upload, DollarSign, Layout,
     Type, CheckCircle, Image as ImageIcon,
-    Dumbbell, Wifi, Car, Coffee, Info, ArrowLeft
+    Dumbbell, Wifi, Car, Coffee, Info, ArrowLeft, Clock, Trash2, Plus
 } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
 
@@ -38,17 +38,32 @@ export default function AddTurf() {
     const [formData, setFormData] = useState({
         turfName: '',
         description: '',
-        category: 'Football (5v5)',
-        hourlyRate: '',
         address: '',
         city: '',
         pincode: ''
     });
 
+    const [courts, setCourts] = useState([]);
+
     const [amenities, setAmenities] = useState([]);
+    const [selectedSlots, setSelectedSlots] = useState([]);
     const [dragActive, setDragActive] = useState(false);
     const [files, setFiles] = useState([]);
     const fileInputRef = useRef(null);
+
+    const availableTimeSlots = [
+        "06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM",
+        "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM",
+        "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM", "10:00 PM", "11:00 PM", "12:00 AM"
+    ];
+
+    const toggleSlot = (slot) => {
+        if (selectedSlots.includes(slot)) {
+            setSelectedSlots(selectedSlots.filter(s => s !== slot));
+        } else {
+            setSelectedSlots([...selectedSlots, slot]);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -106,8 +121,11 @@ export default function AddTurf() {
         if (!formData.description.trim()) return "Description is required.";
         if (formData.description.trim().length < 10) return "Description must be at least 10 characters.";
 
-        if (!formData.hourlyRate) return "Hourly Rate is required.";
-        if (Number(formData.hourlyRate) <= 0) return "Hourly Rate must be a positive number.";
+        if (courts.length === 0) return "At least one court must be added.";
+        for (let i = 0; i < courts.length; i++) {
+            if (!courts[i].name.trim()) return `Court ${i+1} Name is required.`;
+            if (!courts[i].price || Number(courts[i].price) <= 0) return `Court ${i+1} must have a valid positive Hourly Rate.`;
+        }
 
         if (!formData.address.trim()) return "Address is required.";
         if (!formData.city.trim()) return "City is required.";
@@ -115,6 +133,7 @@ export default function AddTurf() {
         if (!formData.pincode) return "Pincode is required.";
         if (!/^\d{6}$/.test(formData.pincode)) return "Pincode must be a valid 6-digit number.";
 
+        if (selectedSlots.length === 0) return "Please select at least one operating slot.";
         if (amenities.length === 0) return "Please select at least one amenity.";
 
         return null; // No errors
@@ -143,9 +162,11 @@ export default function AddTurf() {
         const submissionData = {
             name: formData.turfName,
             location: `${formData.address}, ${formData.city}, ${formData.pincode}`,
-            price: Number(formData.hourlyRate),
-            sports: [formData.category.split(' ')[0]],
+            price: Number(courts[0].price),
+            sports: Array.from(new Set(courts.map(c => c.category.split(' ')[0]))),
+            courts: courts.map(c => ({ name: c.name, category: c.category, price: Number(c.price) })),
             amenities,
+            slots: [...selectedSlots].sort((a, b) => availableTimeSlots.indexOf(a) - availableTimeSlots.indexOf(b)),
             status: 'Active',
             rating: 5.0,
             distance: '1.2 km', 
@@ -156,7 +177,10 @@ export default function AddTurf() {
         try {
             const res = await fetch('http://localhost:5000/api/venues', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify(submissionData)
             });
             const data = await res.json();
@@ -234,32 +258,157 @@ export default function AddTurf() {
                                 />
                             </InputGroup>
                         </div>
+                    </div>
+                </motion.div>
 
-                        <InputGroup label="category" icon={Layout}>
-                            <select
-                                name="category"
-                                value={formData.category}
-                                onChange={handleChange}
-                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neon-purple/50 transition-colors appearance-none cursor-pointer"
-                            >
-                                <option>Football (5v5)</option>
-                                <option>Football (7v7)</option>
-                                <option>Cricket (Box)</option>
-                                <option>Badminton</option>
-                                <option>Tennis</option>
-                            </select>
-                        </InputGroup>
+                {/* Courts Management Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="bg-slate-900 border border-white/5 rounded-3xl p-8"
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                <Layout className="w-5 h-5" />
+                            </span>
+                            Turf Courts
+                        </h2>
+                        <button
+                            type="button"
+                            onClick={() => setCourts([...courts, { id: Date.now(), name: `Court ${String.fromCharCode(65 + courts.length)}`, category: 'Football (5v5)', price: '' }])}
+                            className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-emerald-500 hover:text-emerald-400 transition-colors"
+                        >
+                            <Plus className="w-4 h-4" /> Add Court
+                        </button>
+                    </div>
 
-                        <InputGroup label="Hourly Rate (₹)" icon={DollarSign}>
-                            <input
-                                name="hourlyRate"
-                                value={formData.hourlyRate}
-                                onChange={handleChange}
-                                type="number"
-                                placeholder="1200"
-                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neon-purple/50 transition-colors"
-                            />
-                        </InputGroup>
+                    <div className="space-y-4">
+                        {courts.map((court, index) => (
+                            <div key={court.id} className="grid md:grid-cols-12 gap-4 items-center bg-slate-950 p-4 rounded-xl border border-white/5">
+                                <div className="md:col-span-3 space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Court Name</label>
+                                    <input
+                                        type="text"
+                                        value={court.name}
+                                        onChange={(e) => {
+                                            const newCourts = [...courts];
+                                            newCourts[index].name = e.target.value;
+                                            setCourts(newCourts);
+                                        }}
+                                        placeholder="e.g. Court A"
+                                        className="w-full bg-slate-900 border border-white/5 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 text-sm"
+                                    />
+                                </div>
+                                <div className="md:col-span-4 space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Category</label>
+                                    <div className="relative">
+                                        <Layout className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                                        <select
+                                            value={court.category}
+                                            onChange={(e) => {
+                                                const newCourts = [...courts];
+                                                newCourts[index].category = e.target.value;
+                                                setCourts(newCourts);
+                                            }}
+                                            className="w-full bg-slate-900 border border-white/5 rounded-lg pl-9 pr-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 appearance-none text-sm"
+                                        >
+                                            <option>Football (5v5)</option>
+                                            <option>Football (7v7)</option>
+                                            <option>Football (9v9)</option>
+                                            <option>Football (11v11)</option>
+                                            <option>Cricket (Box)</option>
+                                            <option>Cricket (Full Pitch)</option>
+                                            <option>Badminton</option>
+                                            <option>Tennis</option>
+                                            <option>Basketball (Full Court)</option>
+                                            <option>Basketball (Half Court)</option>
+                                            <option>Volleyball</option>
+                                            <option>Pickleball</option>
+                                            <option>Squash</option>
+                                            <option>Table Tennis</option>
+                                            <option>Swimming Pool</option>
+                                            <option>Gym / Fitness Studio</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="md:col-span-4 space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Hourly Rate (₹)</label>
+                                    <div className="relative">
+                                        <DollarSign className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                                        <input
+                                            type="number"
+                                            value={court.price}
+                                            onChange={(e) => {
+                                                const newCourts = [...courts];
+                                                newCourts[index].price = e.target.value;
+                                                setCourts(newCourts);
+                                            }}
+                                            placeholder="1200"
+                                            className="w-full bg-slate-900 border border-white/5 rounded-lg pl-9 pr-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="md:col-span-1 flex justify-end md:mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCourts(courts.filter(c => c.id !== court.id))}
+                                        className="p-2.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        {courts.length === 0 && (
+                            <div className="py-8 text-center px-4 text-slate-500 bg-slate-900/50 border border-white/5 border-dashed rounded-xl">
+                                <Plus className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                                No courts added yet. Click "+ Add Court" above to start building your venue's layout.
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+
+                {/* Slots Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-slate-900 border border-white/5 rounded-3xl p-8"
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+                                <Clock className="w-5 h-5" />
+                            </span>
+                            Operating Time Slots
+                        </h2>
+                        <button 
+                            type="button" 
+                            onClick={() => setSelectedSlots(selectedSlots.length === availableTimeSlots.length ? [] : [...availableTimeSlots])}
+                            className="text-xs font-bold uppercase tracking-wider text-neon-purple hover:text-white transition-colors"
+                        >
+                            {selectedSlots.length === availableTimeSlots.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {availableTimeSlots.map((slot) => {
+                            const isSelected = selectedSlots.includes(slot);
+                            return (
+                                <button
+                                    type="button"
+                                    key={slot}
+                                    onClick={() => toggleSlot(slot)}
+                                    className={`py-3 rounded-xl border text-sm font-bold transition-all duration-300 ${isSelected 
+                                        ? 'bg-neon-purple text-white border-neon-purple shadow-[0_0_15px_rgba(168,85,247,0.4)]' 
+                                        : 'bg-slate-950 border-white/5 text-slate-500 hover:border-white/20 hover:text-slate-300'}`}
+                                >
+                                    {slot}
+                                </button>
+                            );
+                        })}
                     </div>
                 </motion.div>
 

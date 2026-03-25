@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Trophy, Calendar, MapPin, ArrowRight,
@@ -132,100 +132,40 @@ const FilterButton = ({ label, active, onClick }) => (
 export default function Tournament() {
     const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [tournaments, setTournaments] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const tournaments = [
-        {
-            id: 1,
-            name: "Mumbai Corporate Cup 2024",
-            category: "Football",
-            image: footballNight,
-            status: "Filling Fast",
-            date: "Aug 15 - Aug 20, 2024",
-            location: "Mumbai Football Arena, Andheri",
-            prizePool: "50,000",
-            entryFee: "4,000",
-            format: "5v5 Knockout",
-            slotsLeft: 4
-        },
-        {
-            id: 2,
-            name: "Pro Cricket League Season 4",
-            category: "Cricket",
-            image: cricketImg,
-            status: "Open",
-            date: "Sept 01 - Sept 10, 2024",
-            location: "Bengaluru Cricket Nets, Koramangala",
-            prizePool: "1,00,000",
-            entryFee: "8,000",
-            format: "Box Cricket",
-            slotsLeft: 12
-        },
-        {
-            id: 3,
-            name: "Late Night 5s Sunder League",
-            category: "Football",
-            image: footballImg,
-            status: "Open",
-            date: "Every Saturday",
-            location: "Urban Arena, Mumbai",
-            prizePool: "25,000",
-            entryFee: "2,500",
-            format: "League Stage",
-            slotsLeft: 8
-        },
-        {
-            id: 4,
-            name: "Monsoon Football Blast",
-            category: "Football",
-            image: footballImg,
-            status: "Waitlist",
-            date: "July 20, 2024",
-            location: "Salt Lake Stadium Practice, Kolkata",
-            prizePool: "30,000",
-            entryFee: "3,000",
-            format: "7v7 Knockout",
-            slotsLeft: 0
-        },
-        {
-            id: 5,
-            name: "Gully Cricket Championship",
-            category: "Cricket",
-            image: cricketImg,
-            status: "Open",
-            date: "Oct 02 - Oct 05, 2024",
-            location: "Shivaji Park, Mumbai",
-            prizePool: "20,000",
-            entryFee: "1,500",
-            format: "Tennis Ball",
-            slotsLeft: 16
-        },
-        {
-            id: 6,
-            name: "Smash Masters 2024",
-            category: "Badminton",
-            image: badmintonImg,
-            status: "Filling Fast",
-            date: "Nov 10 - Nov 12, 2024",
-            location: "Smash Court, Delhi",
-            prizePool: "40,000",
-            entryFee: "2,000",
-            format: "Doubles",
-            slotsLeft: 6
-        },
-        {
-            id: 7,
-            name: "Corporate Cricket Bash",
-            category: "Cricket",
-            image: cricketImg,
-            status: "Open",
-            date: "Dec 05 - Dec 10, 2024",
-            location: "Oval Maidan, Mumbai",
-            prizePool: "1,50,000",
-            entryFee: "10,000",
-            format: "Leather Ball",
-            slotsLeft: 8
+    const fetchTournaments = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/tournaments');
+            const data = await res.json();
+            if (data.success) {
+                // Formatting for display, adding fallbacks for images
+                const mapped = data.data.map(t => ({
+                    id: t._id,
+                    name: t.name,
+                    category: t.category,
+                    image: t.image || (t.category === 'Cricket' ? cricketImg : (t.category === 'Badminton' ? badmintonImg : footballImg)),
+                    status: t.status,
+                    date: t.date,
+                    location: t.location,
+                    prizePool: t.prizePool,
+                    entryFee: t.entryFee,
+                    format: t.format,
+                    slotsLeft: t.totalSlots - (t.registeredTeams || 0)
+                }));
+                setTournaments(mapped);
+            }
+        } catch (err) {
+            console.error("Error fetching tournaments:", err);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    useEffect(() => {
+        fetchTournaments();
+    }, []);
 
     const filteredTournaments = selectedCategory === 'All'
         ? tournaments
@@ -377,7 +317,12 @@ export default function Tournament() {
                 </div>
 
                 {/* Grid */}
-                {filteredTournaments.length > 0 ? (
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                         <Trophy className="w-16 h-16 text-slate-700 mb-4" />
+                         <p className="text-slate-500 font-bold uppercase tracking-widest">Loading Tournaments...</p>
+                    </div>
+                ) : filteredTournaments.length > 0 ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredTournaments.map((tournament, index) => (
                             <TournamentCard

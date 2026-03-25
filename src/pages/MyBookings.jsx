@@ -197,7 +197,11 @@ export default function MyBookings() {
     useEffect(() => {
         const fetchBookings = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/bookings');
+                const res = await fetch('http://localhost:5000/api/bookings', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
                 const data = await res.json();
                 if (data.success) {
                     const mapped = data.data.map(b => ({

@@ -31,6 +31,20 @@ export default function PartnerLayout() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Enhanced Security Check
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+
+    React.useEffect(() => {
+        if (!user || (user.role.toLowerCase() !== 'partner' && user.role.toLowerCase() !== 'admin')) {
+            navigate('/partner/login');
+        }
+    }, [user, navigate]);
+
+    if (!user || (user.role.toLowerCase() !== 'partner' && user.role.toLowerCase() !== 'admin')) {
+        return null; // Or a loading spinner
+    }
+
     const sidebarItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/partner/dashboard' },
         { icon: MapPin, label: 'My Turfs', path: '/partner/turfs' },
@@ -86,7 +100,11 @@ export default function PartnerLayout() {
 
                 <div className="mt-auto p-6 border-t border-white/5">
                     <button
-                        onClick={() => navigate('/partner/login')}
+                        onClick={() => {
+                            localStorage.removeItem('user');
+                            localStorage.removeItem('token');
+                            navigate('/partner/login');
+                        }}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut className="w-5 h-5" />
@@ -94,10 +112,14 @@ export default function PartnerLayout() {
                     </button>
 
                     <div className="mt-6 flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-white/5">
-                        <img src={userAvatarImg} alt="Partner" className="w-10 h-10 rounded-lg border border-white/10" />
-                        <div>
-                            <p className="text-sm font-bold text-white">John Doe</p>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Business Owner</p>
+                        <img 
+                            src={user?.user_profile || userAvatarImg} 
+                            alt="Partner" 
+                            className="w-10 h-10 rounded-lg border border-white/10 bg-white" 
+                        />
+                        <div className="overflow-hidden">
+                            <p className="text-sm font-bold text-white truncate">{user?.first_name} {user?.last_name}</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role}</p>
                         </div>
                     </div>
                 </div>
