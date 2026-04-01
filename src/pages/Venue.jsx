@@ -199,8 +199,8 @@ export default function Venue() {
                         location: v.location,
                         price: v.price,
                         amenities: v.amenities && v.amenities.length > 0 ? v.amenities : ["Parking", "Washroom"],
-                        owner: v.owner ? {
-                             name: `${v.owner.first_name} ${v.owner.last_name}`,
+                        owner: v.owner && typeof v.owner === 'object' ? {
+                             name: `${v.owner.first_name || 'Arena'} ${v.owner.last_name || 'Partner'}`,
                              avatar: v.owner.user_profile
                         } : null
                     }));

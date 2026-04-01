@@ -102,7 +102,7 @@ const Header = () => {
                                         <button 
                                             onClick={() => {
                                                 localStorage.clear();
-                                                window.location.href = '/home';
+                                                window.location.href = '/login';
                                             }}
                                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-white hover:bg-red-500/10 rounded-xl transition-colors"
                                         >
