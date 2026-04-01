@@ -79,7 +79,10 @@ export default function Turfs() {
 
     const fetchTurfs = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/venues');
+            const user = JSON.parse(localStorage.getItem('user'));
+            const ownerId = user?.id || user?._id;
+            
+            const res = await fetch(`http://localhost:5000/api/venues?owner=${ownerId}`);
             const data = await res.json();
             if (data.success) {
                 // In a real app, you would filter by partner's owner ID here. 

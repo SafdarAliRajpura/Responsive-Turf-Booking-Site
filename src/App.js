@@ -12,6 +12,7 @@ import PartnerAddTurf from './features/partner/pages/AddTurf';
 import PartnerBookings from './features/partner/pages/Bookings';
 import PartnerAnalytics from './features/partner/pages/Analytics';
 import PartnerSettings from './features/partner/pages/Settings';
+import PartnerTournaments from './features/partner/pages/Tournaments';
 import PartnerLayout from './features/partner/layouts/PartnerLayout';
 import Home from './pages/Home';
 
@@ -76,6 +77,7 @@ function App() {
         <Route path="turfs/add" element={<PartnerAddTurf />} />
         <Route path="bookings" element={<PartnerBookings />} />
         <Route path="analytics" element={<PartnerAnalytics />} />
+        <Route path="tournaments" element={<PartnerTournaments />} />
         <Route path="settings" element={<PartnerSettings />} />
       </Route>
 

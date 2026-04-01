@@ -39,9 +39,10 @@ export default function TournamentRegistration() {
     const [loading, setLoading] = useState(true);
 
     const [tournament, setTournament] = useState({
-        name: "Loading...",
+        name: "Syncing...",
+        image: '',
         fee: 0,
-        minPlayers: 5,
+        minPlayers: 1,
         maxPlayers: 11
     });
 
@@ -61,10 +62,16 @@ export default function TournamentRegistration() {
                 if (data.success) {
                     setTournament({
                         name: data.data.name,
+                        image: data.data.image,
                         fee: data.data.entryFee,
-                        minPlayers: data.data.format.includes('5v5') ? 5 : (data.data.format.includes('7v7') ? 7 : 11),
-                        maxPlayers: data.data.format.includes('5v5') ? 8 : (data.data.format.includes('7v7') ? 10 : 15)
+                        minPlayers: data.data.minPlayers || 5,
+                        maxPlayers: data.data.maxPlayers || 11
                     });
+                    // Initialize with minimum players required
+                    setFormData(prev => ({
+                        ...prev,
+                        players: Array((data.data.minPlayers || 5)).fill('')
+                    }));
                 }
             } catch (err) {
                 console.error("Error fetching tournament:", err);
@@ -174,7 +181,13 @@ export default function TournamentRegistration() {
                     >
                         <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-neon-yellow/5 to-transparent opacity-50" />
-                            <img src={tournamentBg} alt="Event" className="w-full h-32 object-cover rounded-2xl mb-4 group-hover:scale-105 transition-transform duration-500" />
+                            <div className="w-full h-32 rounded-2xl mb-4 overflow-hidden border border-white/5 bg-slate-950 flex items-center justify-center">
+                                {tournament.image ? (
+                                    <img src={tournament.image} alt="Event" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                ) : (
+                                    <Trophy className="w-8 h-8 text-slate-800" />
+                                )}
+                            </div>
 
                             <h2 className="text-xl font-black text-white italic uppercase leading-tight mb-2">{tournament.name}</h2>
 

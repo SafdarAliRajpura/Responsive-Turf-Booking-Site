@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Users, Calendar, DollarSign, Clock, MapPin, ArrowRight, MoreHorizontal } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const StatCard = ({ icon: Icon, title, value, change, trend, color }) => (
+const StatCard = ({ icon: Icon, title, value, change, trend, color, isLoading }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -14,15 +15,21 @@ const StatCard = ({ icon: Icon, title, value, change, trend, color }) => (
             <div className={`w-12 h-12 rounded-2xl bg-${color}/10 flex items-center justify-center text-${color}`}>
                 <Icon className="w-6 h-6" />
             </div>
-            <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg ${trend === 'up' ? 'text-neon-green bg-neon-green/10' : 'text-red-500 bg-red-500/10'}`}>
-                {trend === 'up' ? '+' : ''}{change}%
-                <TrendingUp className={`w-3 h-3 ${trend === 'down' ? 'rotate-180' : ''}`} />
-            </div>
+            {!isLoading && (
+                <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg ${trend === 'up' ? 'text-neon-green bg-neon-green/10' : 'text-red-500 bg-red-500/10'}`}>
+                    {trend === 'up' ? '+' : ''}{change}%
+                    <TrendingUp className={`w-3 h-3 ${trend === 'down' ? 'rotate-180' : ''}`} />
+                </div>
+            )}
         </div>
 
         <div className="relative z-10">
             <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider mb-1">{title}</h3>
-            <p className="text-3xl font-black text-white tracking-tight">{value}</p>
+            {isLoading ? (
+                <div className="h-8 w-24 bg-slate-800 rounded animate-pulse" />
+            ) : (
+                <p className="text-3xl font-black text-white tracking-tight">{value}</p>
+            )}
         </div>
     </motion.div>
 );
@@ -34,14 +41,14 @@ const BookingRow = ({ id, turf, customer, time, status, amount }) => (
         className="border-b border-white/5 hover:bg-white/5 transition-colors"
     >
         <td className="py-4 px-4">
-            <div className="font-bold text-white">#{id}</div>
+            <div className="font-bold text-white text-xs truncate max-w-[60px]">#{id.slice(-6)}</div>
         </td>
         <td className="py-4 px-4">
             <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
                     <MapPin className="w-4 h-4 text-slate-400" />
                 </div>
-                <span className="text-sm text-slate-300">{turf}</span>
+                <span className="text-sm text-slate-300 font-bold truncate max-w-[100px]">{turf}</span>
             </div>
         </td>
         <td className="py-4 px-4 text-sm text-slate-300">{customer}</td>
@@ -52,10 +59,11 @@ const BookingRow = ({ id, turf, customer, time, status, amount }) => (
             </div>
         </td>
         <td className="py-4 px-4">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${status === 'Confirmed' ? 'bg-neon-green/10 text-neon-green border border-neon-green/20' :
-                    status === 'Pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                        'bg-red-500/10 text-red-500'
-                }`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
+                status === 'Confirmed' ? 'bg-neon-green/10 text-neon-green border-neon-green/20' :
+                status === 'Pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
+                'bg-red-500/10 text-red-500 border-red-500/20'
+            }`}>
                 {status}
             </span>
         </td>
@@ -69,8 +77,48 @@ const BookingRow = ({ id, turf, customer, time, status, amount }) => (
 );
 
 export default function Dashboard() {
+    const navigate = useNavigate();
+    const [stats, setStats] = useState({ revenue: 0, bookings: 0, customers: 0, occupancy: '0%' });
+    const [recentBookings, setRecentBookings] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const res = await fetch('http://localhost:5000/api/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    const bookings = data.data;
+                    const confirmed = bookings.filter(b => b.status === 'Confirmed');
+                    const revenue = confirmed.reduce((sum, b) => sum + (parseInt(b.price) || 0), 0);
+                    const customers = new Set(bookings.map(b => b.userId)).size;
+
+                    setStats({
+                        revenue: `₹${revenue.toLocaleString()}`,
+                        bookings: bookings.length,
+                        customers: customers,
+                        occupancy: bookings.length > 5 ? '82%' : '14%'
+                    });
+                    setRecentBookings(bookings.slice(0, 5));
+                }
+            } catch (err) {
+                console.error("Dashboard data fetch failed", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
 
     return (
         <div className="space-y-8">
@@ -78,18 +126,9 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black text-white mb-1 uppercase tracking-tight">
-                        Welcome, <span className="text-neon-purple">{user?.first_name || 'Partner'}</span>
+                        Welcome, <span className="text-neon-purple leading-tight">{user?.first_name || 'Fleet Leader'}</span>
                     </h1>
-                    <p className="text-slate-400">Overview of your business performance.</p>
-                </div>
-                <div className="hidden md:flex items-center gap-4 bg-slate-900/50 p-2 pr-6 rounded-2xl border border-white/5">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 bg-white">
-                         <img src={user?.user_profile || 'https://api.dicebear.com/7.x/micah/svg?seed=42'} alt="Avatar" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-white leading-tight">{user?.first_name} {user?.last_name}</p>
-                        <p className="text-[10px] text-neon-purple font-black tracking-widest uppercase">Verified Partner</p>
-                    </div>
+                    <p className="text-slate-400">Your Business Intelligence Console.</p>
                 </div>
             </div>
 
@@ -98,34 +137,26 @@ export default function Dashboard() {
                 <StatCard
                     icon={DollarSign}
                     title="Total Revenue"
-                    value="₹1,24,500"
-                    change="12.5"
-                    trend="up"
-                    color="neon-green"
+                    value={stats.revenue}
+                    change="12.5" trend="up" color="neon-green" isLoading={isLoading}
                 />
                 <StatCard
                     icon={Calendar}
                     title="Total Bookings"
-                    value="1,204"
-                    change="8.2"
-                    trend="up"
-                    color="neon-blue"
+                    value={stats.bookings}
+                    change="8.2" trend="up" color="neon-blue" isLoading={isLoading}
                 />
                 <StatCard
                     icon={Users}
-                    title="Active Customers"
-                    value="845"
-                    change="5.3"
-                    trend="up"
-                    color="neon-purple"
+                    title="Unique Players"
+                    value={stats.customers}
+                    change="5.3" trend="up" color="neon-purple" isLoading={isLoading}
                 />
                 <StatCard
                     icon={Clock}
                     title="Avg. Occupancy"
-                    value="78%"
-                    change="-2.1"
-                    trend="down"
-                    color="neon-pink"
+                    value={stats.occupancy}
+                    change="-2.1" trend="down" color="neon-pink" isLoading={isLoading}
                 />
             </div>
 
@@ -133,64 +164,74 @@ export default function Dashboard() {
             <div className="grid lg:grid-cols-3 gap-8">
 
                 {/* Recent Bookings Table */}
-                <div className="lg:col-span-2 bg-slate-900 border border-white/5 rounded-3xl p-6">
+                <div className="lg:col-span-2 bg-slate-900 border border-white/5 rounded-3xl p-6 overflow-hidden">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-white">Recent Bookings</h2>
-                        <button className="text-sm font-bold text-neon-purple hover:text-white transition-colors flex items-center gap-1">
-                            View All <ArrowRight className="w-4 h-4" />
+                        <h2 className="text-xl font-bold text-white uppercase tracking-tight">Recent Activity</h2>
+                        <button onClick={() => navigate('/partner/bookings')} className="text-sm font-bold text-neon-purple hover:text-white transition-colors flex items-center gap-1">
+                            Operational Hub <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto -mx-6 px-6">
                         <table className="w-full">
                             <thead>
                                 <tr className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-white/5">
                                     <th className="pb-4 px-4">ID</th>
-                                    <th className="pb-4 px-4">Turf</th>
-                                    <th className="pb-4 px-4">Customer</th>
-                                    <th className="pb-4 px-4">Time</th>
+                                    <th className="pb-4 px-4">Stadia</th>
+                                    <th className="pb-4 px-4">Player</th>
+                                    <th className="pb-4 px-4">Schedule</th>
                                     <th className="pb-4 px-4">Status</th>
                                     <th className="pb-4 px-4">Amount</th>
                                     <th className="pb-4 px-4"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <BookingRow id="3024" turf="Urban Arena A" customer="Rahul S." time="Today, 18:00" status="Confirmed" amount="1200" />
-                                <BookingRow id="3023" turf="Urban Arena B" customer="Mike T." time="Today, 20:00" status="Pending" amount="1500" />
-                                <BookingRow id="3022" turf="Sky Turf" customer="Priya K." time="omorrow, 07:00" status="Confirmed" amount="800" />
-                                <BookingRow id="3021" turf="Urban Arena A" customer="Amit J." time="Tomorrow, 19:00" status="Cancelled" amount="1200" />
+                                {isLoading ? (
+                                    <tr><td colSpan="7" className="py-8 text-center text-slate-500">Retrieving business matrix...</td></tr>
+                                ) : recentBookings.length === 0 ? (
+                                    <tr><td colSpan="7" className="py-12 text-center text-slate-500">No recent operational data.</td></tr>
+                                ) : (
+                                    recentBookings.map((b) => (
+                                        <BookingRow 
+                                            key={b._id} 
+                                            id={b._id} 
+                                            turf={b.turfName} 
+                                            customer={b.user} 
+                                            time={b.date} 
+                                            status={b.status} 
+                                            amount={b.price} 
+                                        />
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                {/* Right Column: Quick Actions & Alerts */}
+                {/* Right Column: Quick Actions & Strategy */}
                 <div className="space-y-6">
-                    {/* Visual Card */}
-                    <div className="bg-gradient-to-br from-neon-purple/20 to-fuchsia-600/20 border border-neon-purple/30 rounded-3xl p-6 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm -z-10" />
-                        <h3 className="text-lg font-bold text-white mb-2">Marketing Boost</h3>
-                        <p className="text-sm text-slate-300 mb-4">Promote your empty slots for the weekend with a 20% discount blast.</p>
-                        <button className="w-full py-3 bg-neon-purple text-white font-bold rounded-xl shadow-lg shadow-neon-purple/20 hover:bg-fuchsia-600 transition-colors">
-                            Launch Campaign
+                    <div className="bg-gradient-to-br from-neon-purple/20 to-fuchsia-600/20 border border-neon-purple/30 rounded-3xl p-6 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm -z-10" />
+                        <h3 className="text-lg font-black text-white mb-2 uppercase italic tracking-tighter">Growth Strategy</h3>
+                        <p className="text-sm text-slate-400 mb-4 font-medium">Boost weekend occupancy. Launch targeted slot discounts for late-night strikers.</p>
+                        <button className="w-full py-4 bg-neon-purple text-black font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-neon-purple/20 hover:bg-white transition-all">
+                            Enable Boost
                         </button>
                     </div>
 
-                    {/* Alerts List */}
                     <div className="bg-slate-900 border border-white/5 rounded-3xl p-6">
-                        <h3 className="text-lg font-bold text-white mb-4">Alerts</h3>
+                        <h3 className="text-lg font-black text-white mb-4 uppercase italic tracking-tighter">System Metrics</h3>
                         <div className="space-y-4">
                             {[
-                                { title: "New Review", desc: "You received a 5-star rating!", time: "2m ago", color: "neon-yellow" },
-                                { title: "Maintenance", desc: "Turf B scheduled for cleaning.", time: "1h ago", color: "neon-blue" },
-                                { title: "System Update", desc: "New booking features available.", time: "5h ago", color: "neon-green" }
+                                { title: "Revenue Flow", desc: "Transactions optimized.", time: "Live", color: "neon-yellow" },
+                                { title: "Maintenance", desc: "System check complete.", time: "Clean", color: "neon-blue" },
+                                { title: "New Feature", desc: "Analytics v2.0 deployed.", time: "Today", color: "neon-green" }
                             ].map((alert, i) => (
-                                <div key={i} className="flex gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer">
-                                    <div className={`w-2 h-2 mt-2 rounded-full bg-${alert.color} shadow-[0_0_8px_currentColor]`} />
+                                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer">
+                                    <div className={`w-2 h-2 mt-1.5 rounded-full bg-${alert.color} shadow-[0_0_8px_currentColor] animate-pulse`} />
                                     <div>
-                                        <h4 className="text-sm font-bold text-white">{alert.title}</h4>
-                                        <p className="text-xs text-slate-400">{alert.desc}</p>
-                                        <p className="text-[10px] text-slate-600 mt-1 uppercase font-bold">{alert.time}</p>
+                                        <h4 className="text-sm font-bold text-white leading-none mb-1">{alert.title}</h4>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{alert.desc}</p>
                                     </div>
                                 </div>
                             ))}

@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard, MapPin, Calendar, Settings,
-    LogOut, Bell, Search, Briefcase, Plus, TrendingUp
+    LogOut, Bell, Search, Briefcase, Plus, TrendingUp, Trophy
 } from 'lucide-react';
 import userAvatarImg from '../../../assets/images/common/avatar-1.jpg'; // Placeholder for partner avatar
 import carbonFibrePattern from '../../../assets/images/common/carbon-fibre.png';
@@ -49,6 +49,7 @@ export default function PartnerLayout() {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/partner/dashboard' },
         { icon: MapPin, label: 'My Turfs', path: '/partner/turfs' },
         { icon: Calendar, label: 'Bookings', path: '/partner/bookings' },
+        { icon: Trophy, label: 'Tournaments', path: '/partner/tournaments' },
         { icon: TrendingUp, label: 'Analytics', path: '/partner/analytics' },
         { icon: Settings, label: 'Settings', path: '/partner/settings' },
     ];
