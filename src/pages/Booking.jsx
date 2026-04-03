@@ -4,10 +4,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     MapPin, IndianRupee,
     CheckCircle, Star,
-    ChevronDown, ArrowLeft, MessageSquare, Send
+    ChevronDown, ArrowLeft, MessageSquare, Send, Navigation
 } from 'lucide-react';
 import { TypeAnimation } from 'react-type-animation';
 import SplitText from '../components/common/SplitText';
+import VenueMap from '../components/common/VenueMap';
+import useNavigation from '../hooks/useNavigation';
 
 // Reuse images
 import carbonFibrePattern from '../assets/images/common/carbon-fibre.png';
@@ -35,6 +37,8 @@ export default function Booking() {
     const [bookingInProgress, setBookingInProgress] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [lastBooking, setLastBooking] = useState(null);
+
+    const { startNavigation, isLoading: navLoading, error: navError, notification: navNotification } = useNavigation();
 
     useEffect(() => {
         const fetchVenue = async () => {
@@ -79,7 +83,8 @@ export default function Booking() {
                         sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
                         rating: v.rating || 4.5,
                         slots: v.slots || [],
-                        courts: parsedCourts
+                        courts: parsedCourts,
+                        coordinates: v.coordinates || { lat: 0, lng: 0 }
                     };
                     setVenue(mappedVenue);
                     setSelectedSport(mappedVenue.sports[0]);
@@ -388,6 +393,44 @@ export default function Booking() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Location Section */}
+                <div className="mb-16">
+                    <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter flex items-center gap-3 mb-8">
+                        <MapPin className="w-8 h-8 text-neon-pink" /> Turf <span className="text-neon-pink">Location</span>
+                    </h2>
+                    <div className="bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 space-y-6">
+                        {/* Notification banner */}
+                        {navNotification && (
+                            <div className="flex items-center gap-3 px-4 py-3 bg-neon-blue/10 border border-neon-blue/30 rounded-xl text-neon-blue text-sm font-bold">
+                                <Navigation className="w-4 h-4 shrink-0" />
+                                {navNotification}
+                            </div>
+                        )}
+                        {/* Error banner */}
+                        {navError && (
+                            <div className="flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm font-bold">
+                                {navError}
+                            </div>
+                        )}
+                        {/* Map */}
+                        <VenueMap coordinates={venue.coordinates} />
+                        {/* Navigation button */}
+                        {venue.coordinates && venue.coordinates.lat !== 0 && (
+                            <button
+                                onClick={() => startNavigation(venue.coordinates)}
+                                disabled={navLoading}
+                                className="flex items-center gap-3 px-6 py-3 bg-neon-blue/10 border border-neon-blue/30 text-neon-blue font-black uppercase tracking-widest text-sm rounded-xl hover:bg-neon-blue hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {navLoading ? (
+                                    <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Getting Location...</>
+                                ) : (
+                                    <><Navigation className="w-4 h-4" /> Start Navigation</>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
 

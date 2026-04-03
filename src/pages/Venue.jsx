@@ -17,6 +17,7 @@ import carbonFibrePattern from '../assets/images/common/carbon-fibre.png';
 import Footer from '../components/common/Footer';
 
 import Header from '../components/common/Header';
+import useNavigation from '../hooks/useNavigation';
 
 const FilterTag = ({ label, active, onClick }) => (
     <button
@@ -32,6 +33,8 @@ const FilterTag = ({ label, active, onClick }) => (
 
 const VenueCard = ({ venue, index, onBook }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const { startNavigation, isLoading: navLoading, error: navError, notification: navNotification } = useNavigation();
+    const hasValidCoords = venue.coordinates && venue.coordinates.lat !== 0 && venue.coordinates.lng !== 0;
 
     // Provide some fallback images to create a carousel effect if venue only has one image
     const images = venue.images || [
@@ -155,6 +158,18 @@ const VenueCard = ({ venue, index, onBook }) => {
                     ))}
                 </div>
 
+                {navNotification && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-neon-blue/10 border border-neon-blue/30 rounded-lg text-neon-blue text-xs font-bold mb-3">
+                        <Navigation className="w-3 h-3 shrink-0" />
+                        {navNotification}
+                    </div>
+                )}
+                {navError && (
+                    <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs font-bold mb-3">
+                        {navError}
+                    </div>
+                )}
+
                 {/* Price & Action */}
                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
                     <div>
@@ -164,6 +179,20 @@ const VenueCard = ({ venue, index, onBook }) => {
                             {venue.price}
                         </div>
                     </div>
+                    {hasValidCoords && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); startNavigation(venue.coordinates); }}
+                            disabled={navLoading}
+                            title="Get Directions"
+                            className="p-2.5 rounded-xl bg-neon-blue/10 border border-neon-blue/30 text-neon-blue hover:bg-neon-blue hover:text-black transition-all disabled:opacity-50"
+                        >
+                            {navLoading ? (
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Navigation className="w-4 h-4" />
+                            )}
+                        </button>
+                    )}
                     <button
                         onClick={() => onBook(venue.id)}
                         className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-neon-green transition-colors flex items-center gap-2 group/btn shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(57,255,20,0.3)]"
@@ -202,7 +231,8 @@ export default function Venue() {
                         owner: v.owner && typeof v.owner === 'object' ? {
                              name: `${v.owner.first_name || 'Arena'} ${v.owner.last_name || 'Partner'}`,
                              avatar: v.owner.user_profile
-                        } : null
+                        } : null,
+                        coordinates: v.coordinates || { lat: 0, lng: 0 }
                     }));
                     setVenues(mappedVenues);
                 }

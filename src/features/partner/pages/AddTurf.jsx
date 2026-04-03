@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import {
     MapPin, Upload, DollarSign, Layout,
     Type, CheckCircle, Image as ImageIcon,
-    Dumbbell, Wifi, Car, Coffee, Info, ArrowLeft, Clock, Trash2, Plus
+    Dumbbell, Wifi, Car, Coffee, Info, ArrowLeft, Clock, Trash2, Plus, Locate
 } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
+import MapPicker from '../components/MapPicker';
 
 const AmenityChip = ({ label, icon: Icon, selected, onClick }) => (
     <button
@@ -40,7 +41,8 @@ export default function AddTurf() {
         description: '',
         address: '',
         city: '',
-        pincode: ''
+        pincode: '',
+        coordinates: { lat: 23.0225, lng: 72.5714 }
     });
 
     const [courts, setCourts] = useState([]);
@@ -171,7 +173,8 @@ export default function AddTurf() {
             rating: 5.0,
             distance: '1.2 km', 
             image: imageString,
-            images: files.length > 0 ? [imageString] : []
+            images: files.length > 0 ? [imageString] : [],
+            coordinates: formData.coordinates
         };
 
         try {
@@ -461,6 +464,20 @@ export default function AddTurf() {
                                         className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neon-blue/50 transition-colors"
                                     />
                                 </InputGroup>
+                            </div>
+
+                            <div className="space-y-4 pt-4 border-t border-white/5 mt-2">
+                                <label className="flex items-center gap-2 text-xs font-black text-neon-blue uppercase tracking-[0.2em] ml-1">
+                                    <Locate className="w-3 h-3" />
+                                    Pin Point On Map
+                                </label>
+                                <MapPicker 
+                                    onLocationSelect={(coords) => setFormData(prev => ({...prev, coordinates: coords}))}
+                                    defaultPos={formData.coordinates}
+                                />
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic text-center">
+                                    Navigate and click to lock exact GPS coordinates.
+                                </p>
                             </div>
                         </div>
                     </motion.div>
