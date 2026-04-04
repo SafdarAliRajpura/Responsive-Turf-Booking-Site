@@ -61,8 +61,14 @@ export default function PartnerLogin() {
                     setTimeout(() => {
                         if (result.data.role === 'admin') {
                             navigate('/admin');
+                        } else if (result.data.role === 'partner') {
+                            if (result.data.isOnboarded) {
+                                navigate('/partner/dashboard');
+                            } else {
+                                navigate('/partner/onboarding');
+                            }
                         } else {
-                            navigate('/partner/dashboard');
+                            navigate('/');
                         }
                     }, 1000);
                 } else {

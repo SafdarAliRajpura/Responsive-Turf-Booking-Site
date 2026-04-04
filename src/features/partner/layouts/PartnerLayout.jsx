@@ -38,11 +38,17 @@ export default function PartnerLayout() {
     React.useEffect(() => {
         if (!user || (user.role.toLowerCase() !== 'partner' && user.role.toLowerCase() !== 'admin')) {
             navigate('/partner/login');
+        } else if (user.role.toLowerCase() === 'partner' && !user.isOnboarded) {
+            navigate('/partner/onboarding');
         }
     }, [user, navigate]);
 
     if (!user || (user.role.toLowerCase() !== 'partner' && user.role.toLowerCase() !== 'admin')) {
         return null; // Or a loading spinner
+    }
+
+    if (user.role.toLowerCase() === 'partner' && !user.isOnboarded) {
+        return null; // prevent rendering layout while redirecting
     }
 
     const sidebarItems = [

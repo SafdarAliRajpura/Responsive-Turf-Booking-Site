@@ -6,6 +6,7 @@ import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import PartnerLogin from './features/partner/auth/PartnerLogin';
 import PartnerRegister from './features/partner/auth/PartnerRegister';
+import PartnerOnboarding from './features/partner/pages/PartnerOnboarding';
 import PartnerDashboard from './features/partner/pages/Dashboard';
 import PartnerTurfs from './features/partner/pages/Turfs';
 import PartnerAddTurf from './features/partner/pages/AddTurf';
@@ -45,7 +46,11 @@ const PublicUserGuard = ({ children }) => {
       if (user.role.toLowerCase() === 'admin') {
         navigate('/admin');
       } else if (user.role.toLowerCase() === 'partner') {
-        navigate('/partner/dashboard');
+        if (user.isOnboarded) {
+          navigate('/partner/dashboard');
+        } else {
+          navigate('/partner/onboarding');
+        }
       }
     }
   }, [user, navigate]);
@@ -71,6 +76,7 @@ function App() {
       {/* Partner Routes */}
       <Route path="/partner/login" element={<PartnerLogin />} />
       <Route path="/partner/register" element={<PartnerRegister />} />
+      <Route path="/partner/onboarding" element={<PartnerOnboarding />} />
       <Route path="/partner" element={<PartnerLayout />}>
         <Route path="dashboard" element={<PartnerDashboard />} />
         <Route path="turfs" element={<PartnerTurfs />} />
