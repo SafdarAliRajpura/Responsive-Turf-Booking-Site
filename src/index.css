@@ -29,4 +29,8 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  @keyframes shine {
+    100% { transform: translateX(200%) skewX(-12deg); }
+  }
 }

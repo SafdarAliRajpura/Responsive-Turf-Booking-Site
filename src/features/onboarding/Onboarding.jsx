@@ -187,12 +187,6 @@ export default function Onboarding({ onComplete }) {
                 </div>
             </motion.div>
 
-            {/* CSS for custom shine animation which Tailwind doesn't have by default unless extended */}
-            <style jsx>{`
-        @keyframes shine {
-          100% { transform: translateX(200%) skewX(-12deg); }
-        }
-      `}</style>
         </div>
     );
 }

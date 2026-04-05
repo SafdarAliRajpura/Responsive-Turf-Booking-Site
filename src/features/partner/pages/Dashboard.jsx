@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, Calendar, DollarSign, Clock, MapPin, ArrowRight, MoreHorizontal } from 'lucide-react';
+import { TrendingUp, Users, Calendar, IndianRupee, Clock, MapPin, ArrowRight, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../../../utils/apiClient';
 
 const StatCard = ({ icon: Icon, title, value, change, trend, color, isLoading }) => (
     <motion.div
@@ -88,27 +89,19 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const token = localStorage.getItem('token');
-                if (!token) return;
-
-                const res = await fetch('http://localhost:5000/api/bookings', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
+                const res = await apiClient.get('/analytics/dashboard');
+                const data = res.data;
                 
                 if (data.success) {
-                    const bookings = data.data;
-                    const confirmed = bookings.filter(b => b.status === 'Confirmed');
-                    const revenue = confirmed.reduce((sum, b) => sum + (parseInt(b.price) || 0), 0);
-                    const customers = new Set(bookings.map(b => b.userId)).size;
+                    const metrics = data.data;
 
                     setStats({
-                        revenue: `₹${revenue.toLocaleString()}`,
-                        bookings: bookings.length,
-                        customers: customers,
-                        occupancy: bookings.length > 5 ? '82%' : '14%'
+                        revenue: `₹${metrics.totalRevenue.toLocaleString()}`,
+                        bookings: metrics.totalBookings,
+                        customers: metrics.activePlayers,
+                        occupancy: metrics.totalBookings > 5 ? '82%' : '14%'
                     });
-                    setRecentBookings(bookings.slice(0, 5));
+                    setRecentBookings(metrics.recentBookings);
                 }
             } catch (err) {
                 console.error("Dashboard data fetch failed", err);
@@ -135,7 +128,7 @@ export default function Dashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    icon={DollarSign}
+                    icon={IndianRupee}
                     title="Total Revenue"
                     value={stats.revenue}
                     change="12.5" trend="up" color="neon-green" isLoading={isLoading}

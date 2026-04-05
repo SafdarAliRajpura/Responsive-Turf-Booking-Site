@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-    Users, TrendingUp, DollarSign, Calendar,
+    Users, TrendingUp, IndianRupee, Calendar,
     ArrowUpRight, ArrowDownRight, MoreHorizontal
 } from 'lucide-react';
 
@@ -33,13 +33,39 @@ const StatCard = ({ title, value, trend, trendValue, icon: Icon, color }) => (
 );
 
 export default function Dashboard() {
-    // Mock Data
-    const bookings = [
-        { id: 1, user: "Rahul S.", venue: "Urban Arena", time: "2h ago", amount: "₹1,200", status: "Confirmed" },
-        { id: 2, user: "Priya M.", venue: "Smash Court", time: "4h ago", amount: "₹800", status: "Given" },
-        { id: 3, user: "Team Vikings", venue: "Salt Lake Stadium", time: "5h ago", amount: "₹3,500", status: "Confirmed" },
-        { id: 4, user: "Amit K.", venue: "Oval Maidan", time: "1d ago", amount: "₹500", status: "Cancelled" },
-    ];
+    const [stats, setStats] = useState({ revenue: 0, users: 0, bookings: 0 });
+    const [bookings, setBookings] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const res = await fetch('http://localhost:5000/api/analytics/dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    const metrics = data.data;
+                    setStats({
+                        revenue: `₹${metrics.totalRevenue.toLocaleString()}`,
+                        users: metrics.activePlayers,
+                        bookings: metrics.totalBookings,
+                    });
+                    setBookings(metrics.recentBookings);
+                }
+            } catch (err) {
+                console.error("Admin Dashboard fetch failed", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
 
     return (
         <div className="space-y-8">
@@ -63,33 +89,33 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Total Revenue"
-                    value="₹4,25,000"
+                    value={isLoading ? "..." : stats.revenue}
                     trend="up"
                     trendValue="+12.5%"
-                    icon={DollarSign}
+                    icon={IndianRupee}
                     color="neon-green"
                 />
                 <StatCard
-                    title="Total User"
-                    value="2,450"
+                    title="Active Players"
+                    value={isLoading ? "..." : stats.users}
                     trend="up"
                     trendValue="+8.2%"
                     icon={Users}
                     color="neon-blue"
                 />
                 <StatCard
-                    title="Active Bookings"
-                    value="142"
+                    title="Total Bookings"
+                    value={isLoading ? "..." : stats.bookings}
                     trend="up"
                     trendValue="+24%"
                     icon={Calendar}
                     color="neon-purple"
                 />
                 <StatCard
-                    title="Growth Rate"
-                    value="18.4%"
-                    trend="down"
-                    trendValue="-2.1%"
+                    title="System Status"
+                    value="Optimal"
+                    trend="up"
+                    trendValue="Live"
                     icon={TrendingUp}
                     color="neon-pink"
                 />
@@ -132,21 +158,25 @@ export default function Dashboard() {
                 <div className="bg-slate-900 border border-white/5 rounded-3xl p-8">
                     <h2 className="text-xl font-bold text-white mb-6">Recent Bookings</h2>
                     <div className="space-y-6">
-                        {bookings.map((booking) => (
-                            <div key={booking.id} className="flex items-center justify-between group cursor-pointer">
+                        {isLoading ? (
+                            <p className="text-slate-500 text-sm text-center py-4">Loading bookings...</p>
+                        ) : bookings.length === 0 ? (
+                            <p className="text-slate-500 text-sm text-center py-4">No recent activity.</p>
+                        ) : bookings.map((booking) => (
+                            <div key={booking._id} className="flex items-center justify-between group cursor-pointer">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border border-white/10 flex items-center justify-center font-bold text-xs">
-                                        {booking.user.charAt(0)}
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border border-white/10 flex items-center justify-center font-bold text-xs uppercase">
+                                        {(booking.user || '?').charAt(0)}
                                     </div>
                                     <div>
                                         <p className="font-bold text-white text-sm group-hover:text-neon-blue transition-colors">{booking.user}</p>
-                                        <p className="text-xs text-slate-500">{booking.venue}</p>
+                                        <p className="text-xs text-slate-500">{booking.turfName}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-bold text-white text-sm">{booking.amount}</p>
+                                    <p className="font-bold text-white text-sm">₹{booking.price}</p>
                                     <p className={`text-[10px] font-bold uppercase ${booking.status === 'Confirmed' ? 'text-emerald-500' :
-                                            booking.status === 'Cancelled' ? 'text-red-500' : 'text-slate-500'
+                                            booking.status === 'Cancelled' || booking.status === 'Rejected' ? 'text-red-500' : 'text-yellow-500'
                                         }`}>{booking.status}</p>
                                 </div>
                             </div>

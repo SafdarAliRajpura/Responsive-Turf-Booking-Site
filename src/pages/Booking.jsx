@@ -96,22 +96,26 @@ export default function Booking() {
             }
         };
 
-        const fetchBookingsForVanue = async () => {
-             try {
-                 const res = await fetch('http://localhost:5000/api/bookings');
-                 const data = await res.json();
-                 if (data.success) {
-                     const activeBookings = data.data.filter(b => b.status !== 'Cancelled' && b.status !== 'Rejected');
-                     setBookedSlots(activeBookings);
-                 }
-             } catch(err) {
-                 console.error("Error fetching booked slots:", err);
-             }
-        };
-
         fetchVenue();
-        fetchBookingsForVanue();
     }, [id]);
+
+    // Fetch dynamic availability
+    useEffect(() => {
+        if (!venue) return;
+        const fetchBookingsForVenue = async () => {
+            try {
+                const formattedDate = new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const res = await fetch(`http://localhost:5000/api/bookings/public?turfName=${encodeURIComponent(venue.name)}&date=${encodeURIComponent(formattedDate)}`);
+                const data = await res.json();
+                if (data.success) {
+                    setBookedSlots(data.data);
+                }
+            } catch(err) {
+                console.error("Error fetching available slots:", err);
+            }
+        };
+        fetchBookingsForVenue();
+    }, [venue, selectedDate]);
 
     useEffect(() => {
         if (!venue || id === '1' || id === '2') return;
@@ -239,9 +243,7 @@ export default function Booking() {
 
     const isSlotBooked = (t) => {
         if (!selectedCourt) return false;
-        const formattedDate = new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         return bookedSlots.some(b => {
-             if (b.turfName !== venue.name || b.sport !== selectedSport || b.date !== formattedDate) return false;
              if (!b.timeSlot.includes(selectedCourt)) return false;
              const targetMins = parseTimeToMinutes(t);
              const bTimeStr = b.timeSlot.substring(0, 8);

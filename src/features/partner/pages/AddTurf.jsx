@@ -2,12 +2,13 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-    MapPin, Upload, DollarSign, Layout,
+    MapPin, Upload, IndianRupee, Layout,
     Type, CheckCircle, Image as ImageIcon,
     Dumbbell, Wifi, Car, Coffee, Info, ArrowLeft, Clock, Trash2, Plus, Locate
 } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
 import MapPicker from '../components/MapPicker';
+import apiClient from '../../../utils/apiClient';
 
 const AmenityChip = ({ label, icon: Icon, selected, onClick }) => (
     <button
@@ -46,6 +47,10 @@ export default function AddTurf() {
     });
 
     const [courts, setCourts] = useState([]);
+    const [pricingRules, setPricingRules] = useState({
+        weekendPrice: '',
+        peakHourPrice: ''
+    });
 
     const [amenities, setAmenities] = useState([]);
     const [selectedSlots, setSelectedSlots] = useState([]);
@@ -172,22 +177,16 @@ export default function AddTurf() {
             status: 'Active',
             rating: 5.0,
             distance: '1.2 km', 
+            weekendPrice: Number(pricingRules.weekendPrice) || null,
+            peakHourPrice: Number(pricingRules.peakHourPrice) || null,
             image: imageString,
             images: files.length > 0 ? [imageString] : [],
             coordinates: formData.coordinates
         };
 
         try {
-            const res = await fetch('http://localhost:5000/api/venues', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(submissionData)
-            });
-            const data = await res.json();
-            if (data.success) {
+            const res = await apiClient.post('/venues', submissionData);
+            if (res.data.success) {
                 setToast({ message: "Turf created successfully in Live DB!", type: 'success' });
                 setTimeout(() => navigate('/partner/turfs'), 1500);
             } else {
@@ -195,7 +194,7 @@ export default function AddTurf() {
             }
         } catch (err) {
             console.error("Error creating turf:", err);
-            setToast({ message: "Network Error", type: 'error' });
+            setToast({ message: err.response?.data?.message || "Network Error", type: 'error' });
         }
     };
 
@@ -339,7 +338,7 @@ export default function AddTurf() {
                                 <div className="md:col-span-4 space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Hourly Rate (₹)</label>
                                     <div className="relative">
-                                        <DollarSign className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                                        <IndianRupee className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
                                         <input
                                             type="number"
                                             value={court.price}
@@ -370,6 +369,57 @@ export default function AddTurf() {
                                 No courts added yet. Click "+ Add Court" above to start building your venue's layout.
                             </div>
                         )}
+                    </div>
+                </motion.div>
+
+                {/* Dynamic Pricing Management */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 }}
+                    className="bg-slate-900 border border-white/5 rounded-3xl p-8"
+                >
+                    <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
+                            <IndianRupee className="w-5 h-5" />
+                        </span>
+                        Dynamic Pricing
+                    </h2>
+                    
+                    <div className="grid md:grid-cols-2 gap-6 p-6 border border-white/5 rounded-2xl bg-slate-950">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 flex justify-between">
+                                Weekend Base Price (₹)
+                                <span className="text-[10px] text-amber-500 lowercase normal-case italic">Optional</span>
+                            </label>
+                            <div className="relative">
+                                <IndianRupee className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                                <input
+                                    type="number"
+                                    value={pricingRules.weekendPrice}
+                                    onChange={(e) => setPricingRules({...pricingRules, weekendPrice: e.target.value})}
+                                    placeholder="e.g. 1500"
+                                    className="w-full bg-slate-900 border border-white/5 rounded-lg pl-9 pr-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 flex justify-between">
+                                Peak Hour Price (₹)
+                                <span className="text-[10px] text-amber-500 lowercase normal-case italic">Optional</span>
+                            </label>
+                            <div className="relative">
+                                <Clock className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                                <input
+                                    type="number"
+                                    value={pricingRules.peakHourPrice}
+                                    onChange={(e) => setPricingRules({...pricingRules, peakHourPrice: e.target.value})}
+                                    placeholder="e.g. 1800 (6 PM - 10 PM)"
+                                    className="w-full bg-slate-900 border border-white/5 rounded-lg pl-9 pr-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </motion.div>
 
