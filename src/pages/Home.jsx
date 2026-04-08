@@ -92,15 +92,23 @@ export default function Home() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await apiClient.get('/analytics/platform-stats');
-                if (res.data?.success) {
-                    const data = res.data.data;
-                    setStats({
+                const [statsRes, catRes] = await Promise.all([
+                    apiClient.get('/analytics/platform-stats'),
+                    apiClient.get('/venues/categories')
+                ]);
+
+                if (statsRes.data?.success) {
+                    const data = statsRes.data.data;
+                    setStats(prev => ({
+                        ...prev,
                         users: data.users || 2400,
                         venues: data.venues || 45,
                         tournaments: data.tournaments || 12,
-                        featuredVenue: data.featuredVenue || { name: "Urban Arena", location: "Mumbai, MH", rating: 4.9 }
-                    });
+                        featuredVenue: data.featuredVenue || prev.featuredVenue,
+                        featuredVenueAvatars: data.featuredVenueAvatars || [],
+                        featuredVenueBookingCount: data.featuredVenueBookingCount || 0,
+                        dynamicCategories: catRes.data?.success ? catRes.data.data : []
+                    }));
                 }
             } catch (err) {
                 console.error("Stats fetching error:", err);
@@ -253,13 +261,22 @@ export default function Home() {
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Popular with Pros</span>
                                         <div className="flex -space-x-3">
-                                            {[avatar1, avatar2, avatar3].map((av, i) => (
+                                            {(stats.featuredVenueAvatars?.length > 0 ? stats.featuredVenueAvatars : [avatar1, avatar2, avatar3]).map((av, i) => (
                                                 <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800 overflow-hidden ring-2 ring-neon-blue/20">
-                                                    <img src={av} alt="p" className="w-full h-full object-cover" />
+                                                    <img 
+                                                        src={
+                                                            av && (av.startsWith('data:') || av.startsWith('http'))
+                                                                ? av
+                                                                : `http://localhost:5000${av?.startsWith('/') ? '' : '/'}${av || 'user-default.jpg'}`
+                                                        } 
+                                                        alt="Player" 
+                                                        className="w-full h-full object-cover" 
+                                                        onError={(e) => { e.target.onerror = null; e.target.src = avatar1; }}
+                                                    />
                                                 </div>
                                             ))}
                                             <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-900 flex items-center justify-center text-[10px] font-black text-white ring-2 ring-neon-blue/20">
-                                                +25
+                                                +{stats.featuredVenueBookingCount || '10'}
                                             </div>
                                         </div>
                                     </div>
@@ -279,41 +296,68 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* Categories / Grid */}
-                <div className="mb-24">
+                {/* Dynamic Sport Categories */}
+                <div className="mb-32">
                     <div className="flex items-end justify-between mb-12">
-                        <div>
-                            {/* <h2 className="text-4xl font-black text-white mb-2">WHAT'S YOUR <span className="text-neon-blue">GAME?</span></h2> */}
-                            <div className="flex items-center gap-2 text-4xl font-black text-white mb-2">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                        >
+                            <div className="flex items-center gap-3 text-4xl md:text-5xl font-black text-white mb-4">
                                 <SplitText>WHAT'S YOUR</SplitText>
                                 <span className="text-neon-blue inline-flex"><SplitText>GAME?</SplitText></span>
                             </div>
-                            <p className="text-slate-400">Explore premium facilities curated for pros.</p>
-                        </div>
-                        <button className="hidden md:flex items-center gap-2 text-white hover:text-neon-green transition-colors font-bold uppercase tracking-wide text-sm border-b border-transparent hover:border-neon-green pb-1">
-                            View All Categories <ArrowRight className="w-4 h-4" />
+                            <p className="text-slate-400 font-medium tracking-wide">Explore premium facilities curated for the competitive edge.</p>
+                        </motion.div>
+                        <button 
+                            onClick={() => navigate('/venues')}
+                            className="hidden md:flex items-center gap-3 text-white hover:text-neon-green transition-all font-black uppercase tracking-widest text-xs border-white/10 hover:border-neon-green group"
+                        >
+                            Global Directory <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-neon-green group-hover:text-black transition-all"><ArrowRight className="w-4 h-4" /></div>
                         </button>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6">
-                        <FeatureCard
-                            title="Night Football"
-                            desc="FIFA-grade floodlights and premium grass for the ultimate night games."
-                            image={footballImg}
-                            delay={0.2}
-                        />
-                        <FeatureCard
-                            title="Cricket Nets"
-                            desc="Pro-level bowling machines and pitch analysis for serious practice."
-                            image={cricketImg}
-                            delay={0.4}
-                        />
-                        <FeatureCard
-                            title="Badminton"
-                            desc="Indoor wooden courts with shock absorption and climate control."
-                            image={badmintonImg}
-                            delay={0.6}
-                        />
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {(stats.dynamicCategories?.length > 0 ? stats.dynamicCategories : [
+                            { title: 'Football', count: 12, desc: 'FIFA-grade floodlights and premium grass.', image: footballImg },
+                            { title: 'Cricket', count: 8, desc: 'Pro-level bowling machines and practice nets.', image: cricketImg },
+                            { title: 'Badminton', count: 5, desc: 'Indoor wooden courts with climate control.', image: badmintonImg }
+                        ]).map((cat, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.1, duration: 0.8 }}
+                                whileHover={{ scale: 1.02 }}
+                                onClick={() => navigate(`/venues?sport=${cat.title}`)}
+                                className="group relative h-[450px] rounded-[2.5rem] overflow-hidden cursor-pointer border border-white/5 hover:border-neon-blue/40 transition-all shadow-2xl"
+                            >
+                                <img 
+                                    src={cat.image?.startsWith('data') || cat.image?.startsWith('http') ? cat.image : (cat.image ? `http://localhost:5000${cat.image}` : [footballImg, cricketImg, badmintonImg][i % 3])} 
+                                    alt={cat.title} 
+                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent group-hover:from-slate-950 transition-colors" />
+                                
+                                <div className="absolute top-6 right-6">
+                                    <div className="px-4 py-2 bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-neon-blue shadow-xl">
+                                        {cat.count} Arenas
+                                    </div>
+                                </div>
+
+                                <div className="absolute bottom-0 left-0 p-8 w-full group-hover:pb-10 transition-all">
+                                    <motion.div className="w-12 h-1 bg-neon-blue mb-4 transform origin-left transition-transform duration-300 group-hover:scale-x-150 group-hover:bg-neon-green" />
+                                    <h3 className="text-4xl font-black text-white mb-2 uppercase italic tracking-tighter group-hover:text-neon-blue transition-colors">{cat.title}</h3>
+                                    <p className="text-slate-300 text-sm font-medium line-clamp-2 mb-6 group-hover:text-white transition-colors">{cat.desc}</p>
+
+                                    <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-[10px] group-hover:text-neon-green transition-colors">
+                                        Check Availability <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
 

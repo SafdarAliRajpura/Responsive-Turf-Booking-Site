@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Search, MapPin, Star, Filter, ArrowRight, IndianRupee, ChevronLeft, ChevronRight, Navigation
 } from 'lucide-react';
@@ -207,9 +207,20 @@ const VenueCard = ({ venue, index, onBook }) => {
 
 export default function Venue() {
     const navigate = useNavigate();
-    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchParams] = useSearchParams();
+    const [selectedCategory, setSelectedCategory] = useState(searchParams.get('sport') || 'All');
     const [venues, setVenues] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Sync selectedCategory when URL changes
+    useEffect(() => {
+        const sportParam = searchParams.get('sport');
+        if (sportParam) {
+            setSelectedCategory(sportParam);
+        } else {
+            setSelectedCategory('All');
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const fetchVenues = async () => {
