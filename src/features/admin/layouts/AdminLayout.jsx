@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard, Users, MapPin, Trophy,
-    Calendar, Settings, LogOut, Bell, Search, Zap
+    Calendar, Settings, LogOut, Bell, Search, Zap, MessageSquare
 } from 'lucide-react';
 import userAvatarImg from '../../../assets/images/common/user-avatar.jpg';
 import carbonFibrePattern from '../../../assets/images/common/carbon-fibre.png';
@@ -49,6 +49,7 @@ export default function AdminLayout() {
         { icon: MapPin, label: 'Venues', path: '/admin/venues' },
         { icon: Trophy, label: 'Tournaments', path: '/admin/tournaments' },
         { icon: Calendar, label: 'Bookings', path: '/admin/bookings' },
+        { icon: MessageSquare, label: 'Inquiries', path: '/admin/inquiries' },
         { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ];
 

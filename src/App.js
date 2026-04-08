@@ -34,6 +34,7 @@ import AdminUsers from './features/admin/pages/Users';
 import AdminVenues from './features/admin/pages/Venues';
 import AdminTournaments from './features/admin/pages/Tournaments';
 import AdminBookings from './features/admin/pages/Bookings';
+import AdminInquiries from './features/admin/pages/Inquiries';
 
 // Role Guard for Restricted User Interface Access
 const PublicUserGuard = ({ children }) => {
@@ -108,6 +109,7 @@ function App() {
         <Route path="venues" element={<AdminVenues />} />
         <Route path="tournaments" element={<AdminTournaments />} />
         <Route path="bookings" element={<AdminBookings />} />
+        <Route path="inquiries" element={<AdminInquiries />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

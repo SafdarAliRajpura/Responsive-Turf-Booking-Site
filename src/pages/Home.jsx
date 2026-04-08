@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
@@ -23,6 +23,7 @@ import avatar3 from '../assets/images/common/avatar-3.jpg';
 import Footer from '../components/common/Footer';
 
 import Header from '../components/common/Header';
+import apiClient from '../utils/apiClient';
 
 const avatars = [avatar1, avatar2, avatar3];
 
@@ -76,6 +77,45 @@ const FeatureCard = ({ title, desc, image, delay }) => (
 
 export default function Home() {
     const navigate = useNavigate();
+    const [stats, setStats] = useState({
+        users: 2400,
+        venues: 45,
+        tournaments: 12,
+        featuredVenue: {
+            name: "Urban Arena",
+            location: "Mumbai, MH",
+            rating: 4.9
+        }
+    });
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await apiClient.get('/analytics/platform-stats');
+                if (res.data?.success) {
+                    const data = res.data.data;
+                    setStats({
+                        users: data.users || 2400,
+                        venues: data.venues || 45,
+                        tournaments: data.tournaments || 12,
+                        featuredVenue: data.featuredVenue || { name: "Urban Arena", location: "Mumbai, MH", rating: 4.9 }
+                    });
+                }
+            } catch (err) {
+                console.error("Stats fetching error:", err);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/venues?search=${encodeURIComponent(searchQuery)}`);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black overflow-x-hidden">
 
@@ -134,17 +174,19 @@ export default function Home() {
                             transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
                             className="flex flex-wrap gap-4"
                         >
-                            <div className="flex-1 bg-slate-900/80 border border-white/10 rounded-2xl p-2 flex items-center max-w-sm focus-within:border-neon-green/50 transition-colors">
+                            <form onSubmit={handleSearch} className="flex-1 bg-slate-900/80 border border-white/10 rounded-2xl p-2 flex items-center max-w-sm focus-within:border-neon-green/50 transition-colors">
                                 <MapPin className="w-5 h-5 text-slate-500 ml-3" />
                                 <input
                                     type="text"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
                                     placeholder="Find a turf near you..."
                                     className="bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 w-full px-4 py-2 font-medium"
                                 />
-                                <button className="bg-neon-green text-black p-3 rounded-xl hover:bg-white transition-colors">
+                                <button type="submit" className="bg-neon-green text-black p-3 rounded-xl hover:bg-white transition-colors">
                                     <Search className="w-5 h-5" />
                                 </button>
-                            </div>
+                            </form>
                         </motion.div>
 
                         <motion.div
@@ -153,13 +195,13 @@ export default function Home() {
                             transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
                             className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4"
                         >
-                            <StatCard icon={Trophy} label="Tournaments" value="12 Live" color="neon-yellow" />
-                            <StatCard icon={MapPin} label="Venues" value="45+" color="neon-pink" />
-                            <StatCard icon={Users} label="Players" value="2.4k" color="neon-blue" />
+                            <StatCard icon={Trophy} label="Tournaments" value={`${stats.tournaments} Live`} color="neon-yellow" />
+                            <StatCard icon={MapPin} label="Venues" value={`${stats.venues}+`} color="neon-pink" />
+                            <StatCard icon={Users} label="Players" value={stats.users > 1000 ? `${(stats.users/1000).toFixed(1)}k` : stats.users} color="neon-blue" />
                         </motion.div>
                     </div>
 
-                    <div className="lg:w-1/2 relative">
+                    <div className="lg:w-1/2 relative group">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, rotate: 6 }}
                             animate={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -167,31 +209,66 @@ export default function Home() {
                             className="relative z-10 rounded-[3rem] overflow-hidden border-8 border-slate-900/50 shadow-2xl shadow-neon-blue/20"
                         >
                             <img
-                                src={heroBgImg}
-                                alt="Hero"
-                                className="w-full h-[600px] object-cover"
+                                src={
+                                    stats.featuredVenue.image 
+                                        ? (stats.featuredVenue.image.startsWith('data:') || stats.featuredVenue.image.startsWith('http') 
+                                            ? stats.featuredVenue.image 
+                                            : `http://localhost:5000${stats.featuredVenue.image.startsWith('/') ? '' : '/'}${stats.featuredVenue.image}`)
+                                        : heroBgImg
+                                }
+                                alt={stats.featuredVenue.name}
+                                className="w-full h-[600px] object-cover transition-transform duration-1000 group-hover:scale-110"
+                                onError={(e) => { e.target.onerror = null; e.target.src = heroBgImg; }}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
 
-                            <div className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-white font-bold text-lg">Urban Arena, Mumbai</h4>
-                                    <div className="flex items-center gap-1 text-neon-yellow">
-                                        <Star className="w-4 h-4 fill-current" />
-                                        <span className="font-bold">4.9</span>
+                            <div className="absolute top-8 left-8">
+                                <span className="px-4 py-2 bg-neon-yellow text-black font-black uppercase text-[10px] tracking-widest rounded-full shadow-[0_0_20px_rgba(250,204,21,0.4)] flex items-center gap-2">
+                                    <Star className="w-3 h-3 fill-current" /> Highest Rated Arena
+                                </span>
+                            </div>
+
+                            <div className="absolute bottom-8 left-8 right-8 bg-slate-950/40 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl group-hover:border-neon-blue/40 transition-colors">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h4 className="text-white font-black text-3xl italic uppercase leading-none mb-1 tracking-tighter">
+                                            {stats.featuredVenue.name}
+                                        </h4>
+                                        <p className="text-neon-blue text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                            <MapPin className="w-3 h-3" /> {stats.featuredVenue.location}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <div className="text-neon-yellow flex items-center gap-1 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]">
+                                            <Star className="w-6 h-6 fill-current" />
+                                            <span className="text-3xl font-black italic">{stats.featuredVenue.rating || '5.0'}</span>
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Elite Score</span>
                                     </div>
                                 </div>
-                                <p className="text-slate-300 text-sm mb-4">5v5 Football • Heated Turf • Night Mode</p>
+                                
+                                <div className="h-px w-full bg-white/10 mb-6" />
+
                                 <div className="flex items-center justify-between">
-                                    <div className="flex -space-x-3">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-800 bg-slate-700 overflow-hidden">
-                                                <img src={avatars[i - 1]} alt="p" className="w-full h-full" />
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Popular with Pros</span>
+                                        <div className="flex -space-x-3">
+                                            {[avatar1, avatar2, avatar3].map((av, i) => (
+                                                <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800 overflow-hidden ring-2 ring-neon-blue/20">
+                                                    <img src={av} alt="p" className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
+                                            <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-900 flex items-center justify-center text-[10px] font-black text-white ring-2 ring-neon-blue/20">
+                                                +25
                                             </div>
-                                        ))}
-                                        <div className="w-8 h-8 rounded-full border-2 border-slate-800 bg-slate-800 flex items-center justify-center text-[10px] font-bold">+12</div>
+                                        </div>
                                     </div>
-                                    <button onClick={() => navigate('/venues')} className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-neon-green transition-colors">Book Now</button>
+                                    <button 
+                                        onClick={() => navigate('/venues')} 
+                                        className="px-8 py-4 bg-white text-black text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-neon-green hover:shadow-[0_0_30px_rgba(57,255,20,0.4)] transition-all transform active:scale-95"
+                                    >
+                                        Book Elite Turf
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>

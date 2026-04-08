@@ -4,6 +4,7 @@ import { Mail, Phone, MapPin, Send, MessageSquare, User, Globe, ArrowRight } fro
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import Toast from '../components/ui/Toast';
+import apiClient from '../utils/apiClient';
 
 const ContactInfoCard = ({ icon: Icon, title, value, link, delay }) => (
     <motion.a
@@ -69,7 +70,7 @@ export default function Contact() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!formData.name || !formData.email || !formData.message) {
@@ -78,13 +79,16 @@ export default function Contact() {
         }
 
         setIsSubmitting(true);
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Contact Form Data:", formData);
-            setToast({ message: "Message sent! We'll get back to you soon.", type: 'success' });
+        try {
+            await apiClient.post('/contacts', formData);
+            setToast({ message: "Your inquiry has been securely transmitted. Our support executives will connect with you shortly.", type: 'success' });
             setFormData({ name: '', email: '', subject: '', message: '' });
+        } catch (error) {
+            console.error("Submission Error:", error);
+            setToast({ message: "Transmission failed. Please verify your connection or try again momentarily.", type: 'error' });
+        } finally {
             setIsSubmitting(false);
-        }, 1500);
+        }
     };
 
     return (
