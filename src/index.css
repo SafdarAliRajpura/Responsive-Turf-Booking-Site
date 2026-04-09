@@ -48,13 +48,4 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(100, 100, 255, 0.4);
   }
-
-  @keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(calc(-50% - 12px)); }
-  }
-
-  .animate-scroll {
-    animation: scroll 40s linear infinite;
-  }
 }
