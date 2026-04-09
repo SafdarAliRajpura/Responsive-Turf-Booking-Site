@@ -1,13 +1,53 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Zap, Menu, Bell, LogOut, LayoutDashboard, User as UserIcon, MessageSquare, Heart, Calendar } from 'lucide-react';
+import { Zap, Menu, Bell, LogOut, LayoutDashboard, User as UserIcon, MessageSquare, Heart, Calendar, Search, MapPin, Trophy, Target } from 'lucide-react';
 import userAvatarImg from '../../assets/images/common/user-avatar.jpg';
 import { useNotifications } from '../../context/NotificationContext';
 import NotificationToast from './NotificationToast';
+import apiClient from '../../utils/apiClient';
 
 const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Search State
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const [searchResults, setSearchResults] = React.useState([]);
+    const [isSearching, setIsSearching] = React.useState(false);
+    const [showSearch, setShowSearch] = React.useState(false);
+    const searchRef = React.useRef(null);
+
+    // Debounced Search Logic
+    React.useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (searchQuery.length > 2) {
+                setIsSearching(true);
+                try {
+                    const res = await apiClient.get(`/search?query=${searchQuery}`);
+                    if (res.data?.success) setSearchResults(res.data.data);
+                } catch (err) {
+                    console.error('Search failed', err);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
+
+    // Close search on click outside
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSearch(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Get user data from local storage
     const userString = localStorage.getItem('user');
@@ -37,6 +77,66 @@ const Header = () => {
                     <span className="text-xl font-black tracking-tighter text-white">
                         TURF<span className="text-neon-green">X</span>
                     </span>
+                </div>
+
+                <div className="hidden lg:flex flex-1 max-w-md mx-8 relative" ref={searchRef}>
+                    <div className="relative w-full group">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-green to-neon-blue rounded-xl opacity-20 group-hover:opacity-100 transition duration-500 blur" />
+                        <div className="relative flex items-center bg-slate-900 border border-white/10 rounded-xl px-4 py-2 hover:border-white/20 transition-all">
+                            <Search className="w-5 h-5 text-slate-500 group-focus-within:text-neon-green transition-colors" />
+                            <input 
+                                type="text"
+                                placeholder="Global Pulse Search..."
+                                value={searchQuery}
+                                onFocus={() => setShowSearch(true)}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-transparent border-none text-white text-xs font-bold placeholder-slate-600 focus:outline-none focus:ring-0 w-full px-4"
+                            />
+                            {isSearching && (
+                                <div className="w-4 h-4 border-2 border-neon-green border-t-transparent rounded-full animate-spin" />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Search Results Dropdown */}
+                    {showSearch && (searchQuery.length > 2) && (
+                        <div className="absolute top-full left-0 right-0 mt-3 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-2xl z-[100] max-h-[70vh] overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-300">
+                            {searchResults.length > 0 ? (
+                                <div className="p-2 space-y-1">
+                                    {searchResults.map((item, idx) => (
+                                        <button 
+                                            key={idx}
+                                            onClick={() => {
+                                                setShowSearch(false);
+                                                if(item.type === 'Venue') navigate(`/venues/${item._id}`);
+                                                else if(item.type === 'Tournament') navigate('/tournaments');
+                                                else navigate('/profile');
+                                            }}
+                                            className="w-full flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-all group/item text-left"
+                                        >
+                                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 border border-white/5 group-hover/item:border-neon-green/30 transition-colors">
+                                                {item.type === 'Venue' && <MapPin className="w-5 h-5 text-neon-pink" />}
+                                                {item.type === 'Tournament' && <Trophy className="w-5 h-5 text-neon-yellow" />}
+                                                {item.type === 'Player' && <Target className="w-5 h-5 text-neon-blue" />}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="text-sm font-bold text-white truncate">{item.name || `${item.first_name} ${item.last_name}`}</h4>
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{item.type}</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 truncate">{item.location || (item.skillLevel ? `${item.skillLevel} Player` : 'Community Member')}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : !isSearching && (
+                                <div className="p-12 text-center">
+                                    <Search className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
+                                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No matches found in the pulse</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">

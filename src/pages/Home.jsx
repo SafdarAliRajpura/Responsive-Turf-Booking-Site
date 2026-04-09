@@ -6,7 +6,7 @@ import SplitText from '../components/common/SplitText';
 import {
     Trophy, Users, Search,
     MapPin, Star, ArrowRight,
-    Shield, Smartphone, Globe, Activity
+    Shield, Smartphone, Globe, Activity, Quote
 } from 'lucide-react';
 
 // Local Image Imports
@@ -19,6 +19,7 @@ import cubesPattern from '../assets/images/common/cubes.png';
 import avatar1 from '../assets/images/common/avatar-1.jpg';
 import avatar2 from '../assets/images/common/avatar-2.jpg';
 import avatar3 from '../assets/images/common/avatar-3.jpg';
+import userAvatarImg from '../assets/images/common/user-avatar.jpg';
 
 import Footer from '../components/common/Footer';
 
@@ -77,44 +78,45 @@ const FeatureCard = ({ title, desc, image, delay }) => (
 
 export default function Home() {
     const navigate = useNavigate();
-    const [stats, setStats] = useState({
-        users: 2400,
-        venues: 45,
-        tournaments: 12,
-        featuredVenue: {
-            name: "Urban Arena",
-            location: "Mumbai, MH",
-            rating: 4.9
-        }
+    const [stats, setStats] = useState({ 
+        users: 2400, 
+        venues: 45, 
+        tournaments: 12, 
+        recentAvatars: [], 
+        featuredVenue: { name: 'Elite Arena', location: 'Navi Mumbai', rating: '5.0' },
+        featuredVenueAvatars: [],
+        featuredVenueBookingCount: 15
     });
+    const [categories, setCategories] = useState([]);
+    const [eliteReviews, setEliteReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchHomeData = async () => {
             try {
-                const [statsRes, catRes] = await Promise.all([
+                const [statsRes, catRes, reviewRes] = await Promise.all([
                     apiClient.get('/analytics/platform-stats'),
-                    apiClient.get('/venues/categories')
+                    apiClient.get('/venues/categories'),
+                    apiClient.get('/reviews/highlights')
                 ]);
-
+                
                 if (statsRes.data?.success) {
-                    const data = statsRes.data.data;
-                    setStats(prev => ({
-                        ...prev,
-                        users: data.users || 2400,
-                        venues: data.venues || 45,
-                        tournaments: data.tournaments || 12,
-                        featuredVenue: data.featuredVenue || prev.featuredVenue,
-                        featuredVenueAvatars: data.featuredVenueAvatars || [],
-                        featuredVenueBookingCount: data.featuredVenueBookingCount || 0,
-                        dynamicCategories: catRes.data?.success ? catRes.data.data : []
-                    }));
+                    setStats(prev => ({ ...prev, ...statsRes.data.data }));
+                }
+                if (catRes.data?.success) {
+                    setCategories(catRes.data.data);
+                }
+                if (reviewRes.data?.success) {
+                    setEliteReviews(reviewRes.data.data);
                 }
             } catch (err) {
-                console.error("Stats fetching error:", err);
+                console.error('Home data fetch error:', err);
+            } finally {
+                setLoading(false);
             }
         };
-        fetchStats();
+        fetchHomeData();
     }, []);
 
     const handleSearch = (e) => {
@@ -284,7 +286,7 @@ export default function Home() {
                                         onClick={() => navigate('/venues')} 
                                         className="px-8 py-4 bg-white text-black text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-neon-green hover:shadow-[0_0_30px_rgba(57,255,20,0.4)] transition-all transform active:scale-95"
                                     >
-                                        Book Elite Turf
+                                        Play Now
                                     </button>
                                 </div>
                             </div>
@@ -319,7 +321,7 @@ export default function Home() {
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {(stats.dynamicCategories?.length > 0 ? stats.dynamicCategories : [
+                        {(categories.length > 0 ? categories : [
                             { title: 'Football', count: 12, desc: 'FIFA-grade floodlights and premium grass.', image: footballImg },
                             { title: 'Cricket', count: 8, desc: 'Pro-level bowling machines and practice nets.', image: cricketImg },
                             { title: 'Badminton', count: 5, desc: 'Indoor wooden courts with climate control.', image: badmintonImg }
@@ -425,6 +427,87 @@ export default function Home() {
                         ))}
                     </div>
                 </div>
+
+                {/* Testimonials Section */}
+                {eliteReviews.length > 0 && (
+                    <div className="mb-32">
+                        <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6">
+                            <div className="text-left">
+                                <span className="text-neon-pink font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Elite Experiences</span>
+                                <div className="flex gap-3 text-4xl md:text-6xl font-black text-white italic truncate">
+                                    <SplitText>PLAYER</SplitText>
+                                    <span className="text-neon-pink inline-flex"><SplitText>PULSE.</SplitText></span>
+                                </div>
+                            </div>
+                            <div className="text-right hidden md:block">
+                                <div className="flex items-center gap-1 text-neon-yellow mb-2 justify-end">
+                                    {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+                                </div>
+                                <p className="text-slate-500 text-xs font-black uppercase tracking-widest">4.9/5 Average Platform Rating</p>
+                            </div>
+                        </div>
+
+                        {/* Infinite Horizontal Scroll */}
+                        <div className="relative group overflow-hidden -mx-6 px-6">
+                            <div className="flex gap-6 animate-scroll hover:[animation-play-state:paused] py-4">
+                                {[...eliteReviews, ...eliteReviews].map((review, i) => (
+                                    <motion.div
+                                        key={`${review._id}-${i}`}
+                                        whileHover={{ y: -10, transition: { duration: 0.3 } }}
+                                        className="min-w-[400px] bg-slate-900/40 backdrop-blur-xl border border-white/5 p-8 rounded-[3rem] relative group/card hover:border-neon-pink/30 hover:bg-slate-900/60 transition-all duration-500"
+                                    >
+                                        <Quote className="absolute top-8 right-10 w-16 h-16 text-white/5 group-hover/card:text-neon-pink/10 transition-colors" />
+                                        
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-neon-pink to-purple-600 p-[2px]">
+                                                <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden border-2 border-slate-950 relative">
+                                                    <img 
+                                                        src={[avatar1, avatar2, avatar3][i % 3]} 
+                                                        alt={review.user} 
+                                                        className="w-full h-full object-cover opacity-80 group-hover/card:opacity-100 transition-opacity" 
+                                                    />
+                                                    <div className="absolute inset-0 bg-neon-pink/10" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <h4 className="text-white font-black uppercase italic tracking-tighter text-lg">{review.user}</h4>
+                                                    <div className="w-4 h-4 rounded-full bg-neon-blue flex items-center justify-center">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    {[...Array(5)].map((_, idx) => (
+                                                        <Star key={idx} className={`w-3 h-3 ${idx < review.rating ? 'text-neon-yellow fill-current' : 'text-slate-700'}`} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-slate-300 italic text-lg leading-relaxed mb-8 relative z-10 font-medium">
+                                            "{review.comment}"
+                                        </p>
+
+                                        <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-neon-pink/10 flex items-center justify-center">
+                                                    <MapPin className="w-4 h-4 text-neon-pink" />
+                                                </div>
+                                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">{review.venueId?.name || 'Pro Arena'}</span>
+                                            </div>
+                                            <button 
+                                                onClick={() => review.venueId?._id && navigate(`/venues/${review.venueId._id}`)}
+                                                className="px-4 py-2 bg-white/5 hover:bg-neon-pink hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 border border-white/5"
+                                            >
+                                                Book Arena
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* CTA Banne */}
                 <div className="relative rounded-[3rem] overflow-hidden bg-slate-900 border border-white/10 px-6 py-20 text-center">

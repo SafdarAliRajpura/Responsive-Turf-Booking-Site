@@ -166,13 +166,15 @@ export default function Community() {
                                 Start Discussion <Plus className="w-5 h-5" />
                             </button>
                             <div className="flex -space-x-4">
-                                {(platformStats.recentAvatars?.length > 0 ? platformStats.recentAvatars : [1, 2, 3, 4]).map((avatar, i) => (
-                                    <div key={i} className="w-12 h-12 rounded-full border-4 border-slate-950 bg-slate-800 overflow-hidden relative shadow-lg">
+                                {(platformStats.recentAvatars?.length > 0 
+                                    ? platformStats.recentAvatars.slice(0, 5) 
+                                    : [1, 2, 3, 4]).map((avatar, i) => (
+                                    <div key={i} className="w-12 h-12 rounded-full border-4 border-slate-950 bg-slate-800 overflow-hidden relative shadow-lg group-hover:scale-110 transition-transform cursor-pointer">
                                         <img src={typeof avatar === 'string' ? avatar : userAvatarImg} alt="User" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
                                     </div>
                                 ))}
                                 <div className="w-12 h-12 rounded-full border-4 border-slate-950 bg-gradient-to-br from-neon-blue to-purple-600 flex items-center justify-center text-[10px] font-black text-white z-10 shadow-xl shadow-neon-blue/20">
-                                    {platformStats.users > 4 ? `${(platformStats.users - 4).toLocaleString()}+` : 'JOIN'}
+                                    {platformStats.users > 5 ? `${(platformStats.users - 5).toLocaleString()}+` : 'JOIN'}
                                 </div>
                             </div>
                         </motion.div>
