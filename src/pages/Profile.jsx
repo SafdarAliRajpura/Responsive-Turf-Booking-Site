@@ -126,17 +126,24 @@ export default function Profile() {
                                                 <img src={userProfilePic} alt="Profile" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
-                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r ${getTierColor(user.skillLevel)} rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg`}>
-                                            {user.skillLevel} Tier
+                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r ${getTierColor(user.skillLevel)} rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg whitespace-nowrap`}>
+                                            {user.skillLevel} • {user.primaryRole || 'Athlete'}
                                         </div>
                                     </div>
 
                                     <h1 className="text-3xl font-black italic uppercase mb-2 tracking-tighter">
                                         {user.first_name} <span className="text-neon-blue">{user.last_name}</span>
                                     </h1>
-                                    <p className="text-slate-500 text-sm font-medium mb-8 flex items-center justify-center gap-2">
-                                        <MapPin className="w-3 h-3" /> Player ID: {(user._id || '000000').slice(-6).toUpperCase()}
+                                    <p className="text-slate-500 text-[10px] font-bold mb-6 flex items-center justify-center gap-2 uppercase tracking-widest">
+                                        <MapPin className="w-3 h-3 text-neon-blue" /> Player ID: {(user._id || '000000').slice(-6).toUpperCase()}
                                     </p>
+
+                                    {user.bio && (
+                                        <div className="mb-8 px-4 py-3 bg-white/5 border border-white/5 rounded-2xl relative">
+                                            <div className="absolute -top-2 left-4 px-2 bg-slate-900 text-[8px] font-black uppercase text-neon-blue tracking-widest">Athlete Bio</div>
+                                            <p className="text-sm text-slate-400 font-medium italic leading-relaxed line-clamp-3">"{user.bio}"</p>
+                                        </div>
+                                    )}
 
                                     {/* Stat Grid */}
                                     <div className="grid grid-cols-2 gap-4 w-full mb-8">
@@ -146,7 +153,7 @@ export default function Profile() {
                                         </div>
                                         <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
                                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Rank</p>
-                                            <p className="text-xl font-black text-neon-green">#{(Math.floor(Math.random() * 50) + 1)}</p>
+                                            <p className="text-xl font-black text-neon-green">#{user.rank || 1}</p>
                                         </div>
                                     </div>
 
@@ -246,73 +253,109 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {/* Social Activity Feed */}
-                        <div className="bg-slate-900 border border-white/10 rounded-[40px] p-8 md:p-12 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-blue to-purple-600" />
-                            <h2 className="text-2xl font-black italic uppercase mb-10 flex items-center gap-3">
-                                <TrendingUp className="w-6 h-6 text-neon-blue" /> Tactical <span className="text-neon-blue">Milestones</span>
-                            </h2>
-                            
-                            <div className="space-y-8">
-                                {[
-                                    { t: 'Joined the Ecosystem', d: 'New Player Registration', date: new Date(user.createdAt).toLocaleDateString(), xp: '+100 XP' },
-                                    { t: 'Field Scout', d: 'Browsed Local Venues', date: 'Historical', xp: '+10 XP' }
-                                ].map((m, i) => (
-                                    <div key={i} className="flex gap-6 items-start">
-                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 flex-shrink-0">
-                                            <div className="w-2 h-2 rounded-full bg-neon-blue animate-pulse" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h4 className="font-bold text-white text-lg">{m.t}</h4>
-                                                <span className="text-xs font-black text-neon-green uppercase tracking-widest">{m.xp}</span>
-                                            </div>
-                                            <p className="text-slate-500 text-sm font-medium">{m.d} • {m.date}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
 
                     </div>
                 </div>
-            </main>
-
-            <AnimatePresence>
+            </main>            <AnimatePresence>
                 {isEditing && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl"
                     >
                         <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-                            className="bg-slate-900 border border-white/10 rounded-[40px] p-10 w-full max-w-lg shadow-2xl overflow-hidden relative"
+                            className="bg-slate-900 border border-white/10 rounded-[40px] p-8 md:p-10 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh] relative"
                         >
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-green to-neon-blue" />
                             <div className="flex justify-between items-center mb-10">
-                                <h3 className="text-3xl font-black text-white italic uppercase">Player <span className="text-neon-green">Bio</span></h3>
+                                <div>
+                                    <h3 className="text-3xl font-black text-white italic uppercase leading-none mb-2">Athlete <span className="text-neon-green">Bio Hub</span></h3>
+                                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Customize your player identity across the network</p>
+                                </div>
                                 <button onClick={() => setIsEditing(false)} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all"><X className="w-6 h-6" /></button>
                             </div>
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Identity</label>
-                                    <div className="flex gap-4">
-                                        <input type="text" value={editForm.first_name || ''} onChange={(e) => setEditForm({...editForm, first_name: e.target.value})} placeholder="First Name" className="flex-1 bg-slate-950 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-green/50" />
-                                        <input type="text" value={editForm.last_name || ''} onChange={(e) => setEditForm({...editForm, last_name: e.target.value})} placeholder="Last Name" className="flex-1 bg-slate-950 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-green/50" />
+
+                            <div className="grid md:grid-cols-2 gap-8 mb-10">
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
+                                            <User className="w-3 h-3" /> Identity Matrix
+                                        </label>
+                                        <div className="flex gap-4">
+                                            <input type="text" value={editForm.first_name || ''} onChange={(e) => setEditForm({...editForm, first_name: e.target.value})} placeholder="First Name" className="flex-1 bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm transition-all" />
+                                            <input type="text" value={editForm.last_name || ''} onChange={(e) => setEditForm({...editForm, last_name: e.target.value})} placeholder="Last Name" className="flex-1 bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm transition-all" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
+                                            <Target className="w-3 h-3" /> Primary Field Role
+                                        </label>
+                                        <select 
+                                            value={editForm.primaryRole || 'Athlete'} 
+                                            onChange={(e) => setEditForm({...editForm, primaryRole: e.target.value})}
+                                            className="w-full bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm"
+                                        >
+                                            <option>Striker</option>
+                                            <option>Midfielder</option>
+                                            <option>Defender</option>
+                                            <option>Goalkeeper</option>
+                                            <option>All-Rounder</option>
+                                            <option>Opening Batsman</option>
+                                            <option>Fast Bowler</option>
+                                            <option>Spin Bowler</option>
+                                            <option>Wicket Keeper</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Avatar URL</label>
-                                    <input type="text" value={editForm.user_profile || ''} onChange={(e) => setEditForm({...editForm, user_profile: e.target.value})} placeholder="https://..." className="w-full bg-slate-950 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-green/50" />
+
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
+                                            <Camera className="w-3 h-3" /> Avatar Sync
+                                        </label>
+                                        <input type="text" value={editForm.user_profile || ''} onChange={(e) => setEditForm({...editForm, user_profile: e.target.value})} placeholder="Profile Image URL..." className="w-full bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm" />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
+                                            <MessageSquare className="w-3 h-3" /> Player Bio (Max 150)
+                                        </label>
+                                        <textarea 
+                                            value={editForm.bio || ''} 
+                                            onChange={(e) => {
+                                                if(e.target.value.length <= 150) setEditForm({...editForm, bio: e.target.value});
+                                            }}
+                                            rows="2" 
+                                            placeholder="Write something cool about your playstyle..." 
+                                            className="w-full bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm resize-none"
+                                        />
+                                    </div>
                                 </div>
-                                <button onClick={handleSaveProfile} disabled={isSaving} className="w-full py-5 bg-white text-black font-black uppercase rounded-2xl shadow-xl hover:bg-neon-green transition-all mt-6 shadow-neon-green/20">
-                                    {isSaving ? 'Syncing...' : 'Update Athlete Profile'}
-                                </button>
                             </div>
+
+                            <div className="space-y-4 mb-10">
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
+                                    <Star className="w-3 h-3" /> Social Links
+                                </label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="relative">
+                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 uppercase">IG @</span>
+                                        <input type="text" value={editForm.socialLinks?.instagram || ''} onChange={(e) => setEditForm({...editForm, socialLinks: {...editForm.socialLinks, instagram: e.target.value }})} className="w-full bg-slate-950 border border-white/5 rounded-2xl pl-16 pr-6 py-4 text-white focus:outline-none focus:border-neon-pink/50 text-sm" />
+                                    </div>
+                                    <div className="relative">
+                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 uppercase">TWX @</span>
+                                        <input type="text" value={editForm.socialLinks?.twitter || ''} onChange={(e) => setEditForm({...editForm, socialLinks: {...editForm.socialLinks, twitter: e.target.value }})} className="w-full bg-slate-950 border border-white/5 rounded-2xl pl-16 pr-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onClick={handleSaveProfile} disabled={isSaving} className="w-full py-5 bg-white text-black font-black uppercase rounded-2xl shadow-xl hover:bg-neon-green transition-all shadow-neon-green/20">
+                                {isSaving ? 'Synchronizing Data...' : 'Commit All Changes'}
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
-
             <Footer />
         </div>
     );

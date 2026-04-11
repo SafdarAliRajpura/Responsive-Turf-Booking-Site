@@ -367,7 +367,6 @@ export default function Home() {
                 <div className="mb-24">
                     <div className="text-center mb-16">
                         <span className="text-neon-pink font-bold tracking-widest uppercase text-xs mb-4 block">The TurfX Advantage</span>
-                        {/* <h2 className="text-4xl md:text-5xl font-black text-white mb-6">WHY <span className="text-neon-green">CHOOSE US?</span></h2> */}
                         <div className="flex justify-center flex-wrap gap-3 text-4xl md:text-5xl font-black text-white mb-6">
                             <SplitText>WHY</SplitText>
                             <span className="text-neon-green inline-flex"><SplitText>CHOOSE US?</SplitText></span>
@@ -380,28 +379,28 @@ export default function Home() {
                             {
                                 icon: Smartphone,
                                 title: "Instant Access",
-                                desc: "Book your favorite turf in seconds with our lightning-fast interface.",
+                                desc: `Book over ${stats.venues}+ verified arenas instantly with our zero-lag interface.`,
                                 bgClass: "bg-neon-blue/10",
                                 textClass: "text-neon-blue"
                             },
                             {
                                 icon: Shield,
-                                title: "Pro Standards",
-                                desc: "Every venue is verified for quality, safety, and amenities.",
+                                title: "Verified Arenas",
+                                desc: `Every single one of our ${stats.venues} venues is manually vetted for FIFA-grade standards.`,
                                 bgClass: "bg-neon-green/10",
                                 textClass: "text-neon-green"
                             },
                             {
                                 icon: Activity,
-                                title: "Live Analytics",
-                                desc: "Track your matches, wins, and performance stats over time.",
+                                title: "Live Pulse",
+                                desc: `Over ${stats.featuredVenueBookingCount} bookings handled this month with 99.9% uptime.`,
                                 bgClass: "bg-neon-pink/10",
                                 textClass: "text-neon-pink"
                             },
                             {
                                 icon: Globe,
-                                title: "Community",
-                                desc: "Find teams, challenge rivals, and climb the city-wide leaderboards.",
+                                title: "Global Network",
+                                desc: `Join ${stats.users > 1000 ? (stats.users/1000).toFixed(1) + 'k' : stats.users}+ pros competing across the network today.`,
                                 bgClass: "bg-neon-yellow/10",
                                 textClass: "text-neon-yellow"
                             }
@@ -421,8 +420,8 @@ export default function Home() {
                                 <div className={`w-14 h-14 rounded-2xl ${item.bgClass} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                                     <item.icon className={`w-7 h-7 ${item.textClass}`} />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-                                <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{item.title}</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed font-medium">{item.desc}</p>
                             </motion.div>
                         ))}
                     </div>

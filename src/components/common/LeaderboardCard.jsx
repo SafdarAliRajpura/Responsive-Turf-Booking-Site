@@ -90,7 +90,7 @@ const LeaderboardCard = () => {
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-white truncate">{player.first_name} {player.last_name}</p>
                             <div className={`mt-0.5 inline-flex px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${getSkillColor(player.skillLevel)}`}>
-                                {player.skillLevel}
+                                {player.skillLevel} • {player.primaryRole || 'Athlete'}
                             </div>
                         </div>
 

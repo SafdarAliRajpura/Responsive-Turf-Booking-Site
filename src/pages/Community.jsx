@@ -271,7 +271,7 @@ export default function Community() {
                                             <img src={post.author?.user_profile || userAvatarImg} alt="Author" className="w-10 h-10 rounded-full border border-white/10 object-cover" />
                                             <div>
                                                 <h3 className="font-bold text-lg leading-tight group-hover:text-neon-blue transition-colors truncate max-w-[200px] md:max-w-md">{post.title}</h3>
-                                                <p className="text-xs text-slate-500 mt-1">By <span className="text-white">{post.author?.first_name || 'Anonymous'}</span> • {new Date(post.createdAt).toLocaleDateString()}</p>
+                                                <p className="text-xs text-slate-500 mt-1">By <span className="text-white">{post.author?.first_name || 'Anonymous'}</span> • <span className="text-neon-blue font-bold uppercase tracking-tighter text-[10px]">{post.author?.primaryRole || 'Athlete'}</span> • {new Date(post.createdAt).toLocaleDateString()}</p>
                                             </div>
                                         </div>
                                         <span className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold uppercase tracking-wider text-slate-400 border border-white/5 whitespace-nowrap">
@@ -323,7 +323,7 @@ export default function Community() {
                                         <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter mb-8">{selectedDiscussion.title}</h2>
                                         <div className="flex items-center gap-4 p-4 rounded-3xl bg-white/5 border border-white/5 inline-flex">
                                             <img src={selectedDiscussion.author?.user_profile || userAvatarImg} className="w-12 h-12 rounded-full border-2 border-neon-blue/50" alt="" />
-                                            <div><p className="text-xs font-black text-neon-blue uppercase">Posted By</p><p className="text-lg font-bold text-white">{selectedDiscussion.author?.first_name} {selectedDiscussion.author?.last_name}</p></div>
+                                            <div><p className="text-xs font-black text-neon-blue uppercase">{selectedDiscussion.author?.primaryRole || 'Athlete'}</p><p className="text-lg font-bold text-white">{selectedDiscussion.author?.first_name} {selectedDiscussion.author?.last_name}</p></div>
                                         </div>
                                     </div>
                                     <p className="text-xl text-slate-300 leading-relaxed font-light mb-12">{selectedDiscussion.content}</p>
@@ -345,7 +345,13 @@ export default function Community() {
                                                 <div key={idx} className="flex gap-5 items-start">
                                                     <img src={comment.user?.user_profile || userAvatarImg} className="w-10 h-10 rounded-full flex-shrink-0 border border-white/10" alt="" />
                                                     <div className="flex-1 bg-white/5 border border-white/5 rounded-[25px] p-6">
-                                                        <div className="flex justify-between mb-2"><p className="font-bold text-neon-blue">{comment.user?.first_name} {comment.user?.last_name || ''}</p><span className="text-[10px] text-slate-500 uppercase">{new Date(comment.createdAt).toLocaleDateString()}</span></div>
+                                                        <div className="flex justify-between mb-2">
+                                                            <div>
+                                                                <p className="font-bold text-white leading-none">{comment.user?.first_name} {comment.user?.last_name || ''}</p>
+                                                                <p className="text-[8px] font-black text-neon-blue uppercase tracking-widest mt-1">{comment.user?.primaryRole || 'Athlete'}</p>
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-500 uppercase">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                                        </div>
                                                         <p className="text-slate-300">{comment.text}</p>
                                                     </div>
                                                 </div>

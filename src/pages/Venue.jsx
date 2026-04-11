@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-    Search, MapPin, Star, Filter, ArrowRight, IndianRupee, ChevronLeft, ChevronRight, Navigation
+    Search, MapPin, Star, Filter, ArrowRight, IndianRupee, 
+    ChevronLeft, ChevronRight, Navigation, Car, Wifi, 
+    CheckCircle, Coffee
 } from 'lucide-react';
 import { TypeAnimation } from 'react-type-animation';
 import { AnimatePresence } from 'framer-motion';
@@ -18,6 +20,7 @@ import Footer from '../components/common/Footer';
 
 import Header from '../components/common/Header';
 import useNavigation from '../hooks/useNavigation';
+import apiClient from '../utils/apiClient';
 
 const FilterTag = ({ label, active, onClick }) => (
     <button
@@ -30,6 +33,16 @@ const FilterTag = ({ label, active, onClick }) => (
         {label}
     </button>
 );
+
+const amenityMap = {
+    'parking': { label: 'Parking', icon: Car },
+    'wifi': { label: 'WiFi', icon: Wifi },
+    'changing_room': { label: 'Locker', icon: CheckCircle },
+    'canteen': { label: 'Cafeteria', icon: Coffee },
+    'showers': { label: 'Shower', icon: CheckCircle },
+    'first_aid': { label: 'First Aid', icon: CheckCircle },
+    'power_backup': { label: 'Power', icon: CheckCircle }
+};
 
 const VenueCard = ({ venue, index, onBook }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -44,10 +57,10 @@ const VenueCard = ({ venue, index, onBook }) => {
     ];
 
     // Auto-play carousel
-    React.useEffect(() => {
+    useEffect(() => {
         const timer = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % images.length);
-        }, 5000 + (index * 1000)); // stagger the intervals slightly so they don't all flip at the same time
+        }, 5000 + (index * 1000));
         return () => clearInterval(timer);
     }, [images.length, index]);
 
@@ -75,7 +88,7 @@ const VenueCard = ({ venue, index, onBook }) => {
                     />
                 </AnimatePresence>
 
-                {/* Left/Right manual controls (Optional, but good for interactive feel) */}
+                {/* Left/Right manual controls */}
                 <div className="absolute inset-0 z-20 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                         onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev - 1 + images.length) % images.length) }}
@@ -91,7 +104,7 @@ const VenueCard = ({ venue, index, onBook }) => {
                     </button>
                 </div>
 
-                {/* Rating & Distance Overlay (Frosted Glass) */}
+                {/* Rating & Distance Overlay */}
                 <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
                     <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 shadow-lg flex items-center gap-1.5 transform hover:scale-105 transition-transform">
                         <Star className="w-4 h-4 text-neon-yellow fill-current" />
@@ -136,26 +149,17 @@ const VenueCard = ({ venue, index, onBook }) => {
                     </div>
                 </div>
 
-                {/* Partner Identity Card (Small Version for Users) */}
-                {venue.owner && (
-                    <div className="flex items-center gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-white/5">
-                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shrink-0">
-                             <img src={venue.owner.avatar || 'https://api.dicebear.com/7.x/micah/svg?seed=Safdar'} alt="Partner" className="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-neon-blue uppercase tracking-widest leading-none mb-1">Partner</p>
-                            <p className="text-sm font-black text-white italic lowercase tracking-tight">{venue.owner.name}</p>
-                        </div>
-                    </div>
-                )}
-
                 {/* Amenities */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                    {venue.amenities.map((amenity, i) => (
-                        <span key={i} className="text-[10px] text-slate-500 bg-white/5 px-2 py-1 rounded-md border border-white/5">
-                            {amenity}
-                        </span>
-                    ))}
+                    {venue.amenities.map((item, i) => {
+                        const am = amenityMap[item] || { label: item, icon: CheckCircle };
+                        return (
+                            <span key={i} className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5">
+                                <am.icon className="w-3 h-3 text-neon-blue" />
+                                {am.label}
+                            </span>
+                        );
+                    })}
                 </div>
 
                 {navNotification && (
@@ -173,8 +177,8 @@ const VenueCard = ({ venue, index, onBook }) => {
                 {/* Price & Action */}
                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
                     <div>
-                        <span className="text-slate-400 text-xs uppercase tracking-wider">Per Hour</span>
-                        <div className="flex items-center text-white font-bold text-lg">
+                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Starting from</span>
+                        <div className="flex items-center text-white font-black text-xl">
                             <IndianRupee className="w-4 h-4 text-neon-green" />
                             {venue.price}
                         </div>
@@ -195,7 +199,7 @@ const VenueCard = ({ venue, index, onBook }) => {
                     )}
                     <button
                         onClick={() => onBook(venue.id)}
-                        className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-neon-green transition-colors flex items-center gap-2 group/btn shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(57,255,20,0.3)]"
+                        className="px-5 py-2.5 bg-white text-black text-xs font-black uppercase rounded-xl hover:bg-neon-green transition-colors flex items-center gap-2 group/btn shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(57,255,20,0.3)]"
                     >
                         Book Now <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
@@ -211,54 +215,58 @@ export default function Venue() {
     const [selectedCategory, setSelectedCategory] = useState(searchParams.get('sport') || 'All');
     const [venues, setVenues] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
-    // Sync selectedCategory when URL changes
+    // Sync selectedCategory and searchQuery when URL changes
     useEffect(() => {
         const sportParam = searchParams.get('sport');
-        if (sportParam) {
-            setSelectedCategory(sportParam);
-        } else {
-            setSelectedCategory('All');
-        }
+        const searchParam = searchParams.get('search');
+        if (sportParam) setSelectedCategory(sportParam);
+        if (searchParam) setSearchQuery(searchParam);
     }, [searchParams]);
 
-    useEffect(() => {
-        const fetchVenues = async () => {
-            try {
-                const res = await fetch('http://localhost:5000/api/venues');
-                const data = await res.json();
-                if (data.success) {
-                    const mappedVenues = data.data.filter(v => !v.status || v.status.toUpperCase() === 'ACTIVE').map((v) => ({
-                        id: v._id,
-                        name: v.name,
-                        sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
-                        image: (v.images && v.images.length > 0) ? v.images[0] : (v.image || footballNight),
-                        images: (v.images && v.images.length > 0) ? v.images : [v.image || footballNight, footballImg, cricketImg],
-                        rating: v.rating || 4.5,
-                        distance: v.distance || "2.5 km",
-                        location: v.location,
-                        price: v.price,
-                        amenities: v.amenities && v.amenities.length > 0 ? v.amenities : ["Parking", "Washroom"],
-                        owner: v.owner && typeof v.owner === 'object' ? {
-                             name: `${v.owner.first_name || 'Arena'} ${v.owner.last_name || 'Partner'}`,
-                             avatar: v.owner.user_profile
-                        } : null,
-                        coordinates: v.coordinates || { lat: 0, lng: 0 }
-                    }));
-                    setVenues(mappedVenues);
-                }
-            } catch (err) {
-                console.error("Error fetching venues:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchVenues();
-    }, []);
+    const fetchVenues = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (selectedCategory && selectedCategory !== 'All') params.append('sport', selectedCategory);
+            if (searchQuery) params.append('search', searchQuery);
 
-    const filteredVenues = selectedCategory === 'All'
-        ? venues
-        : venues.filter(v => v.sports.includes(selectedCategory));
+            const res = await apiClient.get(`/venues?${params.toString()}`);
+            if (res.data.success) {
+                const mappedVenues = res.data.data.map((v) => ({
+                    id: v._id,
+                    name: v.name,
+                    sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
+                    image: (v.images && v.images.length > 0) ? v.images[0] : (v.image || footballNight),
+                    images: (v.images && v.images.length > 0) ? v.images : [v.image || footballNight, footballImg, cricketImg],
+                    rating: v.rating || 4.5,
+                    distance: v.distance || "2.5 km",
+                    location: v.location,
+                    price: v.price,
+                    amenities: v.amenities && v.amenities.length > 0 ? v.amenities : ["parking"],
+                    owner: v.owner && typeof v.owner === 'object' ? {
+                         name: `${v.owner.first_name || 'Arena'} ${v.owner.last_name || 'Partner'}`,
+                         avatar: v.owner.user_profile
+                    } : null,
+                    coordinates: v.coordinates || { lat: 0, lng: 0 }
+                }));
+                setVenues(mappedVenues);
+            }
+        } catch (err) {
+            console.error("Error fetching venues:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Refetch when filters change
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchVenues();
+        }, 300); // Small debounce for search typing
+        return () => clearTimeout(timer);
+    }, [selectedCategory, searchQuery]);
 
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black overflow-x-hidden">
@@ -313,6 +321,8 @@ export default function Venue() {
                                 <Search className="w-5 h-5 text-slate-400 ml-3" />
                                 <input
                                     type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search by location, sport, or venue name..."
                                     className="bg-transparent border-none text-white placeholder-slate-500 focus:outline-none focus:ring-0 w-full px-4 py-2 font-medium"
                                 />
@@ -349,7 +359,7 @@ export default function Venue() {
                 ) : (
                     <>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {filteredVenues.map((venue, index) => (
+                            {venues.map((venue, index) => (
                                 <VenueCard
                                     key={venue.id}
                                     venue={venue}
@@ -360,7 +370,7 @@ export default function Venue() {
                         </div>
 
                         {/* Empty State */}
-                        {filteredVenues.length === 0 && (
+                        {venues.length === 0 && (
                             <div className="text-center py-20 text-slate-500">
                                 <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                 <p>No venues found matching your criteria.</p>

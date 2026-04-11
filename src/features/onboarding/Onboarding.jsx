@@ -1,51 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Users, Zap, ChevronRight } from 'lucide-react';
+import { Trophy, Users, Zap, ChevronRight, MapPin } from 'lucide-react';
+import apiClient from '../../utils/apiClient';
+
+// Local Image Imports
 import eliteTurfsImg from '../../assets/images/onboarding/elite-turfs.jpg';
 import squadSyncImg from '../../assets/images/onboarding/squad-sync.jpg';
 import gameOnImg from '../../assets/images/onboarding/game-on.jpg';
 
-const steps = [
-    {
-        title: "ELITE TURFS",
-        subtitle: "WORLD CLASS FACILITIES",
-        desc: "Experience football on FIFA-quality surfaces. Real-time booking for the ultimate game.",
-        icon: <Trophy className="w-10 h-10 text-neon-yellow" />,
-        img: eliteTurfsImg,
-        color: "neon-green",
-        stats: [
-            { label: "Venues", value: "50+" },
-            { label: "Cities", value: "12" }
-        ]
-    },
-    {
-        title: "SQUAD SYNC",
-        subtitle: "BUILD YOUR LEGACY",
-        desc: "Create teams, track stats, and challenge rivals. The community that never sleeps.",
-        icon: <Users className="w-10 h-10 text-neon-blue" />,
-        img: squadSyncImg,
-        color: "neon-blue",
-        stats: [
-            { label: "Players", value: "10k+" },
-            { label: "Matches", value: "500/day" }
-        ]
-    },
-    {
-        title: "GAME ON",
-        subtitle: "INSTANT ACCESS",
-        desc: "Zero friction booking with automated bill splitting. Focus on the game, not the logistics.",
-        icon: <Zap className="w-10 h-10 text-neon-pink" />,
-        img: gameOnImg,
-        color: "neon-pink",
-        stats: [
-            { label: "Uptime", value: "99.9%" },
-            { label: "Speed", value: "Instant" }
-        ]
-    }
-];
-
 export default function Onboarding({ onComplete }) {
     const [current, setCurrent] = useState(0);
+    const [stats, setStats] = useState({
+        users: 2400,
+        venues: 45,
+        tournaments: 12,
+        bookingCount: 1500
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await apiClient.get('/analytics/platform-stats');
+                if (res.data?.success) {
+                    const data = res.data.data;
+                    setStats({
+                        users: data.users || 2400,
+                        venues: data.venues || 45,
+                        tournaments: data.tournaments || 12,
+                        bookingCount: data.featuredVenueBookingCount || 1500
+                    });
+                }
+            } catch (err) {
+                console.error("Onboarding stats fetch error:", err);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const steps = [
+        {
+            title: "ELITE TURFS",
+            subtitle: "WORLD CLASS FACILITIES",
+            desc: `Experience football on ${stats.venues}+ FIFA-quality surfaces. Real-time booking for the ultimate game.`,
+            icon: <Trophy className="w-10 h-10 text-yellow-400" />,
+            img: eliteTurfsImg,
+            color: "neon-green",
+            stats: [
+                { label: "Active Venues", value: `${stats.venues}+` },
+                { label: "Cities", value: "Verified" }
+            ]
+        },
+        {
+            title: "SQUAD SYNC",
+            subtitle: "BUILD YOUR LEGACY",
+            desc: `Join ${stats.users > 1000 ? (stats.users/1000).toFixed(1)+'k' : stats.users}+ players already on the platform. Track stats and challenge rivals.`,
+            icon: <Users className="w-10 h-10 text-neon-blue" />,
+            img: squadSyncImg,
+            color: "neon-blue",
+            stats: [
+                { label: "Pro Players", value: `${stats.users}+` },
+                { label: "Matches", value: "Live" }
+            ]
+        },
+        {
+            title: "TOURNAMENTS",
+            subtitle: "COMPETE & WIN",
+            desc: `Sign up for ${stats.tournaments}+ live tournaments. Zero friction registration and automated bracket management.`,
+            icon: <Zap className="w-10 h-10 text-neon-pink" />,
+            img: gameOnImg,
+            color: "neon-pink",
+            stats: [
+                { label: "Tournaments", value: stats.tournaments },
+                { label: "Prizes", value: "Awaits" }
+            ]
+        }
+    ];
 
     const nextStep = () => {
         if (current === steps.length - 1) {
@@ -56,6 +85,13 @@ export default function Onboarding({ onComplete }) {
     };
 
     const currentStep = steps[current];
+
+    // Helper for trend colors
+    const colorStyles = {
+        'neon-green': 'from-neon-green to-green-600 shadow-[0_0_30px_rgba(57,255,20,0.3)]',
+        'neon-blue': 'from-neon-blue to-blue-600 shadow-[0_0_30px_rgba(0,255,255,0.3)]',
+        'neon-pink': 'from-neon-pink to-purple-600 shadow-[0_0_30px_rgba(255,0,255,0.3)]'
+    };
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-950 overflow-hidden text-white font-sans selection:bg-neon-green selection:text-black">
@@ -87,10 +123,6 @@ export default function Onboarding({ onComplete }) {
             >
                 <div className="relative backdrop-blur-xl bg-slate-900/40 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden">
 
-                    {/* Decorative Glow */}
-                    <div className={`absolute -top-20 -right-20 w-60 h-60 bg-${currentStep.color} rounded-full blur-[100px] opacity-20 transition-colors duration-700`} />
-                    <div className={`absolute -bottom-20 -left-20 w-60 h-60 bg-${currentStep.color} rounded-full blur-[100px] opacity-20 transition-colors duration-700`} />
-
                     <div className="relative z-10 flex flex-col h-full">
 
                         {/* Top Navigation / Progress */}
@@ -101,7 +133,9 @@ export default function Onboarding({ onComplete }) {
                                         key={i}
                                         animate={{
                                             width: i === current ? 32 : 8,
-                                            backgroundColor: i === current ? '#39ff14' : 'rgba(255,255,255,0.2)'
+                                            backgroundColor: i === current ? 
+                                                (current === 0 ? '#39ff14' : current === 1 ? '#00f2ff' : '#ff007f') 
+                                                : 'rgba(255,255,255,0.2)'
                                         }}
                                         className="h-2 rounded-full"
                                     />
@@ -142,12 +176,12 @@ export default function Onboarding({ onComplete }) {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1 }}
                                     >
-                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-${currentStep.color}/10 text-${currentStep.color} border border-${currentStep.color}/20 mb-3`}>
+                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-white/5 border border-white/10 mb-3`}>
                                             {currentStep.subtitle}
                                         </span>
                                         <h1 className="text-4xl font-extrabold text-white leading-[1.1] mb-3">
                                             {currentStep.title.split(' ')[0]} <br />
-                                            <span className={`text-transparent bg-clip-text bg-gradient-to-r from-${currentStep.color} to-white`}>
+                                            <span className={`text-transparent bg-clip-text bg-gradient-to-r ${currentStep.color === 'neon-green' ? 'from-neon-green to-emerald-400' : currentStep.color === 'neon-blue' ? 'from-neon-blue to-cyan-400' : 'from-neon-pink to-purple-400'}`}>
                                                 {currentStep.title.split(' ').slice(1).join(' ')}
                                             </span>
                                         </h1>
@@ -174,7 +208,7 @@ export default function Onboarding({ onComplete }) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={nextStep}
-                            className={`w-full py-4 rounded-xl bg-gradient-to-r ${current === 0 ? 'from-neon-green to-green-600' : current === 1 ? 'from-neon-blue to-blue-600' : 'from-neon-pink to-purple-600'} text-black font-black text-lg tracking-wide uppercase shadow-[0_0_30px_rgba(57,255,20,0.3)] hover:shadow-[0_0_50px_rgba(57,255,20,0.5)] transition-all flex items-center justify-center gap-2 group relative overflow-hidden`}
+                            className={`w-full py-4 rounded-xl bg-gradient-to-r ${colorStyles[currentStep.color]} text-black font-black text-lg tracking-wide uppercase transition-all flex items-center justify-center gap-2 group relative overflow-hidden`}
                         >
                             <span className="relative z-10">{current === steps.length - 1 ? 'Start Playing' : 'Continue'}</span>
                             <ChevronRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
@@ -189,4 +223,4 @@ export default function Onboarding({ onComplete }) {
 
         </div>
     );
-}
+}

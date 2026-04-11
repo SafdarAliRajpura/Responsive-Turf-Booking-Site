@@ -201,8 +201,11 @@ export default function AddTurf() {
     const availableAmenities = [
         { id: 'parking', label: 'Parking', icon: Car },
         { id: 'wifi', label: 'Free WiFi', icon: Wifi },
-        { id: 'changing_room', label: 'Changing Room', icon: Dumbbell },
+        { id: 'changing_room', label: 'Changing Room', icon: CheckCircle },
         { id: 'canteen', label: 'Cafeteria', icon: Coffee },
+        { id: 'showers', label: 'Shower', icon: CheckCircle },
+        { id: 'power_backup', label: 'Power Backup', icon: CheckCircle },
+        { id: 'first_aid', label: 'First Aid', icon: CheckCircle },
     ];
 
     return (
