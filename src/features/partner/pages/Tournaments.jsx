@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, MapPin, Calendar, Users, IndianRupee, Clock, X, Trash2, Edit, CheckCircle, Upload, Image as ImageIcon } from 'lucide-react';
+import { Trophy, Plus, MapPin, Calendar, Users, IndianRupee, Clock, X, Trash2, Edit, CheckCircle, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
+import apiClient from '../../../utils/apiClient';
 
 const TournamentCard = ({ tournament, onEdit, onDelete, index }) => (
     <motion.div
@@ -35,22 +36,22 @@ const TournamentCard = ({ tournament, onEdit, onDelete, index }) => (
         </div>
 
         <div className="p-6">
-            <h3 className="text-xl font-black text-white mb-2 uppercase italic tracking-tighter group-hover:text-neon-purple transition-colors">
+            <h3 className="text-xl font-black text-white mb-2 uppercase italic tracking-tighter group-hover:text-neon-purple transition-colors truncate">
                 {tournament.name}
             </h3>
             
             <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-2 text-slate-400 text-sm">
-                    <MapPin className="w-4 h-4 text-neon-purple" />
+                    <MapPin className="w-4 h-4 text-neon-purple flex-shrink-0" />
                     <span className="truncate">{tournament.location}</span>
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2 text-slate-400 text-sm">
-                        <Calendar className="w-4 h-4 text-neon-blue" />
+                        <Calendar className="w-4 h-4 text-neon-blue flex-shrink-0" />
                         {tournament.date}
                     </div>
-                    <div className="flex items-center gap-2 text-slate-400 text-sm">
-                        <Users className="w-4 h-4 text-neon-green" />
+                    <div className="flex items-center gap-2 text-slate-400 text-sm font-bold">
+                        <Users className="w-4 h-4 text-neon-green flex-shrink-0" />
                         {tournament.totalSlots} Teams
                     </div>
                 </div>
@@ -82,25 +83,32 @@ const TournamentCard = ({ tournament, onEdit, onDelete, index }) => (
 export default function Tournaments() {
     const [tournaments, setTournaments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingId, setEditingId] = useState(null);
     const [toast, setToast] = useState({ message: null, type: 'info' });
-    const [formData, setFormData] = useState({
+    
+    const initialFormState = {
         name: '', description: '', category: 'Football', location: '',
         date: '', time: '', entryFee: '', prizePool: '', totalSlots: '',
         minPlayers: 5, maxPlayers: 11,
         status: 'Upcoming', image: ''
-    });
+    };
+    const [formData, setFormData] = useState(initialFormState);
 
     const fetchMyTournaments = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const res = await fetch(`http://localhost:5000/api/tournaments?owner=${user.id || user._id}`);
-            const data = await res.json();
-            if (data.success) {
-                setTournaments(data.data);
+            const userString = localStorage.getItem('user');
+            if (!userString) return;
+            const user = JSON.parse(userString);
+            const res = await apiClient.get(`/tournaments?owner=${user.id || user._id}`);
+            if (res.data.success) {
+                setTournaments(res.data.data);
             }
         } catch (err) {
             console.error("Fetch Tournaments Error:", err);
+            setToast({ message: "Network synchronization failed", type: "error" });
         } finally {
             setLoading(false);
         }
@@ -110,44 +118,64 @@ export default function Tournaments() {
         fetchMyTournaments();
     }, []);
 
+    const openCreateModal = () => {
+        setIsEditing(false);
+        setEditingId(null);
+        setFormData(initialFormState);
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (tournament) => {
+        setIsEditing(true);
+        setEditingId(tournament._id);
+        setFormData({
+            name: tournament.name,
+            description: tournament.description,
+            category: tournament.category,
+            location: tournament.location,
+            date: tournament.date,
+            time: tournament.time,
+            entryFee: tournament.entryFee,
+            prizePool: tournament.prizePool,
+            totalSlots: tournament.totalSlots,
+            minPlayers: tournament.minPlayers,
+            maxPlayers: tournament.maxPlayers,
+            status: tournament.status,
+            image: tournament.image
+        });
+        setIsModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
-            const res = await fetch('http://localhost:5000/api/tournaments', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(formData)
-            });
-            const data = await res.json();
-            if (data.success) {
-                setToast({ message: "Championship Live!", type: "success" });
+            const url = isEditing ? `/tournaments/${editingId}` : '/tournaments';
+            const method = isEditing ? 'patch' : 'post';
+            
+            const res = await apiClient[method](url, formData);
+            
+            if (res.data.success) {
+                setToast({ 
+                    message: isEditing ? "Blueprint Modified Successfully" : "Championship Live!", 
+                    type: "success" 
+                });
                 setIsModalOpen(false);
                 fetchMyTournaments();
-                setFormData({
-                    name: '', description: '', category: 'Football', location: '',
-                    date: '', time: '', entryFee: '', prizePool: '', totalSlots: '',
-                    minPlayers: 5, maxPlayers: 11,
-                    status: 'Upcoming', image: ''
-                });
             }
         } catch (err) {
-            setToast({ message: "Deployment Failed", type: "error" });
+            console.error("Submission Error:", err);
+            setToast({ message: "Transmission Error: Deployment failed", type: "error" });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Abort this championship?")) return;
+        if (!window.confirm("Abort this championship? This action is IRREVERSIBLE.")) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/tournaments/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (res.ok) {
+            const res = await apiClient.delete(`/tournaments/${id}`);
+            if (res.data.success) {
                 setToast({ message: "Tournament Terminated", type: "success" });
                 fetchMyTournaments();
             }
@@ -168,41 +196,50 @@ export default function Tournaments() {
     };
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between">
+        <div className="space-y-8 pb-12">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">CHAMPIONSHIPS</h1>
-                    <p className="text-slate-400 font-medium">Engineer and manage elite sports tournaments.</p>
+                    <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">CHAMPIONSHIPS <span className="text-neon-purple text-2xl">LAB</span></h1>
+                    <p className="text-slate-400 font-medium tracking-tight">Engineer and manage elite sports tournaments.</p>
                 </div>
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-neon-purple text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-lg shadow-neon-purple/20"
+                    onClick={openCreateModal}
+                    className="bg-neon-purple text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:bg-white hover:text-black transition-all"
                 >
                     <Plus className="w-5 h-5" /> Design Tournament
                 </motion.button>
             </div>
 
             {loading ? (
-                <div className="h-64 flex items-center justify-center text-neon-purple font-black tracking-[0.2em]">INITIALIZING SYTEMS...</div>
+                <div className="h-64 flex flex-col items-center justify-center gap-4">
+                    <Loader2 className="w-10 h-10 text-neon-purple animate-spin" />
+                    <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Syncing Arena Matrix...</p>
+                </div>
             ) : tournaments.length === 0 ? (
-                <div className="py-24 text-center bg-slate-900/50 border border-white/5 rounded-[2.5rem]">
-                    <div className="w-20 h-20 bg-white/5 rounded-3xl mx-auto mb-6 flex items-center justify-center">
+                <div className="py-24 text-center bg-slate-900/50 border border-white/5 rounded-[2.5rem] backdrop-blur-sm">
+                    <div className="w-20 h-20 bg-white/5 rounded-3xl mx-auto mb-6 flex items-center justify-center border border-white/5">
                         <Trophy className="w-10 h-10 text-slate-700" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">No Active Campaigns</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">Click 'Design Tournament' to launch your first championship onto the Arena Pro network.</p>
+                    <h3 className="text-xl font-bold text-white mb-2 uppercase italic tracking-tighter">No Active Campaigns</h3>
+                    <p className="text-slate-500 max-w-sm mx-auto text-sm font-medium">Click 'Design Tournament' to launch your first championship onto the Arena Pro network.</p>
                 </div>
             ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {tournaments.map((t, i) => (
-                        <TournamentCard key={t._id} tournament={t} index={i} onDelete={handleDelete} onEdit={() => {}} />
+                        <TournamentCard 
+                            key={t._id} 
+                            tournament={t} 
+                            index={i} 
+                            onDelete={handleDelete} 
+                            onEdit={openEditModal} 
+                        />
                     ))}
                 </div>
             )}
 
-            {/* Premium Create Modal */}
+            {/* Premium Create/Edit Modal */}
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -215,24 +252,27 @@ export default function Tournaments() {
                             initial={{ scale: 0.9, opacity: 0, y: 40 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 40 }}
-                            className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] w-full max-w-2xl p-8 md:p-12 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+                            className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] w-full max-w-2xl p-8 md:p-10 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar"
+                            onClick={e => e.stopPropagation()}
                         >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-neon-purple/10 rounded-bl-[100%] pointer-events-none" />
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-neon-purple/20 rounded-bl-[100%] pointer-events-none blur-3xl" />
                             
-                            <div className="flex justify-between items-center mb-10">
+                            <div className="flex justify-between items-center mb-10 relative z-10">
                                 <div>
-                                    <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">Campaign <span className="text-neon-purple">Blueprint</span></h2>
-                                    <p className="text-slate-400 text-sm">Define the parameters for your next elite tournament.</p>
+                                    <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">
+                                        {isEditing ? 'Modify' : 'Campaign'} <span className="text-neon-purple">Blueprint</span>
+                                    </h2>
+                                    <p className="text-slate-400 text-sm font-medium">{isEditing ? 'Update the parameters of your active tournament.' : 'Define the parameters for your next elite tournament.'}</p>
                                 </div>
-                                <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-                                    <X className="w-8 h-8" />
+                                <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all border border-white/5">
+                                    <X className="w-6 h-6" />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                                 <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Championship Name</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Championship Name</label>
                                         <input 
                                             type="text" required value={formData.name}
                                             onChange={e => setFormData({...formData, name: e.target.value})}
@@ -240,8 +280,8 @@ export default function Tournaments() {
                                             className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all font-bold italic uppercase tracking-tighter"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Sport Discipline</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Sport Discipline</label>
                                         <select 
                                             value={formData.category}
                                             onChange={e => setFormData({...formData, category: e.target.value})}
@@ -255,19 +295,19 @@ export default function Tournaments() {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Campaign Brief</label>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Campaign Brief</label>
                                     <textarea 
                                         required value={formData.description}
                                         onChange={e => setFormData({...formData, description: e.target.value})}
                                         placeholder="Experience the peak of local competition..."
-                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all h-32 resize-none"
+                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all h-24 resize-none"
                                     />
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Host Stadium / Venue</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Host Stadium / Venue</label>
                                         <input 
                                             type="text" required value={formData.location}
                                             onChange={e => setFormData({...formData, location: e.target.value})}
@@ -275,34 +315,29 @@ export default function Tournaments() {
                                             className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all font-bold"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Tournament Banner / Poster</label>
-                                        <div className="relative group/upload h-[120px]">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Visual Asset (Banner)</label>
+                                        <div className="relative group/upload h-[60px]">
                                             <input 
                                                 type="file" 
                                                 accept="image/*"
                                                 onChange={handleImageUpload}
                                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                                             />
-                                            <div className={`w-full h-full border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all ${
+                                            <div className={`w-full h-full border border-dashed rounded-2xl flex items-center px-4 transition-all ${
                                                 formData.image ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-white/10 hover:border-white/20 bg-slate-950'
                                             }`}>
                                                 {formData.image ? (
-                                                    <div className="flex items-center gap-4 px-4 w-full h-full">
-                                                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-black flex-shrink-0">
+                                                    <div className="flex items-center gap-3 w-full h-full">
+                                                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 bg-black flex-shrink-0">
                                                             <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
                                                         </div>
-                                                        <div className="overflow-hidden">
-                                                            <p className="text-white text-xs font-bold truncate italic">IMAGE_CAPTURED.JPG</p>
-                                                            <p className="text-neon-purple text-[10px] font-black uppercase tracking-widest mt-1">Change Media</p>
-                                                        </div>
+                                                        <p className="text-neon-purple text-[10px] font-black uppercase tracking-widest truncate">Asset Loaded ✓</p>
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500 mb-2 group-hover/upload:text-neon-purple transition-colors">
-                                                            <Upload className="w-5 h-5" />
-                                                        </div>
-                                                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Drop Visual Asset</p>
+                                                        <Upload className="w-4 h-4 text-slate-500 mr-2" />
+                                                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Upload Media</p>
                                                     </>
                                                 )}
                                             </div>
@@ -311,55 +346,36 @@ export default function Tournaments() {
                                 </div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="col-span-2">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Launch Date</label>
+                                    <div className="col-span-2 space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Launch Date</label>
                                         <input 
                                             type="date" required value={formData.date}
                                             onChange={e => setFormData({...formData, date: e.target.value})}
                                             className="w-full bg-slate-950 border border-white/10 rounded-2xl px-4 py-4 text-white text-sm outline-none focus:border-neon-purple/50 [color-scheme:dark]"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Kickoff</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Kickoff</label>
                                         <input 
                                             type="time" required value={formData.time}
                                             onChange={e => setFormData({...formData, time: e.target.value})}
                                             className="w-full bg-slate-950 border border-white/10 rounded-2xl px-4 py-4 text-white text-sm outline-none focus:border-neon-purple/50 [color-scheme:dark]"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Max Slots</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Max Slots</label>
                                         <input 
                                             type="number" required value={formData.totalSlots}
                                             onChange={e => setFormData({...formData, totalSlots: e.target.value})}
                                             placeholder="16"
-                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-4 py-4 text-neon-green font-black outline-none focus:border-neon-green/50"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-4 py-4 text-neon-green font-black outline-none focus:border-neon-green/50 text-center"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-6 p-6 bg-white/5 rounded-[2rem] border border-white/5">
-                                    <div className="flex-1">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Min Squad Size</label>
-                                        <input 
-                                            type="number" required value={formData.minPlayers}
-                                            onChange={e => setFormData({...formData, minPlayers: e.target.value})}
-                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-4 py-4 text-white font-bold outline-none focus:border-neon-purple/50"
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block">Max Roster Pool</label>
-                                        <input 
-                                            type="number" required value={formData.maxPlayers}
-                                            onChange={e => setFormData({...formData, maxPlayers: e.target.value})}
-                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-4 py-4 text-white font-bold outline-none focus:border-neon-purple/50"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-6 bg-white/5 p-6 rounded-[2rem] border border-white/5">
-                                    <div>
-                                        <label className="text-[10px] font-black text-neon-yellow uppercase tracking-[0.2em] mb-2 block">Entry Bounty (₹)</label>
+                                <div className="grid md:grid-cols-2 gap-6 bg-white/5 p-5 rounded-[1.5rem] border border-white/5">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-neon-yellow uppercase tracking-[0.2em] ml-1">Entry Bounty (₹)</label>
                                         <input 
                                             type="number" required value={formData.entryFee}
                                             onChange={e => setFormData({...formData, entryFee: e.target.value})}
@@ -367,8 +383,8 @@ export default function Tournaments() {
                                             className="w-full bg-slate-900 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-neon-yellow/50 transition-all font-black"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-neon-purple uppercase tracking-[0.2em] mb-2 block">Total Prize Pool (₹)</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-neon-purple uppercase tracking-[0.2em] ml-1">Total Prize Pool (₹)</label>
                                         <input 
                                             type="number" required value={formData.prizePool}
                                             onChange={e => setFormData({...formData, prizePool: e.target.value})}
@@ -380,10 +396,15 @@ export default function Tournaments() {
 
                                 <button 
                                     type="submit"
-                                    className="w-full py-6 bg-neon-purple text-white font-black uppercase tracking-[0.3em] text-xs rounded-2xl shadow-2xl shadow-neon-purple/30 hover:bg-white hover:text-black transition-all group overflow-hidden relative"
+                                    disabled={isSubmitting}
+                                    className="w-full py-5 bg-neon-purple text-white font-black uppercase tracking-[0.3em] text-xs rounded-2xl shadow-2xl shadow-neon-purple/30 hover:bg-white hover:text-black disabled:bg-slate-800 disabled:text-slate-500 transition-all group overflow-hidden relative"
                                 >
                                     <span className="relative z-10 flex items-center justify-center gap-3">
-                                        DEPLOY CHAMPIONSHIP <Trophy className="w-4 h-4" />
+                                        {isSubmitting ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> SYNCHRONIZING...</>
+                                        ) : (
+                                            <>{isEditing ? 'COMMIT MODIFICATIONS' : 'DEPLOY CHAMPIONSHIP'} <Trophy className="w-4 h-4" /></>
+                                        )}
                                     </span>
                                 </button>
                             </form>

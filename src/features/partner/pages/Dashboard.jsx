@@ -99,7 +99,8 @@ export default function Dashboard() {
                         revenue: `₹${metrics.totalRevenue.toLocaleString()}`,
                         bookings: metrics.totalBookings,
                         customers: metrics.activePlayers,
-                        occupancy: metrics.totalBookings > 5 ? '82%' : '14%'
+                        occupancy: metrics.occupancyPercentage || '0%',
+                        trends: metrics.trends
                     });
                     setRecentBookings(metrics.recentBookings);
                 }
@@ -131,25 +132,25 @@ export default function Dashboard() {
                     icon={IndianRupee}
                     title="Total Revenue"
                     value={stats.revenue}
-                    change="12.5" trend="up" color="neon-green" isLoading={isLoading}
+                    change={stats.trends?.revenue || 0} trend={stats.trends?.revenue >= 0 ? 'up' : 'down'} color="neon-green" isLoading={isLoading}
                 />
                 <StatCard
                     icon={Calendar}
                     title="Total Bookings"
                     value={stats.bookings}
-                    change="8.2" trend="up" color="neon-blue" isLoading={isLoading}
+                    change={stats.trends?.bookings || 0} trend={stats.trends?.bookings >= 0 ? 'up' : 'down'} color="neon-blue" isLoading={isLoading}
                 />
                 <StatCard
                     icon={Users}
                     title="Unique Players"
                     value={stats.customers}
-                    change="5.3" trend="up" color="neon-purple" isLoading={isLoading}
+                    change={stats.trends?.players || 0} trend={stats.trends?.players >= 0 ? 'up' : 'down'} color="neon-purple" isLoading={isLoading}
                 />
                 <StatCard
                     icon={Clock}
                     title="Avg. Occupancy"
                     value={stats.occupancy}
-                    change="-2.1" trend="down" color="neon-pink" isLoading={isLoading}
+                    change={stats.trends?.occupancy || 0} trend={stats.trends?.occupancy >= 0 ? 'up' : 'down'} color="neon-pink" isLoading={isLoading}
                 />
             </div>
 

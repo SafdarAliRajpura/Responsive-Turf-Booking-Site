@@ -153,9 +153,26 @@ export default function Booking() {
         );
     }
 
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
     const processImmediateBooking = async () => {
         if (!selectedTime || !selectedCourt) return;
         setBookingInProgress(true);
+
+        const resSDK = await loadRazorpay();
+        if (!resSDK) {
+            alert("Razorpay SDK failed to load. Are you online?");
+            setBookingInProgress(false);
+            return;
+        }
 
         let courtHourlyPrice = venue.price;
         if (selectedCourt && selectedCourt.includes('₹')) {
@@ -168,27 +185,72 @@ export default function Booking() {
             sport: selectedSport,
             date: new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             timeSlot: `${selectedTime} (${selectedCourt}) - 1h`,
-            price: courtHourlyPrice,
-            status: 'Pending'
+            price: courtHourlyPrice
         };
 
         try {
-            const res = await fetch('http://localhost:5000/api/bookings', {
+            // Step 1: Create Order on Backend
+            const orderRes = await fetch('http://localhost:5000/api/payments/order', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(bookingData)
+                body: JSON.stringify({ amount: courtHourlyPrice, bookingData })
             });
-            const data = await res.json();
-            if (data.success) {
-                setLastBooking(bookingData);
-                setBookedSlots(prev => [...prev, data.data]);
-                setShowPaymentModal(true);
-            }
+
+            const orderData = await orderRes.json();
+            if (!orderData.success) throw new Error(orderData.message);
+
+            // Step 2: Open Razorpay Checkout
+            const options = {
+                key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+                amount: orderData.order.amount,
+                currency: "INR",
+                name: "Arena Pro Elite",
+                description: `Match Booking: ${venue.name}`,
+                order_id: orderData.order.id,
+                handler: async function (response) {
+                    // Step 3: Verify Payment
+                    try {
+                        const verifyRes = await fetch('http://localhost:5000/api/payments/verify', {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                bookingId: orderData.bookingId
+                            })
+                        });
+
+                        const verifyData = await verifyRes.json();
+                        if (verifyData.success) {
+                            setLastBooking(bookingData);
+                            setShowPaymentModal(true);
+                        } else {
+                            alert("Verification failed. Please contact support.");
+                        }
+                    } catch (err) {
+                        console.error("Verification error:", err);
+                    }
+                },
+                prefill: {
+                    name: (JSON.parse(localStorage.getItem('user'))?.first_name || ""),
+                    email: (JSON.parse(localStorage.getItem('user'))?.email || ""),
+                },
+                theme: { color: "#a855f7" } // Neon Purple theme
+            };
+
+            const paymentObject = new window.Razorpay(options);
+            paymentObject.open();
+
         } catch(e) {
-            console.error("Booking failed:", e);
+            console.error("Booking/Payment failed:", e);
+            alert(e.message || "Failed to initiate payment engine.");
         } finally {
             setBookingInProgress(false);
         }

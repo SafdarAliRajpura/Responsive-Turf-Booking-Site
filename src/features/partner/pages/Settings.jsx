@@ -1,38 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Lock, Store, Camera, Eye, EyeOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Save, Lock, Store, Camera, Eye, EyeOff, Shield, 
+    Bell, Globe, CheckCircle, Loader2, Trash2, 
+    User, Smartphone, CreditCard
+} from 'lucide-react';
 import apiClient from '../../../utils/apiClient';
 import userAvatar from '../../../assets/images/common/avatar-1.jpg';
 import Toast from '../../../components/ui/Toast';
 
-const Section = ({ title, icon: Icon, children }) => (
-    <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 md:p-8 mb-6">
-        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/5">
-            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-neon-purple">
-                <Icon className="w-5 h-5" />
+const Section = ({ title, subtitle, icon: Icon, children }) => (
+    <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 md:p-10 mb-8 relative overflow-hidden group shadow-2xl"
+    >
+        <div className="absolute top-0 right-0 w-32 h-32 bg-neon-purple/5 rounded-bl-[100%] pointer-events-none group-hover:bg-neon-purple/10 transition-colors" />
+        
+        <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/5">
+            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-neon-purple border border-white/10 shadow-lg">
+                <Icon className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-bold text-white">{title}</h2>
+            <div>
+                <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase">{title}</h2>
+                <p className="text-slate-500 text-sm font-medium">{subtitle}</p>
+            </div>
         </div>
         {children}
-    </div>
+    </motion.div>
 );
 
-const InputGroup = ({ label, type = "text", value, onChange, placeholder, name, isPassword, showPassword, onTogglePassword }) => (
-    <div className="space-y-2">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>
+const InputGroup = ({ label, type = "text", value, onChange, placeholder, name, isPassword, showPassword, onTogglePassword, icon: Icon }) => (
+    <div className="space-y-2.5">
+        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">{label}</label>
         <div className="relative">
+            {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />}
             <input
                 type={isPassword ? (showPassword ? "text" : "password") : type}
                 name={name}
                 value={value || ''}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-neon-purple/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all font-medium ${isPassword ? 'pr-10' : ''}`}
+                className={`w-full bg-slate-950 border border-white/10 rounded-2xl ${Icon ? 'pl-12' : 'px-5'} py-4 text-white text-sm focus:outline-none focus:border-neon-purple/50 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all font-bold placeholder:text-slate-800 ${isPassword ? 'pr-12' : ''}`}
             />
             {isPassword && (
                 <button
                     type="button"
                     onClick={onTogglePassword}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors focus:outline-none"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors focus:outline-none"
                 >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -43,8 +58,8 @@ const InputGroup = ({ label, type = "text", value, onChange, placeholder, name, 
 
 export default function Settings() {
     const [toast, setToast] = useState({ message: null, type: 'info' });
-
-    const showNotification = (message, type) => setToast({ message, type });
+    const [isSaving, setIsSaving] = useState(false);
+    const [isPassLoading, setIsPassLoading] = useState(false);
 
     const [profile, setProfile] = useState({
         businessName: '',
@@ -92,11 +107,7 @@ export default function Settings() {
     };
 
     const handleSaveProfile = async () => {
-        if (!profile.email || !profile.ownerName) {
-            showNotification('Owner Name and Email are required.', 'error');
-            return;
-        }
-
+        setIsSaving(true);
         const nameParts = profile.ownerName.trim().split(' ');
         const first_name = nameParts[0];
         const last_name = nameParts.slice(1).join(' ');
@@ -113,27 +124,22 @@ export default function Settings() {
         try {
             const res = await apiClient.put('/auth/profile', payload);
             if (res.data.success) {
-                showNotification('Profile updated successfully!', 'success');
+                setToast({ message: 'Blueprint Integrated Successfully!', type: 'success' });
                 localStorage.setItem('user', JSON.stringify(res.data.data));
-            } else {
-                showNotification(res.data.message || 'Failed to update profile.', 'error');
             }
         } catch (error) {
-            console.error(error);
-            showNotification(error.response?.data?.message || 'Server error updating profile.', 'error');
+            setToast({ message: error.response?.data?.message || 'Synchronization Error', type: 'error' });
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleSavePassword = async () => {
         if (!passwords.currentPassword) {
-            showNotification('You must enter your current password.', 'error');
+            setToast({ message: 'Current credentials required.', type: 'error' });
             return;
         }
-        if (!passwords.newPassword || passwords.newPassword.length < 6) {
-            showNotification('New password must be at least 6 characters.', 'error');
-            return;
-        }
-
+        setIsPassLoading(true);
         try {
             const res = await apiClient.put('/auth/change-password', {
                 currentPassword: passwords.currentPassword,
@@ -141,42 +147,53 @@ export default function Settings() {
             });
 
             if (res.data.success) {
-                showNotification('Password changed successfully!', 'success');
+                setToast({ message: 'Security Protocol Updated!', type: 'success' });
                 setPasswords({ currentPassword: '', newPassword: '' });
                 setShowCurrentPassword(false);
                 setShowNewPassword(false);
-            } else {
-                showNotification(res.data.message || 'Failed to change password.', 'error');
             }
         } catch (error) {
-            console.error(error);
-            showNotification(error.response?.data?.message || 'Server error changing password.', 'error');
+            setToast({ message: error.response?.data?.message || 'Validation Failed', type: 'error' });
+        } finally {
+            setIsPassLoading(false);
         }
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 pb-12 relative">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="max-w-5xl mx-auto space-y-8 pb-20 relative px-4 sm:px-0">
+            {/* Premium Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                 <div>
-                    <h1 className="text-3xl font-black text-white mb-2">SETTINGS</h1>
-                    <p className="text-slate-400">Manage your profile and security parameters.</p>
+                    <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">
+                        Control <span className="text-neon-purple">Center</span>
+                    </h1>
+                    <p className="text-slate-500 font-medium tracking-tight">Configure your professional operational parameters.</p>
                 </div>
-                <button 
-                    onClick={handleSaveProfile}
-                    className="flex shrink-0 items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-xl font-bold hover:bg-neon-green transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_20px_rgba(57,255,20,0.5)]"
-                >
-                    <Save className="w-5 h-5" /> Save Profile
-                </button>
+                <div className="flex gap-4">
+                    <button 
+                        onClick={handleSaveProfile}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 px-8 py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-neon-green transition-all shadow-xl hover:shadow-neon-green/20 disabled:bg-slate-800 disabled:text-slate-500"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Commit Changes
+                    </button>
+                </div>
             </div>
 
-            <Section title="Business Profile" icon={Store}>
-                <div className="flex flex-col md:flex-row gap-8 items-start">
-                    <div className="text-center md:text-left flex-shrink-0">
-                        <div className="relative group inline-block">
-                            <img src={profile.user_profile || userAvatar} alt="Profile" className="w-32 h-32 rounded-2xl object-cover border-4 border-slate-800 bg-slate-900" />
-                            <label className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity cursor-pointer text-white font-bold text-xs uppercase tracking-wider backdrop-blur-sm gap-2">
-                                <Camera className="w-6 h-6" />
-                                <span>Change Photo</span>
+            <div className="grid lg:grid-cols-12 gap-8">
+                {/* Left Side: Navigation Links / Status */}
+                <div className="lg:col-span-4 space-y-6">
+                    <div className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-neon-green/5 rounded-bl-[100%] pointer-events-none" />
+                        <div className="relative inline-block mb-6">
+                            <img 
+                                src={profile.user_profile || userAvatar} 
+                                alt="Profile" 
+                                className="w-32 h-32 rounded-3xl object-cover border-4 border-slate-950 bg-slate-950 shadow-2xl" 
+                            />
+                            <label className="absolute -bottom-2 -right-2 w-10 h-10 bg-white text-black rounded-xl border-4 border-slate-900 flex items-center justify-center cursor-pointer hover:bg-neon-purple hover:text-white transition-all shadow-lg">
+                                <Camera className="w-4 h-4" />
                                 <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                                     const file = e.target.files[0];
                                     if(file) {
@@ -189,54 +206,121 @@ export default function Settings() {
                                 }} />
                             </label>
                         </div>
+                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter truncate leading-none mb-1">{profile.businessName || 'Untitled Business'}</h3>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{profile.ownerName}</p>
+                        
+                        <div className="mt-8 pt-8 border-t border-white/5 space-y-3">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em]">
+                                <span className="text-slate-600">Site Status</span>
+                                <span className="text-neon-green flex items-center gap-1.5"><CheckCircle className="w-3 h-3" /> All Systems Online</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em]">
+                                <span className="text-slate-600">Reputation</span>
+                                <span className="text-neon-yellow">Elite Partner</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex-1 w-full grid md:grid-cols-2 gap-6">
-                        <InputGroup label="Business Name" name="businessName" value={profile.businessName} onChange={handleProfileChange} placeholder="e.g. Neon Arena" />
-                        <InputGroup label="Owner Name" name="ownerName" value={profile.ownerName} onChange={handleProfileChange} placeholder="e.g. John Doe" />
-                        <InputGroup label="Contact Email" type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="admin@example.com" />
-                        <InputGroup label="Phone Number" type="tel" name="mobileNumber" value={profile.mobileNumber} onChange={handleProfileChange} placeholder="+91 98765 43210" />
-                    </div>
-                </div>
-            </Section>
 
-            <Section title="Security" icon={Lock}>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <InputGroup 
-                        label="Current Password" 
-                        name="currentPassword" 
-                        value={passwords.currentPassword} 
-                        onChange={handlePasswordChange} 
-                        placeholder="••••••••" 
-                        isPassword={true}
-                        showPassword={showCurrentPassword}
-                        onTogglePassword={() => setShowCurrentPassword(!showCurrentPassword)}
-                    />
-                    <InputGroup 
-                        label="New Password" 
-                        name="newPassword" 
-                        value={passwords.newPassword} 
-                        onChange={handlePasswordChange} 
-                        placeholder="••••••••" 
-                        isPassword={true}
-                        showPassword={showNewPassword}
-                        onTogglePassword={() => setShowNewPassword(!showNewPassword)}
-                    />
-                </div>
-                <div className="mt-6 flex justify-end">
-                    <button onClick={handleSavePassword} className="px-6 py-3 bg-neon-purple text-white rounded-xl font-bold hover:bg-purple-600 transition-colors shadow-lg hover:shadow-neon-purple/20 flex items-center gap-2">
-                        Update Password
-                    </button>
-                </div>
-                <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                    <div>
-                        <p className="text-white font-bold text-sm">Two-Factor Authentication</p>
-                        <p className="text-slate-500 text-xs mt-0.5">Add an extra layer of security to your account.</p>
+                    <div className="bg-slate-900/50 border border-white/5 rounded-[2.5rem] p-6 space-y-2">
+                        {[
+                            { icon: User, label: 'Account Profile', active: true },
+                            { icon: Bell, label: 'Notifications', active: false },
+                            { icon: CreditCard, label: 'Payout Settings', active: false },
+                            { icon: Globe, label: 'Platform Hub', active: false }
+                        ].map((item, idx) => (
+                            <button 
+                                key={idx}
+                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${item.active ? 'bg-neon-purple/10 text-neon-purple border border-neon-purple/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <item.icon className="w-4 h-4" />
+                                {item.label}
+                            </button>
+                        ))}
                     </div>
-                    <button className="px-4 py-2 border border-neon-purple text-neon-purple rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neon-purple hover:text-white transition-colors">
-                        Enable 2FA
-                    </button>
                 </div>
-            </Section>
+
+                {/* Right Side: Forms */}
+                <div className="lg:col-span-8">
+                    <Section 
+                        title="Operational Profile" 
+                        subtitle="Public facing data for your athlete network." 
+                        icon={Store}
+                    >
+                        <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
+                            <InputGroup label="Business Title" name="businessName" value={profile.businessName} onChange={handleProfileChange} placeholder="e.g. Neon Arena" icon={Smartphone} />
+                            <InputGroup label="Director of Ops" name="ownerName" value={profile.ownerName} onChange={handleProfileChange} placeholder="e.g. John Doe" icon={User} />
+                            <InputGroup label="Communication Socket" type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="admin@example.com" icon={Globe} />
+                            <InputGroup label="Secure Mobile" type="tel" name="mobileNumber" value={profile.mobileNumber} onChange={handleProfileChange} placeholder="+91 98765 43210" icon={Smartphone} />
+                        </div>
+                    </Section>
+
+                    <Section 
+                        title="Security Layer" 
+                        subtitle="Control access protocols and account integrity." 
+                        icon={Shield}
+                    >
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <InputGroup 
+                                label="Access Key (Current)" 
+                                name="currentPassword" 
+                                value={passwords.currentPassword} 
+                                onChange={handlePasswordChange} 
+                                placeholder="••••••••" 
+                                isPassword={true}
+                                showPassword={showCurrentPassword}
+                                onTogglePassword={() => setShowCurrentPassword(!showCurrentPassword)}
+                                icon={Lock}
+                            />
+                            <InputGroup 
+                                label="New Access Key" 
+                                name="newPassword" 
+                                value={passwords.newPassword} 
+                                onChange={handlePasswordChange} 
+                                placeholder="••••••••" 
+                                isPassword={true}
+                                showPassword={showNewPassword}
+                                onTogglePassword={() => setShowNewPassword(!showNewPassword)}
+                                icon={CheckCircle}
+                            />
+                        </div>
+                        <div className="mt-8 flex justify-end">
+                            <button 
+                                onClick={handleSavePassword} 
+                                disabled={isPassLoading}
+                                className="px-8 py-4 bg-neon-purple text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white hover:text-black transition-all shadow-xl shadow-neon-purple/30 flex items-center gap-2 disabled:bg-slate-800"
+                            >
+                                {isPassLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                                Upgrade Access Security
+                            </button>
+                        </div>
+
+                        <div className="mt-10 pt-10 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
+                                    <Smartphone className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-white font-black uppercase italic tracking-tighter leading-none mb-1">Two-Factor Authentication</p>
+                                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Biometric & SMS Secondary Access</p>
+                                </div>
+                            </div>
+                            <button className="px-6 py-3 border-2 border-slate-800 text-slate-400 hover:text-white hover:border-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
+                                Enable Layer
+                            </button>
+                        </div>
+                    </Section>
+
+                    <div className="bg-red-500/5 border border-red-500/10 rounded-[2.5rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 group hover:bg-red-500/10 transition-all">
+                        <div className="text-center md:text-left">
+                            <h3 className="text-xl font-black text-red-500 italic uppercase tracking-tighter leading-none mb-2">Off-Chain Decommissioning</h3>
+                            <p className="text-slate-500 text-xs font-medium">Permanently remove your business from the Arena network.</p>
+                        </div>
+                        <button className="px-8 py-4 bg-transparent border-2 border-red-500/30 text-red-500/60 hover:text-white hover:bg-red-500 hover:border-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                            Deactivate Account
+                        </button>
+                    </div>
+                </div>
+            </div>
             
             <Toast
                 message={toast.message}
