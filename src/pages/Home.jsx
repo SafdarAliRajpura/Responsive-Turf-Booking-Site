@@ -466,7 +466,18 @@ export default function Home() {
                                         <div className="flex items-center gap-4 mb-6">
                                             <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-neon-blue to-purple-600 p-[2px]">
                                                 <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden border-2 border-slate-950">
-                                                    <img src={userAvatarImg} alt={review.user} className="w-full h-full object-cover" />
+                                                    <img 
+                                                        src={
+                                                            review.userId?.user_profile 
+                                                                ? (review.userId.user_profile.startsWith('data:') || review.userId.user_profile.startsWith('http') 
+                                                                    ? review.userId.user_profile 
+                                                                    : `http://localhost:5000${review.userId.user_profile}`)
+                                                                : userAvatarImg
+                                                        } 
+                                                        alt={review.user} 
+                                                        className="w-full h-full object-cover" 
+                                                        onError={(e) => { e.target.onerror = null; e.target.src = userAvatarImg; }}
+                                                    />
                                                 </div>
                                             </div>
                                             <div>
@@ -487,7 +498,7 @@ export default function Home() {
                                                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest truncate max-w-[150px]">{review.venueId?.name || 'Top Arena'}</span>
                                             </div>
                                             <button 
-                                                onClick={() => review.venueId?._id && navigate(`/venues/${review.venueId._id}`)}
+                                                onClick={() => review.venueId?._id && navigate(`/book/${review.venueId._id}`)}
                                                 className="text-[10px] font-black text-neon-blue uppercase tracking-tighter hover:text-white transition-colors"
                                             >
                                                 View Arena

@@ -82,7 +82,9 @@ export default function Bookings() {
                             <th className="px-8 py-5">TX ID</th>
                             <th className="px-8 py-5">Athlete</th>
                             <th className="px-8 py-5">Field & Schedule</th>
-                            <th className="px-8 py-5">Revenue</th>
+                            <th className="px-8 py-5">Gross</th>
+                            <th className="px-8 py-5">Platform Fee</th>
+                            <th className="px-8 py-5">Partner Share</th>
                             <th className="px-8 py-5">Status</th>
                             <th className="px-8 py-5 text-right">Intel</th>
                         </tr>
@@ -91,7 +93,7 @@ export default function Bookings() {
                         {loading ? (
                              [1,2,3,4].map(i => (
                                 <tr key={i} className="animate-pulse">
-                                    <td colSpan="6" className="px-8 py-6 h-16 bg-white/5"></td>
+                                    <td colSpan="8" className="px-8 py-6 h-16 bg-white/5"></td>
                                 </tr>
                              ))
                         ) : filteredBookings.map((b, i) => (
@@ -122,10 +124,22 @@ export default function Bookings() {
                                         </div>
                                     </div>
                                 </td>
+                                <td className="px-8 py-6 font-black text-white/50 text-xs">
+                                    <div className="flex items-center gap-1">
+                                        <IndianRupee className="w-2.5 h-2.5" />
+                                        <span>{b.price}</span>
+                                    </div>
+                                </td>
+                                <td className="px-8 py-6 font-black text-neon-green">
+                                    <div className="flex items-center gap-1">
+                                        <IndianRupee className="w-3 h-3" />
+                                        <span>{b.adminCommission || (Number(b.price) * 0.1).toFixed(2)}</span>
+                                    </div>
+                                </td>
                                 <td className="px-8 py-6 font-black text-white">
                                     <div className="flex items-center gap-1">
-                                        <IndianRupee className="w-3 h-3 text-neon-green" />
-                                        <span>{b.price}</span>
+                                        <IndianRupee className="w-3 h-3 text-slate-500" />
+                                        <span>{b.partnerShare || (Number(b.price) * 0.9).toFixed(2)}</span>
                                     </div>
                                 </td>
                                 <td className="px-8 py-6">
@@ -206,23 +220,23 @@ export default function Bookings() {
                                     </div>
 
                                     <div className="bg-slate-950/50 border border-white/5 rounded-3xl p-6 space-y-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 flex-shrink-0">
-                                                <MapPin className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Arena Location</p>
-                                                <p className="text-sm font-bold text-white uppercase">{selectedBooking.turfName}</p>
-                                            </div>
+                                        <div className="flex items-center justify-between">
+                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Platform Fee (10%)</p>
+                                             <p className="text-sm font-black text-neon-green">₹{selectedBooking.adminCommission || (Number(selectedBooking.price) * 0.1).toFixed(2)}</p>
                                         </div>
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 flex-shrink-0">
-                                                <Calendar className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Scheduled Deployment</p>
-                                                <p className="text-sm font-bold text-white uppercase">{selectedBooking.date} @ {selectedBooking.timeSlot}</p>
-                                            </div>
+                                        <div className="flex items-center justify-between">
+                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Partner Payout (90%)</p>
+                                             <p className="text-sm font-black text-white">₹{selectedBooking.partnerShare || (Number(selectedBooking.price) * 0.9).toFixed(2)}</p>
+                                        </div>
+                                        <div className="h-px bg-white/5" />
+                                        <div className="flex items-start gap-4 pt-2">
+                                             <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 flex-shrink-0">
+                                                 <Target className="w-5 h-5 text-neon-blue" />
+                                             </div>
+                                             <div>
+                                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Transaction Ref</p>
+                                                 <p className="text-[10px] font-mono font-bold text-white uppercase">{selectedBooking.paymentId || 'Razorpay_Order_ID: ' + (selectedBooking.orderId || 'N/A')}</p>
+                                             </div>
                                         </div>
                                     </div>
 
