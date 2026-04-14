@@ -222,7 +222,7 @@ export default function Bookings() {
                                         </h2>
                                         <div className="flex items-center gap-3 mt-4">
                                             <StatusBadge status={selectedBooking.status} />
-                                            <p className="text-slate-500 font-mono text-[10px] uppercase">Ref: {(selectedBooking.id || '').slice(-12).toUpperCase()}</p>
+                                            <p className="text-slate-500 font-mono text-[10px] uppercase break-all w-full">Ref: {(selectedBooking.id || '').toUpperCase()}</p>
                                         </div>
                                     </div>
 

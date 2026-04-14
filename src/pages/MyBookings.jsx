@@ -116,8 +116,7 @@ const ReceiptModal = ({ booking, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Right Panel: QR Matrix & Validation */}
-                    <div className="w-full md:w-[220px] bg-slate-950/50 p-8 flex flex-col items-center justify-center border-t md:border-t-0 border-white/10">
+                        <div className="w-full md:w-[220px] bg-slate-950/50 p-8 flex flex-col items-center justify-center border-t md:border-t-0 border-white/10">
                         <div className="p-4 bg-white rounded-3xl shadow-[0_0_50px_rgba(57,255,20,0.15)] mb-4">
                             <QRCodeSVG 
                                 value={`ARENA-${booking.id}`}
@@ -127,7 +126,7 @@ const ReceiptModal = ({ booking, onClose }) => {
                         </div>
                         <div className="text-center">
                             <p className="text-[9px] font-black text-slate-500 tracking-[0.3em] uppercase mb-1">Clearance Scan</p>
-                            <p className="text-[8px] font-mono text-slate-700">ID: {booking.id.substring(0, 12).toUpperCase()}</p>
+                            <p className="text-[7px] font-mono text-slate-700 break-all w-[160px] leading-tight">ID: {String(booking.id || '').toUpperCase()}</p>
                         </div>
                     </div>
                 </div>
