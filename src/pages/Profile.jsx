@@ -60,12 +60,18 @@ export default function Profile() {
     const getXpProgress = () => {
         if (!user) return 0;
         const xp = user.xp || 0;
+        // Legend Tier
         if (xp >= 5000) return 100;
-        if (xp >= 2500) return ((xp - 2500) / 2500) * 100;
-        if (xp >= 1000) return ((xp - 1000) / 1500) * 100;
-        if (xp >= 500) return ((xp - 500) / 500) * 100;
-        if (xp >= 100) return ((xp - 100) / 400) * 100;
-        return (xp / 100) * 100;
+        // Elite Tier (2500 - 4999)
+        if (xp >= 2500) return Math.min(((xp - 2500) / 2500) * 100, 100);
+        // Pro Tier (1000 - 2499)
+        if (xp >= 1000) return Math.min(((xp - 1000) / 1500) * 100, 100);
+        // Semi-Pro Tier (500 - 999)
+        if (xp >= 500) return Math.min(((xp - 500) / 500) * 100, 100);
+        // Amateur Tier (100 - 499)
+        if (xp >= 100) return Math.min(((xp - 100) / 400) * 100, 100);
+        // Rookie Tier (0 - 99)
+        return Math.min((xp / 100) * 100, 100);
     };
 
     const getNextTier = () => {

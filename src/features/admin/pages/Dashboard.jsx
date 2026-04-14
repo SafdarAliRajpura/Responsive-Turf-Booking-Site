@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     Users, TrendingUp, IndianRupee, Calendar,
-    ArrowUpRight, ArrowDownRight, MoreHorizontal
+    ArrowUpRight, ArrowDownRight, MoreHorizontal, Shield
 } from 'lucide-react';
 
 const StatCard = ({ title, value, trend, trendValue, icon: Icon, color }) => {
@@ -134,7 +134,7 @@ export default function Dashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Total Revenue"
+                    title="Total Network Gross"
                     value={isLoading ? "..." : formatCurrency(stats.revenue)}
                     trend={stats.trends.revenue >= 0 ? 'up' : 'down'}
                     trendValue={formatTrend(stats.trends.revenue)}
@@ -142,7 +142,15 @@ export default function Dashboard() {
                     color="neon-green"
                 />
                 <StatCard
-                    title="Total Users"
+                    title="Platform Dividend (10%)"
+                    value={isLoading ? "..." : formatCurrency(stats.revenue * 0.1)}
+                    trend={stats.trends.revenue >= 0 ? 'up' : 'down'}
+                    trendValue={formatTrend(stats.trends.revenue)}
+                    icon={TrendingUp}
+                    color="neon-purple"
+                />
+                <StatCard
+                    title="Total Athletes"
                     value={isLoading ? "..." : stats.totalUsers || stats.users}
                     trend={stats.trends.players >= 0 ? 'up' : 'down'}
                     trendValue={formatTrend(stats.trends.players)}
@@ -150,19 +158,11 @@ export default function Dashboard() {
                     color="neon-blue"
                 />
                 <StatCard
-                    title="Total Bookings"
-                    value={isLoading ? "..." : stats.bookings}
-                    trend={stats.trends.bookings >= 0 ? 'up' : 'down'}
-                    trendValue={formatTrend(stats.trends.bookings)}
-                    icon={Calendar}
-                    color="neon-purple"
-                />
-                <StatCard
                     title="System Status"
                     value={stats.systemStatus}
                     trend="up"
                     trendValue="Live"
-                    icon={TrendingUp}
+                    icon={Shield}
                     color="neon-pink"
                 />
             </div>

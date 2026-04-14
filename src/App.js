@@ -2,6 +2,7 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import PremiumLoader from './components/ui/PremiumLoader';
+import NotificationToast from './components/common/NotificationToast';
 
 // Lazy Loaded Auth & Onboarding
 const Onboarding = lazy(() => import('./features/onboarding/Onboarding'));
@@ -19,6 +20,7 @@ const PartnerBookings = lazy(() => import('./features/partner/pages/Bookings'));
 const PartnerAnalytics = lazy(() => import('./features/partner/pages/Analytics'));
 const PartnerSettings = lazy(() => import('./features/partner/pages/Settings'));
 const PartnerTournaments = lazy(() => import('./features/partner/pages/Tournaments'));
+const PartnerScanner = lazy(() => import('./features/partner/pages/Scanner'));
 const PartnerLayout = lazy(() => import('./features/partner/layouts/PartnerLayout'));
 
 // Lazy Loaded Public Pages
@@ -95,6 +97,7 @@ function App() {
           <Route path="analytics" element={<PartnerAnalytics />} />
           <Route path="tournaments" element={<PartnerTournaments />} />
           <Route path="settings" element={<PartnerSettings />} />
+          <Route path="scanner" element={<PartnerScanner />} />
         </Route>
 
         {/* Protected User UI Routes - Blocked for Admins/Partners */}
@@ -123,6 +126,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <NotificationToast />
     </Suspense>
   );
 }

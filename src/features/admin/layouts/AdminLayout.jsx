@@ -5,6 +5,7 @@ import {
     LayoutDashboard, Users, MapPin, Trophy,
     Calendar, Settings, LogOut, Bell, Search, Zap, MessageSquare
 } from 'lucide-react';
+import NotificationDropdown from '../../../components/common/NotificationDropdown';
 import userAvatarImg from '../../../assets/images/common/user-avatar.jpg';
 import carbonFibrePattern from '../../../assets/images/common/carbon-fibre.png';
 
@@ -131,10 +132,7 @@ export default function AdminLayout() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="relative w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-neon-pink rounded-full animate-pulse shadow-[0_0_10px_#ff00ff]" />
-                        </button>
+                        <NotificationDropdown color="neon-green" />
                     </div>
                 </header>
 

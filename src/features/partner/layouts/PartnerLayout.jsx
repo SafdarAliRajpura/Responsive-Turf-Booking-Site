@@ -3,8 +3,9 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard, MapPin, Calendar, Settings,
-    LogOut, Bell, Search, Briefcase, Plus, TrendingUp, Trophy
+    LogOut, Bell, Search, Briefcase, Plus, TrendingUp, Trophy, Maximize
 } from 'lucide-react';
+import NotificationDropdown from '../../../components/common/NotificationDropdown';
 import userAvatarImg from '../../../assets/images/common/avatar-1.jpg'; // Placeholder for partner avatar
 import carbonFibrePattern from '../../../assets/images/common/carbon-fibre.png';
 
@@ -55,6 +56,7 @@ export default function PartnerLayout() {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/partner/dashboard' },
         { icon: MapPin, label: 'My Turfs', path: '/partner/turfs' },
         { icon: Calendar, label: 'Bookings', path: '/partner/bookings' },
+        { icon: Maximize, label: 'Entry Scanner', path: '/partner/scanner' },
         { icon: Trophy, label: 'Tournaments', path: '/partner/tournaments' },
         { icon: TrendingUp, label: 'Analytics', path: '/partner/analytics' },
         { icon: Settings, label: 'Settings', path: '/partner/settings' },
@@ -147,10 +149,7 @@ export default function PartnerLayout() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="relative w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-neon-green rounded-full animate-pulse shadow-[0_0_10px_#39ff14]" />
-                        </button>
+                        <NotificationDropdown color="neon-green" />
                     </div>
                 </header>
 

@@ -79,7 +79,13 @@ const BookingRow = ({ id, turf, customer, time, status, amount }) => (
 
 export default function Dashboard() {
     const navigate = useNavigate();
-    const [stats, setStats] = useState({ revenue: 0, bookings: 0, customers: 0, occupancy: '0%' });
+    const [stats, setStats] = useState({ 
+        revenue: '₹0', 
+        bookings: 0, 
+        customers: 0, 
+        occupancy: '0%',
+        trends: { revenue: 0, bookings: 0, players: 0 }
+    });
     const [recentBookings, setRecentBookings] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -130,15 +136,15 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     icon={IndianRupee}
-                    title="Total Revenue"
-                    value={stats.revenue}
+                    title="Net Profit (90%)"
+                    value={`₹${(Number(String(stats.revenue).replace(/[^0-9.-]+/g,"")) * 0.9).toLocaleString()}`}
                     change={stats.trends?.revenue || 0} trend={stats.trends?.revenue >= 0 ? 'up' : 'down'} color="neon-green" isLoading={isLoading}
                 />
                 <StatCard
-                    icon={Calendar}
-                    title="Total Bookings"
-                    value={stats.bookings}
-                    change={stats.trends?.bookings || 0} trend={stats.trends?.bookings >= 0 ? 'up' : 'down'} color="neon-blue" isLoading={isLoading}
+                    icon={TrendingUp}
+                    title="Gross Sales"
+                    value={stats.revenue}
+                    change={stats.trends?.revenue || 0} trend={stats.trends?.revenue >= 0 ? 'up' : 'down'} color="neon-blue" isLoading={isLoading}
                 />
                 <StatCard
                     icon={Users}
@@ -175,7 +181,7 @@ export default function Dashboard() {
                                     <th className="pb-4 px-4">Player</th>
                                     <th className="pb-4 px-4">Schedule</th>
                                     <th className="pb-4 px-4">Status</th>
-                                    <th className="pb-4 px-4">Amount</th>
+                                    <th className="pb-4 px-4">Earnings (90%)</th>
                                     <th className="pb-4 px-4"></th>
                                 </tr>
                             </thead>
@@ -193,7 +199,7 @@ export default function Dashboard() {
                                             customer={b.user} 
                                             time={b.date} 
                                             status={b.status} 
-                                            amount={b.price} 
+                                            amount={(b.price * 0.9).toFixed(2)} 
                                         />
                                     ))
                                 )}

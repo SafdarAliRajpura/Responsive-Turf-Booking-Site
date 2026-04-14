@@ -142,25 +142,25 @@ export default function Analytics() {
             {/* Quick Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard 
-                    title="Gross Revenue" 
+                    title="Net Earnings (90%)" 
+                    value={`₹${((metrics?.totalRevenue || 0) * 0.9).toLocaleString()}`} 
+                    change={`${metrics?.trends?.revenue >= 0 ? '+' : ''}${metrics?.trends?.revenue}%`} 
+                    isGood={metrics?.trends?.revenue >= 0} 
+                    icon={TrendingUp}
+                />
+                <StatCard 
+                    title="Total Gross" 
                     value={`₹${(metrics?.totalRevenue || 0).toLocaleString()}`} 
                     change={`${metrics?.trends?.revenue >= 0 ? '+' : ''}${metrics?.trends?.revenue}%`} 
                     isGood={metrics?.trends?.revenue >= 0} 
                     icon={IndianRupee}
                 />
                 <StatCard 
-                    title="Avg. Booking" 
-                    value={`₹${metrics?.avgBookingValue || 0}`} 
+                    title="Avg. Payout" 
+                    value={`₹${Math.round((metrics?.avgBookingValue || 0) * 0.9)}`} 
                     change="+5.2%" 
                     isGood={true} 
                     icon={Target}
-                />
-                <StatCard 
-                    title="Conversion" 
-                    value={metrics?.conversionRate || '0%'} 
-                    change="+1.1%" 
-                    isGood={true} 
-                    icon={TrendingUp}
                 />
                 <StatCard 
                     title="Active Strikers" 

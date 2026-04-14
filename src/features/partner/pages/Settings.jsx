@@ -8,6 +8,7 @@ import {
 import apiClient from '../../../utils/apiClient';
 import userAvatar from '../../../assets/images/common/avatar-1.jpg';
 import Toast from '../../../components/ui/Toast';
+import { useNotifications } from '../../../context/NotificationContext';
 
 const Section = ({ title, subtitle, icon: Icon, children }) => (
     <motion.div 
@@ -60,6 +61,9 @@ export default function Settings() {
     const [toast, setToast] = useState({ message: null, type: 'info' });
     const [isSaving, setIsSaving] = useState(false);
     const [isPassLoading, setIsPassLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('profile');
+
+    const { notifications, markAsRead, markAllRead } = useNotifications();
 
     const [profile, setProfile] = useState({
         businessName: '',
@@ -223,16 +227,17 @@ export default function Settings() {
 
                     <div className="bg-slate-900/50 border border-white/5 rounded-[2.5rem] p-6 space-y-2">
                         {[
-                            { icon: User, label: 'Account Profile', active: true },
-                            { icon: Bell, label: 'Notifications', active: false },
-                            { icon: CreditCard, label: 'Payout Settings', active: false },
-                            { icon: Globe, label: 'Platform Hub', active: false }
+                            { icon: User, label: 'Account Profile', id: 'profile' },
+                            { icon: Bell, label: 'Notifications', id: 'notifications' },
+                            { icon: CreditCard, label: 'Payout Settings', id: 'payout' },
+                            { icon: Globe, label: 'Platform Hub', id: 'hub' }
                         ].map((item, idx) => (
                             <button 
                                 key={idx}
-                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${item.active ? 'bg-neon-purple/10 text-neon-purple border border-neon-purple/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+                                onClick={() => setActiveTab(item.id)}
+                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === item.id ? 'bg-neon-purple/10 text-neon-purple border border-neon-purple/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
                             >
-                                <item.icon className="w-4 h-4" />
+                                <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-neon-purple' : ''}`} />
                                 {item.label}
                             </button>
                         ))}
@@ -241,84 +246,156 @@ export default function Settings() {
 
                 {/* Right Side: Forms */}
                 <div className="lg:col-span-8">
-                    <Section 
-                        title="Operational Profile" 
-                        subtitle="Public facing data for your athlete network." 
-                        icon={Store}
-                    >
-                        <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-                            <InputGroup label="Business Title" name="businessName" value={profile.businessName} onChange={handleProfileChange} placeholder="e.g. Neon Arena" icon={Smartphone} />
-                            <InputGroup label="Director of Ops" name="ownerName" value={profile.ownerName} onChange={handleProfileChange} placeholder="e.g. John Doe" icon={User} />
-                            <InputGroup label="Communication Socket" type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="admin@example.com" icon={Globe} />
-                            <InputGroup label="Secure Mobile" type="tel" name="mobileNumber" value={profile.mobileNumber} onChange={handleProfileChange} placeholder="+91 98765 43210" icon={Smartphone} />
-                        </div>
-                    </Section>
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'profile' && (
+                            <motion.div key="profile" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                                <Section 
+                                    title="Operational Profile" 
+                                    subtitle="Public facing data for your athlete network." 
+                                    icon={Store}
+                                >
+                                    <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
+                                        <InputGroup label="Business Title" name="businessName" value={profile.businessName} onChange={handleProfileChange} placeholder="e.g. Neon Arena" icon={Smartphone} />
+                                        <InputGroup label="Director of Ops" name="ownerName" value={profile.ownerName} onChange={handleProfileChange} placeholder="e.g. John Doe" icon={User} />
+                                        <InputGroup label="Communication Socket" type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="admin@example.com" icon={Globe} />
+                                        <InputGroup label="Secure Mobile" type="tel" name="mobileNumber" value={profile.mobileNumber} onChange={handleProfileChange} placeholder="+91 98765 43210" icon={Smartphone} />
+                                    </div>
+                                </Section>
 
-                    <Section 
-                        title="Security Layer" 
-                        subtitle="Control access protocols and account integrity." 
-                        icon={Shield}
-                    >
-                        <div className="grid md:grid-cols-2 gap-8">
-                            <InputGroup 
-                                label="Access Key (Current)" 
-                                name="currentPassword" 
-                                value={passwords.currentPassword} 
-                                onChange={handlePasswordChange} 
-                                placeholder="••••••••" 
-                                isPassword={true}
-                                showPassword={showCurrentPassword}
-                                onTogglePassword={() => setShowCurrentPassword(!showCurrentPassword)}
-                                icon={Lock}
-                            />
-                            <InputGroup 
-                                label="New Access Key" 
-                                name="newPassword" 
-                                value={passwords.newPassword} 
-                                onChange={handlePasswordChange} 
-                                placeholder="••••••••" 
-                                isPassword={true}
-                                showPassword={showNewPassword}
-                                onTogglePassword={() => setShowNewPassword(!showNewPassword)}
-                                icon={CheckCircle}
-                            />
-                        </div>
-                        <div className="mt-8 flex justify-end">
-                            <button 
-                                onClick={handleSavePassword} 
-                                disabled={isPassLoading}
-                                className="px-8 py-4 bg-neon-purple text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white hover:text-black transition-all shadow-xl shadow-neon-purple/30 flex items-center gap-2 disabled:bg-slate-800"
-                            >
-                                {isPassLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                                Upgrade Access Security
-                            </button>
-                        </div>
+                                <Section 
+                                    title="Security Layer" 
+                                    subtitle="Control access protocols and account integrity." 
+                                    icon={Shield}
+                                >
+                                    <div className="grid md:grid-cols-2 gap-8">
+                                        <InputGroup 
+                                            label="Access Key (Current)" 
+                                            name="currentPassword" 
+                                            value={passwords.currentPassword} 
+                                            onChange={handlePasswordChange} 
+                                            placeholder="••••••••" 
+                                            isPassword={true}
+                                            showPassword={showCurrentPassword}
+                                            onTogglePassword={() => setShowCurrentPassword(!showCurrentPassword)}
+                                            icon={Lock}
+                                        />
+                                        <InputGroup 
+                                            label="New Access Key" 
+                                            name="newPassword" 
+                                            value={passwords.newPassword} 
+                                            onChange={handlePasswordChange} 
+                                            placeholder="••••••••" 
+                                            isPassword={true}
+                                            showPassword={showNewPassword}
+                                            onTogglePassword={() => setShowNewPassword(!showNewPassword)}
+                                            icon={CheckCircle}
+                                        />
+                                    </div>
+                                    <div className="mt-8 flex justify-end">
+                                        <button 
+                                            onClick={handleSavePassword} 
+                                            disabled={isPassLoading}
+                                            className="px-8 py-4 bg-neon-purple text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white hover:text-black transition-all shadow-xl shadow-neon-purple/30 flex items-center gap-2 disabled:bg-slate-800"
+                                        >
+                                            {isPassLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                                            Upgrade Access Security
+                                        </button>
+                                    </div>
 
-                        <div className="mt-10 pt-10 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
-                                    <Smartphone className="w-6 h-6" />
+                                    <div className="mt-10 pt-10 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
+                                                <Smartphone className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <p className="text-white font-black uppercase italic tracking-tighter leading-none mb-1">Two-Factor Authentication</p>
+                                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Biometric & SMS Secondary Access</p>
+                                            </div>
+                                        </div>
+                                        <button className="px-6 py-3 border-2 border-slate-800 text-slate-400 hover:text-white hover:border-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
+                                            Enable Layer
+                                        </button>
+                                    </div>
+                                </Section>
+
+                                <div className="bg-red-500/5 border border-red-500/10 rounded-[2.5rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 group hover:bg-red-500/10 transition-all">
+                                    <div className="text-center md:text-left">
+                                        <h3 className="text-xl font-black text-red-500 italic uppercase tracking-tighter leading-none mb-2">Off-Chain Decommissioning</h3>
+                                        <p className="text-slate-500 text-xs font-medium">Permanently remove your business from the Arena network.</p>
+                                    </div>
+                                    <button className="px-8 py-4 bg-transparent border-2 border-red-500/30 text-red-500/60 hover:text-white hover:bg-red-500 hover:border-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                        Deactivate Account
+                                    </button>
                                 </div>
-                                <div>
-                                    <p className="text-white font-black uppercase italic tracking-tighter leading-none mb-1">Two-Factor Authentication</p>
-                                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Biometric & SMS Secondary Access</p>
-                                </div>
-                            </div>
-                            <button className="px-6 py-3 border-2 border-slate-800 text-slate-400 hover:text-white hover:border-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
-                                Enable Layer
-                            </button>
-                        </div>
-                    </Section>
+                            </motion.div>
+                        )}
 
-                    <div className="bg-red-500/5 border border-red-500/10 rounded-[2.5rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 group hover:bg-red-500/10 transition-all">
-                        <div className="text-center md:text-left">
-                            <h3 className="text-xl font-black text-red-500 italic uppercase tracking-tighter leading-none mb-2">Off-Chain Decommissioning</h3>
-                            <p className="text-slate-500 text-xs font-medium">Permanently remove your business from the Arena network.</p>
-                        </div>
-                        <button className="px-8 py-4 bg-transparent border-2 border-red-500/30 text-red-500/60 hover:text-white hover:bg-red-500 hover:border-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
-                            Deactivate Account
-                        </button>
-                    </div>
+                        {activeTab === 'notifications' && (
+                            <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                                <Section 
+                                    title="Intelligence Feed" 
+                                    subtitle="Manage your tactical operational alerts." 
+                                    icon={Bell}
+                                >
+                                    <div className="flex items-center justify-between mb-8">
+                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Live Event Log</p>
+                                        <button onClick={markAllRead} className="text-[10px] font-black uppercase tracking-widest text-neon-purple hover:text-white transition-colors">Clear All Intel</button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {notifications.length > 0 ? (
+                                            notifications.map((notif) => (
+                                                <div 
+                                                    key={notif._id}
+                                                    onClick={() => markAsRead(notif._id)}
+                                                    className={`p-6 rounded-3xl border transition-all flex items-start gap-4 cursor-pointer ${!notif.isRead ? 'bg-neon-purple/5 border-neon-purple/20' : 'bg-slate-950 border-white/5 opacity-60 hover:opacity-100'}`}
+                                                >
+                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${!notif.isRead ? 'bg-neon-purple text-black' : 'bg-white/5 text-slate-400'}`}>
+                                                        <Bell className="w-6 h-6" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{notif.type}</span>
+                                                            <span className="text-[9px] font-bold text-slate-600 italic">{new Date(notif.createdAt).toLocaleString()}</span>
+                                                        </div>
+                                                        <p className="text-sm text-white font-medium leading-relaxed">{notif.message}</p>
+                                                    </div>
+                                                    {!notif.isRead && <div className="w-2 h-2 rounded-full bg-neon-purple shadow-[0_0_10px_#a855f7] mt-2" />}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="py-20 text-center bg-slate-950/50 rounded-3xl border border-dashed border-white/5">
+                                                <Bell className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
+                                                <p className="text-slate-600 font-bold uppercase tracking-widest text-xs italic">Operational logs are currently silent.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Section>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'payout' && (
+                            <motion.div key="payout" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                                <Section title="Settlement Protocol" subtitle="Configure your financial payout routes." icon={CreditCard}>
+                                    <div className="py-20 text-center bg-slate-950/50 rounded-3xl border border-dashed border-white/5">
+                                        <CreditCard className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
+                                        <p className="text-slate-600 font-bold uppercase tracking-widest text-xs italic">Financial blueprint expansion in progress.</p>
+                                    </div>
+                                </Section>
+                            </motion.div>
+                        )}
+                        
+                        {activeTab === 'hub' && (
+                            <motion.div key="hub" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                                <Section title="Platform Matrix" subtitle="Connected ecosystem settings and API tokens." icon={Globe}>
+                                    <div className="py-20 text-center bg-slate-950/50 rounded-3xl border border-dashed border-white/5">
+                                        <Globe className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
+                                        <p className="text-slate-600 font-bold uppercase tracking-widest text-xs italic">System expansion protocols loading...</p>
+                                    </div>
+                                </Section>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
             

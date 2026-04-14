@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Zap, Menu, Bell, LogOut, LayoutDashboard, User as UserIcon, MessageSquare, Heart, Calendar, Search, MapPin, Trophy, Target } from 'lucide-react';
 import userAvatarImg from '../../assets/images/common/user-avatar.jpg';
 import { useNotifications } from '../../context/NotificationContext';
-import NotificationToast from './NotificationToast';
+import NotificationDropdown from './NotificationDropdown';
 import apiClient from '../../utils/apiClient';
 
 const Header = () => {
@@ -178,56 +178,7 @@ const Header = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="group relative">
-                        <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
-                            <Bell className="w-5 h-5" />
-                            {unreadCount > 0 && (
-                                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-neon-pink rounded-full flex items-center justify-center text-[10px] font-black text-white border-2 border-slate-950 animate-bounce">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </button>
-
-                        {/* Notifications Dropdown */}
-                        <div className="absolute right-0 top-[calc(100%+0.5rem)] w-80 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] overflow-hidden">
-                            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-                                <h4 className="text-xs font-black uppercase tracking-widest text-white">Notifications</h4>
-                                {unreadCount > 0 && (
-                                    <button onClick={markAllRead} className="text-[10px] font-bold text-neon-blue hover:text-white transition-colors">Mark all read</button>
-                                )}
-                            </div>
-                            <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                                {notifications.length > 0 ? (
-                                    notifications.map((notif) => (
-                                        <div 
-                                            key={notif._id} 
-                                            onClick={() => {
-                                                markAsRead(notif._id);
-                                                if(notif.link) navigate(notif.link);
-                                            }}
-                                            className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer flex gap-3 ${!notif.isRead ? 'bg-neon-blue/5' : ''}`}
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 border border-white/5">
-                                                {getIcon(notif.type)}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm text-white font-medium line-clamp-2">
-                                                    <span className="font-bold text-neon-blue">{notif.sender?.first_name || 'System'}</span> {notif.message}
-                                                </p>
-                                                <p className="text-[10px] text-slate-500 mt-1">{new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                                            </div>
-                                            {!notif.isRead && <div className="w-2 h-2 rounded-full bg-neon-pink mt-2 flex-shrink-0" />}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="p-8 text-center">
-                                        <Bell className="w-8 h-8 text-slate-700 mx-auto mb-2 opacity-20" />
-                                        <p className="text-sm text-slate-500 italic">No alerts yet</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                    <NotificationDropdown color="neon-green" />
                     <div className="group relative">
                         <button
                             className="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-purple-600 p-[2px] transition-transform hover:scale-105"
@@ -282,7 +233,7 @@ const Header = () => {
                     </button>
                 </div>
             </div>
-            <NotificationToast />
+
         </nav>
     );
 };
