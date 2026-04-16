@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Save, Lock, Store, Camera, Eye, EyeOff, Shield, 
     Bell, Globe, CheckCircle, Loader2, Trash2, 
-    User, Smartphone, CreditCard
+    User, Smartphone, CreditCard, Zap, BarChart3, Info, Trophy, Users
 } from 'lucide-react';
 import apiClient from '../../../utils/apiClient';
 import userAvatar from '../../../assets/images/common/avatar-1.jpg';
@@ -63,7 +63,7 @@ export default function Settings() {
     const [isPassLoading, setIsPassLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
 
-    const { notifications, markAsRead, markAllRead } = useNotifications();
+    const { notifications, markAsRead, markAllRead, refresh, unreadCount, clearNotifications } = useNotifications();
 
     const [profile, setProfile] = useState({
         businessName: '',
@@ -169,9 +169,9 @@ export default function Settings() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                 <div>
                     <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">
-                        Control <span className="text-neon-purple">Center</span>
+                        Setting <span className="text-neon-purple">Center</span>
                     </h1>
-                    <p className="text-slate-500 font-medium tracking-tight">Configure your professional operational parameters.</p>
+                    <p className="text-slate-500 font-medium tracking-tight">Manage your professional profile and account settings.</p>
                 </div>
                 <div className="flex gap-4">
                     <button 
@@ -228,9 +228,7 @@ export default function Settings() {
                     <div className="bg-slate-900/50 border border-white/5 rounded-[2.5rem] p-6 space-y-2">
                         {[
                             { icon: User, label: 'Account Profile', id: 'profile' },
-                            { icon: Bell, label: 'Notifications', id: 'notifications' },
-                            { icon: CreditCard, label: 'Payout Settings', id: 'payout' },
-                            { icon: Globe, label: 'Platform Hub', id: 'hub' }
+                            { icon: Bell, label: 'Notifications', id: 'notifications' }
                         ].map((item, idx) => (
                             <button 
                                 key={idx}
@@ -250,8 +248,8 @@ export default function Settings() {
                         {activeTab === 'profile' && (
                             <motion.div key="profile" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                                 <Section 
-                                    title="Operational Profile" 
-                                    subtitle="Public facing data for your athlete network." 
+                                    title="Business Profile" 
+                                    subtitle="Public information for your players and fans." 
                                     icon={Store}
                                 >
                                     <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
@@ -298,7 +296,7 @@ export default function Settings() {
                                             className="px-8 py-4 bg-neon-purple text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white hover:text-black transition-all shadow-xl shadow-neon-purple/30 flex items-center gap-2 disabled:bg-slate-800"
                                         >
                                             {isPassLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                                            Upgrade Access Security
+                                            Update Password
                                         </button>
                                     </div>
 
@@ -333,13 +331,23 @@ export default function Settings() {
                         {activeTab === 'notifications' && (
                             <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                                 <Section 
-                                    title="Intelligence Feed" 
-                                    subtitle="Manage your tactical operational alerts." 
+                                    title="Update Hub" 
+                                    subtitle="Manage your notifications and recent updates." 
                                     icon={Bell}
                                 >
                                     <div className="flex items-center justify-between mb-8">
-                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Live Event Log</p>
-                                        <button onClick={markAllRead} className="text-[10px] font-black uppercase tracking-widest text-neon-purple hover:text-white transition-colors">Clear All Intel</button>
+                                        <div className="flex items-center gap-3">
+                                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Recent Activity</p>
+                                            {unreadCount > 0 && (
+                                                <span className="px-2 py-0.5 bg-neon-purple text-black text-[9px] font-black rounded-full shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                                                    {unreadCount} NEW
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <button onClick={refresh} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">Refresh</button>
+                                            <button onClick={clearNotifications} className="text-[10px] font-black uppercase tracking-widest text-neon-purple hover:text-white transition-colors">Clear All</button>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-4">
@@ -348,25 +356,39 @@ export default function Settings() {
                                                 <div 
                                                     key={notif._id}
                                                     onClick={() => markAsRead(notif._id)}
-                                                    className={`p-6 rounded-3xl border transition-all flex items-start gap-4 cursor-pointer ${!notif.isRead ? 'bg-neon-purple/5 border-neon-purple/20' : 'bg-slate-950 border-white/5 opacity-60 hover:opacity-100'}`}
+                                                    className={`p-5 rounded-[2rem] border transition-all flex items-start gap-5 cursor-pointer relative overflow-hidden group ${!notif.isRead ? 'bg-neon-purple/5 border-neon-purple/20' : 'bg-slate-950 border-white/5 opacity-60 hover:opacity-100'}`}
                                                 >
-                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${!notif.isRead ? 'bg-neon-purple text-black' : 'bg-white/5 text-slate-400'}`}>
-                                                        <Bell className="w-6 h-6" />
+                                                    {!notif.isRead && <div className="absolute top-0 left-0 w-1 h-full bg-neon-purple shadow-[0_0_15px_#a855f7]" />}
+                                                    
+                                                    <div className="flex-shrink-0 relative">
+                                                        {notif.sender?.user_profile ? (
+                                                            <img src={notif.sender.user_profile} alt="Sender" className="w-12 h-12 rounded-2xl object-cover border border-white/10" />
+                                                        ) : (
+                                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${!notif.isRead ? 'bg-neon-purple text-black' : 'bg-white/5 text-slate-400'}`}>
+                                                                <Bell className="w-6 h-6" />
+                                                            </div>
+                                                        )}
+                                                        {!notif.isRead && <div className="absolute -top-1 -right-1 w-3 h-3 bg-neon-purple rounded-full border-2 border-slate-950 shadow-[0_0_8px_#a855f7]" />}
                                                     </div>
+
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{notif.type}</span>
-                                                            <span className="text-[9px] font-bold text-slate-600 italic">{new Date(notif.createdAt).toLocaleString()}</span>
+                                                        <div className="flex items-center justify-between mb-1.5">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                                {notif.sender ? `${notif.sender.first_name} ${notif.sender.last_name}` : notif.type}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold text-slate-600 italic">
+                                                                {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
                                                         </div>
-                                                        <p className="text-sm text-white font-medium leading-relaxed">{notif.message}</p>
+                                                        <h4 className="text-sm text-white font-bold mb-1 tracking-tight">{notif.title || notif.type}</h4>
+                                                        <p className="text-xs text-slate-400 font-medium leading-relaxed line-clamp-2">{notif.message}</p>
                                                     </div>
-                                                    {!notif.isRead && <div className="w-2 h-2 rounded-full bg-neon-purple shadow-[0_0_10px_#a855f7] mt-2" />}
                                                 </div>
                                             ))
                                         ) : (
                                             <div className="py-20 text-center bg-slate-950/50 rounded-3xl border border-dashed border-white/5">
                                                 <Bell className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
-                                                <p className="text-slate-600 font-bold uppercase tracking-widest text-xs italic">Operational logs are currently silent.</p>
+                                                <p className="text-slate-600 font-bold uppercase tracking-widest text-xs italic">No notifications yet.</p>
                                             </div>
                                         )}
                                     </div>
@@ -374,27 +396,7 @@ export default function Settings() {
                             </motion.div>
                         )}
 
-                        {activeTab === 'payout' && (
-                            <motion.div key="payout" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                                <Section title="Settlement Protocol" subtitle="Configure your financial payout routes." icon={CreditCard}>
-                                    <div className="py-20 text-center bg-slate-950/50 rounded-3xl border border-dashed border-white/5">
-                                        <CreditCard className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
-                                        <p className="text-slate-600 font-bold uppercase tracking-widest text-xs italic">Financial blueprint expansion in progress.</p>
-                                    </div>
-                                </Section>
-                            </motion.div>
-                        )}
-                        
-                        {activeTab === 'hub' && (
-                            <motion.div key="hub" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                                <Section title="Platform Matrix" subtitle="Connected ecosystem settings and API tokens." icon={Globe}>
-                                    <div className="py-20 text-center bg-slate-950/50 rounded-3xl border border-dashed border-white/5">
-                                        <Globe className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
-                                        <p className="text-slate-600 font-bold uppercase tracking-widest text-xs italic">System expansion protocols loading...</p>
-                                    </div>
-                                </Section>
-                            </motion.div>
-                        )}
+
                     </AnimatePresence>
                 </div>
             </div>

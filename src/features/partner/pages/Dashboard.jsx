@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, Calendar, IndianRupee, Clock, MapPin, ArrowRight, MoreHorizontal } from 'lucide-react';
+import { TrendingUp, Users, Calendar, IndianRupee, Clock, MapPin, ArrowRight, MoreHorizontal, Zap, Activity, Info, ChevronRight, Trophy, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../../utils/apiClient';
 
@@ -62,18 +62,13 @@ const BookingRow = ({ id, turf, customer, time, status, amount }) => (
         <td className="py-4 px-4">
             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
                 status === 'Confirmed' ? 'bg-neon-green/10 text-neon-green border-neon-green/20' :
-                status === 'Pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
+                status === 'Completed' ? 'bg-neon-blue/10 text-neon-blue border-neon-blue/20' :
                 'bg-red-500/10 text-red-500 border-red-500/20'
             }`}>
                 {status}
             </span>
         </td>
         <td className="py-4 px-4 font-bold text-white">₹{amount}</td>
-        <td className="py-4 px-4 text-right">
-            <button className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">
-                <MoreHorizontal className="w-4 h-4" />
-            </button>
-        </td>
     </motion.tr>
 );
 
@@ -87,6 +82,7 @@ export default function Dashboard() {
         trends: { revenue: 0, bookings: 0, players: 0 }
     });
     const [recentBookings, setRecentBookings] = useState([]);
+    const [topTournament, setTopTournament] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const userString = localStorage.getItem('user');
@@ -109,6 +105,12 @@ export default function Dashboard() {
                         trends: metrics.trends
                     });
                     setRecentBookings(metrics.recentBookings);
+                }
+
+                // Fetch tournaments for spotlight
+                const tRes = await apiClient.get('/tournaments/my-tournaments');
+                if (tRes.data.success && tRes.data.data.length > 0) {
+                    setTopTournament(tRes.data.data[0]);
                 }
             } catch (err) {
                 console.error("Dashboard data fetch failed", err);
@@ -168,7 +170,7 @@ export default function Dashboard() {
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold text-white uppercase tracking-tight">Recent Activity</h2>
                         <button onClick={() => navigate('/partner/bookings')} className="text-sm font-bold text-neon-purple hover:text-white transition-colors flex items-center gap-1">
-                            Operational Hub <ArrowRight className="w-4 h-4" />
+                            Booking Hub <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
 
@@ -182,14 +184,13 @@ export default function Dashboard() {
                                     <th className="pb-4 px-4">Schedule</th>
                                     <th className="pb-4 px-4">Status</th>
                                     <th className="pb-4 px-4">Earnings (90%)</th>
-                                    <th className="pb-4 px-4"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {isLoading ? (
                                     <tr><td colSpan="7" className="py-8 text-center text-slate-500">Retrieving business matrix...</td></tr>
                                 ) : recentBookings.length === 0 ? (
-                                    <tr><td colSpan="7" className="py-12 text-center text-slate-500">No recent operational data.</td></tr>
+                                    <tr><td colSpan="7" className="py-12 text-center text-slate-500">No recent activity.</td></tr>
                                 ) : (
                                     recentBookings.map((b) => (
                                         <BookingRow 
@@ -208,34 +209,64 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Right Column: Quick Actions & Strategy */}
+                {/* Right Column: Tournament Spotlight */}
                 <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-neon-purple/20 to-fuchsia-600/20 border border-neon-purple/30 rounded-3xl p-6 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm -z-10" />
-                        <h3 className="text-lg font-black text-white mb-2 uppercase italic tracking-tighter">Growth Strategy</h3>
-                        <p className="text-sm text-slate-400 mb-4 font-medium">Boost weekend occupancy. Launch targeted slot discounts for late-night strikers.</p>
-                        <button className="w-full py-4 bg-neon-purple text-black font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-neon-purple/20 hover:bg-white transition-all">
-                            Enable Boost
-                        </button>
+                    <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform">
+                            <Trophy className="w-24 h-24 text-neon-purple" />
+                        </div>
+                        
+                        <div className="relative z-10">
+                            <h3 className="text-lg font-black text-white mb-6 uppercase italic tracking-tighter flex items-center gap-2">
+                                <Target className="w-5 h-5 text-neon-purple" /> Live Championship
+                            </h3>
+
+                            {isLoading ? (
+                                <div className="space-y-4">
+                                    <div className="h-4 bg-white/5 rounded w-3/4 animate-pulse" />
+                                    <div className="h-20 bg-white/5 rounded-2xl animate-pulse" />
+                                </div>
+                            ) : !topTournament ? (
+                                <div className="py-10 text-center text-slate-500">
+                                    <p className="text-xs font-bold uppercase tracking-widest mb-4">No Active Championships</p>
+                                    <button onClick={() => navigate('/partner/tournaments')} className="px-4 py-2 bg-white/5 rounded-lg text-[10px] font-black hover:bg-white/10 transition-all">CREATE NOW</button>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h4 className="text-xl font-black text-white group-hover:text-neon-purple transition-colors truncate">{topTournament.name}</h4>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{topTournament.category} • {topTournament.location}</p>
+                                    </div>
+
+                                    <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Registration Status</span>
+                                            <span className="text-sm font-black text-white italic">{topTournament.registeredTeams}/{topTournament.totalSlots} SQUADS</span>
+                                        </div>
+                                        <div className="h-3 bg-slate-950 rounded-full overflow-hidden border border-white/5">
+                                            <motion.div 
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${(topTournament.registeredTeams / topTournament.totalSlots) * 100}%` }}
+                                                className="h-full bg-gradient-to-r from-neon-purple to-fuchsia-600 shadow-[0_0_15px_rgba(168,85,247,0.5)]" 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => navigate('/partner/tournaments')} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/5 transition-all text-center">
+                                        MANAGE CHAMPIONSHIP
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="bg-slate-900 border border-white/5 rounded-3xl p-6">
-                        <h3 className="text-lg font-black text-white mb-4 uppercase italic tracking-tighter">System Metrics</h3>
-                        <div className="space-y-4">
-                            {[
-                                { title: "Revenue Flow", desc: "Transactions optimized.", time: "Live", color: "neon-yellow" },
-                                { title: "Maintenance", desc: "System check complete.", time: "Clean", color: "neon-blue" },
-                                { title: "New Feature", desc: "Analytics v2.0 deployed.", time: "Today", color: "neon-green" }
-                            ].map((alert, i) => (
-                                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer">
-                                    <div className={`w-2 h-2 mt-1.5 rounded-full bg-${alert.color} shadow-[0_0_8px_currentColor] animate-pulse`} />
-                                    <div>
-                                        <h4 className="text-sm font-bold text-white leading-none mb-1">{alert.title}</h4>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{alert.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
+                    <div className="bg-gradient-to-br from-neon-blue/10 to-indigo-600/10 border border-neon-blue/20 rounded-3xl p-6">
+                        <h3 className="text-lg font-black text-white mb-2 uppercase italic tracking-tighter">System Health</h3>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_rgba(57,255,20,0.5)] animate-pulse" />
+                            <span className="text-[10px] font-black text-neon-green uppercase tracking-widest">All Core Systems Optimal</span>
                         </div>
+                        <p className="text-xs text-slate-400 font-medium leading-relaxed">Network latency: 12ms. Database consistency verified. Secure operations active.</p>
                     </div>
                 </div>
 

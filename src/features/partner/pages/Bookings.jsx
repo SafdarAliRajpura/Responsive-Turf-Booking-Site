@@ -10,7 +10,7 @@ import apiClient from '../../../utils/apiClient';
 const StatusBadge = ({ status }) => {
     const styles = {
         Confirmed: 'bg-neon-green/10 text-neon-green border-neon-green/20',
-        Pending: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+        Completed: 'bg-neon-blue/10 text-neon-blue border-neon-blue/20',
         Cancelled: 'bg-red-500/10 text-red-500 border-red-500/20',
         Rejected: 'bg-red-500/10 text-red-500 border-red-500/20'
     };
@@ -26,7 +26,6 @@ export default function Bookings() {
     const [filter, setFilter] = useState('All');
     const [bookingsState, setBookingsState] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
     const [selectedBooking, setSelectedBooking] = useState(null);
 
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -77,12 +76,7 @@ export default function Bookings() {
     };
 
     const filteredBookings = bookingsState.filter(b => {
-        const matchesFilter = filter === 'All' || b.status === filter;
-        const matchesSearch = 
-            b.user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.turfName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            b.id?.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesFilter && matchesSearch;
+        return filter === 'All' || b.status === filter;
     });
 
     const getFormattedDate = (dateStr) => {
@@ -103,26 +97,16 @@ export default function Bookings() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-white italic tracking-tighter">ARENA <span className="text-neon-purple uppercase font-black">RESERVATIONS</span></h1>
-                    <p className="text-slate-400 font-medium text-sm">Control center for your field deployments and athlete sessions.</p>
+                    <p className="text-slate-400 font-medium text-sm">Manage your field bookings and player sessions.</p>
                 </div>
 
                 <div className="flex gap-4">
-                    <div className="relative group">
-                        <input
-                            type="text"
-                            placeholder="Scan entries..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="bg-slate-900 border border-white/5 rounded-2xl py-3 pl-12 pr-6 text-white text-sm focus:outline-none focus:border-neon-purple/50 w-full md:w-80 backdrop-blur-md outline-none transition-all"
-                        />
-                        <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-500 group-focus-within:text-neon-purple transition-colors" />
-                    </div>
                 </div>
             </div>
 
             {/* Filters */}
             <div className="flex gap-2 border-b border-white/5 pb-4 overflow-x-auto">
-                {['All', 'Confirmed', 'Pending', 'Cancelled'].map(status => (
+                {['All', 'Confirmed', 'Completed', 'Cancelled'].map(status => (
                     <button
                         key={status}
                         onClick={() => setFilter(status)}
@@ -140,7 +124,7 @@ export default function Bookings() {
                 {loading ? (
                     [1,2,3,4].map(i => <div key={i} className="h-24 bg-white/5 rounded-3xl animate-pulse" />)
                 ) : filteredBookings.length === 0 ? (
-                    <div className="text-slate-500 font-bold text-center py-20 bg-slate-900 border border-white/5 rounded-[40px] uppercase tracking-widest text-xs italic">No tactical data found.</div>
+                    <div className="text-slate-500 font-bold text-center py-20 bg-slate-900 border border-white/5 rounded-[40px] uppercase tracking-widest text-xs italic">No activity found.</div>
                 ) : filteredBookings.map((booking, index) => {
                     const { day, month } = getFormattedDate(booking.date);
                     return (
@@ -216,13 +200,13 @@ export default function Bookings() {
 
                                 <div className="mt-12 space-y-8 flex-1 overflow-y-auto custom-scrollbar pr-2">
                                     <div>
-                                        <span className="text-[10px] font-black text-neon-purple uppercase tracking-[0.3em] mb-3 block">Deployment Analytics</span>
+                                        <span className="text-[10px] font-black text-neon-purple uppercase tracking-[0.3em] mb-3 block">Reservation Details</span>
                                         <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">
                                             {selectedBooking.user}
                                         </h2>
                                         <div className="flex items-center gap-3 mt-4">
                                             <StatusBadge status={selectedBooking.status} />
-                                            <p className="text-slate-500 font-mono text-[10px] uppercase break-all w-full">Ref: {(selectedBooking.id || '').toUpperCase()}</p>
+                                            <p className="text-slate-500 font-mono text-[10px] uppercase break-all w-full">ID: {(selectedBooking.id || '').toUpperCase()}</p>
                                         </div>
                                     </div>
 
@@ -300,9 +284,9 @@ export default function Bookings() {
                                 <XCircle className="w-10 h-10 text-red-500" />
                             </div>
                             
-                            <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase mb-4">Confirm <span className="text-red-500">Voidance</span></h2>
+                            <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase mb-4">Confirm <span className="text-red-500">Cancellation</span></h2>
                             <p className="text-slate-400 font-medium text-sm mb-8">
-                                You are about to terminate the reservation for <span className="text-white font-bold">{bookingToCancel?.user}</span>. This deployment cannot be recovered.
+                                You are about to cancel the reservation for <span className="text-white font-bold">{bookingToCancel?.user}</span>. This booking cannot be recovered.
                             </p>
 
                             <div className="flex gap-4">

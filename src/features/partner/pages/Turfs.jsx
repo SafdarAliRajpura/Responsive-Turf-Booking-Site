@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, MapPin, IndianRupee, MoreVertical, Edit, Power, X, Trash2 } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
 
@@ -71,7 +71,12 @@ const TurfCard = ({ turf, index, onToggleStatus, onEditInfo }) => (
 
 export default function Turfs() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const searchQuery = searchParams.get('search') || '';
+
     const [turfs, setTurfs] = useState([]);
+    const [filteredTurfs, setFilteredTurfs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ message: null, type: 'info' });
     const [editingTurf, setEditingTurf] = useState(null);
@@ -110,6 +115,18 @@ export default function Turfs() {
     useEffect(() => {
         fetchTurfs();
     }, []);
+
+    useEffect(() => {
+        if (!searchQuery) {
+            setFilteredTurfs(turfs);
+        } else {
+            const filtered = turfs.filter(t => 
+                t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                t.location.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            setFilteredTurfs(filtered);
+        }
+    }, [searchQuery, turfs]);
 
     const availableTimeSlots = [
         "06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM",
@@ -387,13 +404,13 @@ export default function Turfs() {
                         <div className="w-8 h-8 mx-auto border-4 border-slate-800 border-t-neon-purple rounded-full animate-spin mb-4" />
                         Fetching Your Properties...
                     </div>
-                ) : turfs.length === 0 ? (
+                ) : filteredTurfs.length === 0 ? (
                     <div className="col-span-full py-20 text-center text-slate-500 bg-slate-900/50 border border-white/5 rounded-3xl">
-                        <p className="font-bold text-lg mb-2">No Turfs Managed</p>
-                        <p className="text-sm">Click 'Add New Turf' to start listing your venues.</p>
+                        <p className="font-bold text-lg mb-2">{searchQuery ? 'No Matches Found' : 'No Turfs Managed'}</p>
+                        <p className="text-sm">{searchQuery ? `We couldn't find any results for "${searchQuery}"` : "Click 'Add New Turf' to start listing your venues."}</p>
                     </div>
                 ) : (
-                    turfs.map((turf, index) => (
+                    filteredTurfs.map((turf, index) => (
                         <TurfCard 
                             key={turf.id} 
                             turf={turf} 

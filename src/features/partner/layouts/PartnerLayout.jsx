@@ -1,11 +1,12 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, MapPin, Calendar, Settings,
     LogOut, Bell, Search, Briefcase, Plus, TrendingUp, Trophy, Maximize
 } from 'lucide-react';
 import NotificationDropdown from '../../../components/common/NotificationDropdown';
+import apiClient from '../../../utils/apiClient';
 import userAvatarImg from '../../../assets/images/common/avatar-1.jpg'; // Placeholder for partner avatar
 import carbonFibrePattern from '../../../assets/images/common/carbon-fibre.png';
 
@@ -31,6 +32,10 @@ const SidebarItem = ({ icon: Icon, label, path, active, onClick }) => (
 export default function PartnerLayout() {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const [results, setResults] = React.useState({ venues: [], tournaments: [] });
+    const [allData, setAllData] = React.useState({ venues: [], tournaments: [] });
+    const [showResults, setShowResults] = React.useState(false);
 
     // Enhanced Security Check
     const userString = localStorage.getItem('user');
@@ -41,8 +46,43 @@ export default function PartnerLayout() {
             navigate('/partner/login');
         } else if (user.role.toLowerCase() === 'partner' && !user.isOnboarded) {
             navigate('/partner/onboarding');
+        } else {
+            // Pre-fetch all searchable data
+            const fetchData = async () => {
+                try {
+                    const [vRes, tRes] = await Promise.all([
+                        apiClient.get(`/venues?owner=${user.id || user._id}`),
+                        apiClient.get('/tournaments/my-tournaments')
+                    ]);
+                    setAllData({
+                        venues: vRes.data.data || [],
+                        tournaments: tRes.data.data || []
+                    });
+                } catch (e) {
+                    console.error("Search data fetch failed", e);
+                }
+            };
+            fetchData();
         }
     }, [user, navigate]);
+
+    React.useEffect(() => {
+        if (!searchQuery.trim()) {
+            setResults({ venues: [], tournaments: [] });
+            return;
+        }
+
+        const query = searchQuery.toLowerCase();
+        const filteredVenues = allData.venues.filter(v => 
+            v.name.toLowerCase().includes(query) || v.location.toLowerCase().includes(query)
+        ).slice(0, 4);
+
+        const filteredTournaments = allData.tournaments.filter(t => 
+            t.name.toLowerCase().includes(query) || t.category.toLowerCase().includes(query)
+        ).slice(0, 4);
+
+        setResults({ venues: filteredVenues, tournaments: filteredTournaments });
+    }, [searchQuery, allData]);
 
     if (!user || (user.role.toLowerCase() !== 'partner' && user.role.toLowerCase() !== 'admin')) {
         return null; // Or a loading spinner
@@ -139,13 +179,98 @@ export default function PartnerLayout() {
 
                 {/* Topbar */}
                 <header className="h-20 border-b border-white/10 flex items-center justify-between px-8 bg-slate-900/30 backdrop-blur-md sticky top-0 z-30">
-                    <div className="flex items-center bg-slate-900 border border-white/10 rounded-xl px-4 py-2 w-96 focus-within:border-neon-purple/50 transition-colors">
-                        <Search className="w-4 h-4 text-slate-500 mr-3" />
-                        <input
-                            type="text"
-                            placeholder="Search your venues..."
-                            className="bg-transparent border-none text-white text-sm placeholder-slate-500 focus:outline-none w-full font-medium"
-                        />
+                    <div className="relative">
+                        <form 
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if (searchQuery.trim()) {
+                                    setShowResults(false);
+                                    navigate(`/partner/turfs?search=${searchQuery}`);
+                                }
+                            }}
+                            className="flex items-center bg-slate-900 border border-white/10 rounded-xl px-4 py-2 w-96 focus-within:border-neon-purple/50 transition-colors"
+                        >
+                            <Search className="w-4 h-4 text-slate-500 mr-3" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onFocus={() => setShowResults(true)}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search your venues or tournaments..."
+                                className="bg-transparent border-none text-white text-sm placeholder-slate-500 focus:outline-none w-full font-medium"
+                            />
+                        </form>
+
+                        {/* Search Results Dropdown */}
+                        <AnimatePresence>
+                            {showResults && searchQuery.trim() && (
+                                <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setShowResults(false)} />
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl"
+                                    >
+                                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar p-2">
+                                            {results.venues.length > 0 && (
+                                                <div className="mb-4">
+                                                    <h4 className="px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Venues</h4>
+                                                    {results.venues.map(v => (
+                                                        <button
+                                                            key={v._id}
+                                                            onClick={() => {
+                                                                setShowResults(false);
+                                                                navigate(`/partner/turfs`);
+                                                            }}
+                                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors group text-left"
+                                                        >
+                                                            <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/20">
+                                                                <MapPin className="w-4 h-4 text-teal-500" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-bold text-white group-hover:text-neon-purple transition-colors">{v.name}</p>
+                                                                <p className="text-[10px] text-slate-500 font-medium">{v.location}</p>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {results.tournaments.length > 0 && (
+                                                <div className="mb-2">
+                                                    <h4 className="px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Tournaments</h4>
+                                                    {results.tournaments.map(t => (
+                                                        <button
+                                                            key={t._id}
+                                                            onClick={() => {
+                                                                setShowResults(false);
+                                                                navigate(`/partner/tournaments`);
+                                                            }}
+                                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors group text-left"
+                                                        >
+                                                            <div className="w-8 h-8 rounded-lg bg-neon-purple/10 flex items-center justify-center border border-neon-purple/20">
+                                                                <Trophy className="w-4 h-4 text-neon-purple" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-bold text-white group-hover:text-fuchsia-400 transition-colors">{t.name}</p>
+                                                                <p className="text-[10px] text-slate-500 font-medium">{t.category} • {t.date}</p>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {results.venues.length === 0 && results.tournaments.length === 0 && (
+                                                <div className="py-8 text-center">
+                                                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">No Matches Found</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     <div className="flex items-center gap-4">

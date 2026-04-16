@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, MapPin, Calendar, Users, IndianRupee, Clock, X, Trash2, Edit, CheckCircle, Upload, Image as ImageIcon, Loader2, User as UserIcon } from 'lucide-react';
+import { Trophy, Plus, MapPin, Calendar, Users, IndianRupee, Clock, X, Trash2, Edit, CheckCircle, Upload, Image as ImageIcon, Loader2, User as UserIcon, AlertTriangle } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
 import apiClient from '../../../utils/apiClient';
 
@@ -50,11 +50,15 @@ const TournamentCard = ({ tournament, onEdit, onDelete, index, onViewRoster }) =
                         <span>Squad Occupancy</span>
                         <span className="text-white">{tournament.registeredTeams || 0} / {tournament.totalSlots} JOINED</span>
                     </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">
+                        <span>Team Format</span>
+                        <span className="text-neon-green">{tournament.teamSize || 5} VS {tournament.teamSize || 5}</span>
+                    </div>
                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${((tournament.registeredTeams || 0) / tournament.totalSlots) * 100}%` }}
-                            className="h-full bg-neon-purple rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                            className="h-full bg-neon-blue rounded-full shadow-[0_0_10px_rgba(0,243,255,0.5)]"
                         />
                     </div>
                 </div>
@@ -99,15 +103,21 @@ export default function Tournaments() {
     const [registrations, setRegistrations] = useState([]);
     const [selectedTournament, setSelectedTournament] = useState(null);
     const [isLoadingRoster, setIsLoadingRoster] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [tournamentToDelete, setTournamentToDelete] = useState(null);
     const [toast, setToast] = useState({ message: null, type: 'info' });
     
     const initialFormState = {
-        name: '', description: '', category: 'Football', location: '',
+        name: '', description: '', category: '', location: '',
         date: '', time: '', entryFee: '', prizePool: '', totalSlots: '',
-        minPlayers: 5, maxPlayers: 11,
+        teamSize: 5, minPlayers: 5, maxPlayers: 11,
         status: 'Upcoming', image: ''
     };
     const [formData, setFormData] = useState(initialFormState);
+    const [myVenues, setMyVenues] = useState([]);
+    const [availableSports, setAvailableSports] = useState([]);
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     const fetchMyTournaments = async () => {
         try {
@@ -126,8 +136,20 @@ export default function Tournaments() {
         }
     };
 
+    const fetchMyVenues = async () => {
+        try {
+            const res = await apiClient.get(`/venues?owner=${user.id || user._id}`);
+            if (res.data.success) {
+                setMyVenues(res.data.data);
+            }
+        } catch (err) {
+            console.error("Fetch venues error:", err);
+        }
+    };
+
     useEffect(() => {
         fetchMyTournaments();
+        fetchMyVenues();
     }, []);
 
     const openCreateModal = () => {
@@ -140,6 +162,13 @@ export default function Tournaments() {
     const openEditModal = (tournament) => {
         setIsEditing(true);
         setEditingId(tournament._id);
+        
+        // Populate available sports based on existing location
+        const venue = myVenues.find(v => v.name === tournament.location);
+        if (venue) {
+            setAvailableSports(venue.sports || []);
+        }
+
         setFormData({
             name: tournament.name,
             description: tournament.description,
@@ -150,12 +179,30 @@ export default function Tournaments() {
             entryFee: tournament.entryFee,
             prizePool: tournament.prizePool,
             totalSlots: tournament.totalSlots,
+            teamSize: tournament.teamSize || 5,
             minPlayers: tournament.minPlayers,
             maxPlayers: tournament.maxPlayers,
             status: tournament.status,
             image: tournament.image
         });
         setIsModalOpen(true);
+    };
+
+    const handleVenueChange = (e) => {
+        const venueName = e.target.value;
+        const venue = myVenues.find(v => v.name === venueName);
+        
+        if (venue) {
+            setFormData({ 
+                ...formData, 
+                location: venueName, 
+                category: venue.sports && venue.sports.length > 0 ? venue.sports[0] : '' 
+            });
+            setAvailableSports(venue.sports || []);
+        } else {
+            setFormData({ ...formData, location: venueName, category: '' });
+            setAvailableSports([]);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -183,17 +230,30 @@ export default function Tournaments() {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Abort this championship? This action is IRREVERSIBLE.")) return;
+    const openDeleteModal = (id) => {
+        setTournamentToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!tournamentToDelete) return;
+        setIsSubmitting(true);
         try {
-            const res = await apiClient.delete(`/tournaments/${id}`);
+            const res = await apiClient.delete(`/tournaments/${tournamentToDelete}`);
             if (res.data.success) {
-                setToast({ message: "Tournament Terminated", type: "success" });
+                setToast({ message: "Championship Voided Successfully", type: "success" });
+                setIsDeleteModalOpen(false);
                 fetchMyTournaments();
             }
         } catch (err) {
-            setToast({ message: "Decommissioning Failed", type: "error" });
+            setToast({ message: "Decommissioning Failed: Authorized systems busy", type: "error" });
+        } finally {
+            setIsSubmitting(false);
         }
+    };
+
+    const handleDelete = async (id) => {
+        openDeleteModal(id);
     };
 
     const handleImageUpload = (e) => {
@@ -311,16 +371,30 @@ export default function Tournaments() {
                                         />
                                     </div>
                                     <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Host Stadium / Venue</label>
+                                        <select 
+                                            required value={formData.location}
+                                            onChange={handleVenueChange}
+                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-neon-purple/50 transition-all font-bold"
+                                        >
+                                            <option value="">Select a Venue</option>
+                                            {myVenues.map(v => (
+                                                <option key={v._id} value={v.name}>{v.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Sport Discipline</label>
                                         <select 
                                             value={formData.category}
                                             onChange={e => setFormData({...formData, category: e.target.value})}
                                             className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-neon-purple/50 transition-all font-bold"
+                                            disabled={availableSports.length === 0}
                                         >
-                                            <option>Football</option>
-                                            <option>Cricket</option>
-                                            <option>Badminton</option>
-                                            <option>Tennis</option>
+                                            <option value="">{availableSports.length === 0 ? 'Select Venue First' : 'Select Sport'}</option>
+                                            {availableSports.map(s => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -335,42 +409,61 @@ export default function Tournaments() {
                                     />
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-6">
+                                <div className="grid md:grid-cols-3 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Host Stadium / Venue</label>
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Team Size</label>
                                         <input 
-                                            type="text" required value={formData.location}
-                                            onChange={e => setFormData({...formData, location: e.target.value})}
-                                            placeholder="Arena Pro Central"
-                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all font-bold"
+                                            type="number" required value={formData.teamSize}
+                                            onChange={e => setFormData({...formData, teamSize: e.target.value})}
+                                            placeholder="5"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all font-black"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Visual Asset (Banner)</label>
-                                        <div className="relative group/upload h-[60px]">
-                                            <input 
-                                                type="file" 
-                                                accept="image/*"
-                                                onChange={handleImageUpload}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                            />
-                                            <div className={`w-full h-full border border-dashed rounded-2xl flex items-center px-4 transition-all ${
-                                                formData.image ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-white/10 hover:border-white/20 bg-slate-950'
-                                            }`}>
-                                                {formData.image ? (
-                                                    <div className="flex items-center gap-3 w-full h-full">
-                                                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 bg-black flex-shrink-0">
-                                                            <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                                                        </div>
-                                                        <p className="text-neon-purple text-[10px] font-black uppercase tracking-widest truncate">Asset Loaded ✓</p>
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Min Players</label>
+                                        <input 
+                                            type="number" required value={formData.minPlayers}
+                                            onChange={e => setFormData({...formData, minPlayers: e.target.value})}
+                                            placeholder="5"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all font-black"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Max Players</label>
+                                        <input 
+                                            type="number" required value={formData.maxPlayers}
+                                            onChange={e => setFormData({...formData, maxPlayers: e.target.value})}
+                                            placeholder="11"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-700 outline-none focus:border-neon-purple/50 transition-all font-black"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Visual Asset (Banner)</label>
+                                    <div className="relative group/upload h-[60px]">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                        />
+                                        <div className={`w-full h-full border border-dashed rounded-2xl flex items-center px-4 transition-all ${
+                                            formData.image ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-white/10 hover:border-white/20 bg-slate-950'
+                                        }`}>
+                                            {formData.image ? (
+                                                <div className="flex items-center gap-3 w-full h-full">
+                                                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 bg-black flex-shrink-0">
+                                                        <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        <Upload className="w-4 h-4 text-slate-500 mr-2" />
-                                                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Upload Media</p>
-                                                    </>
-                                                )}
-                                            </div>
+                                                    <p className="text-neon-purple text-[10px] font-black uppercase tracking-widest truncate">Asset Loaded ✓</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Upload className="w-4 h-4 text-slate-500 mr-2" />
+                                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Upload Media</p>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -542,6 +635,61 @@ export default function Tournaments() {
                 type={toast.type}
                 onClose={() => setToast({ ...toast, message: null })}
             />
+
+            {/* Premium Void Protocol Modal (Delete Confirmation) */}
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl" 
+                            onClick={() => setIsDeleteModalOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 50 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 50 }}
+                            className="relative bg-slate-900 border border-red-500/20 rounded-[2.5rem] w-full max-w-md p-10 shadow-[0_0_100px_rgba(239,68,68,0.1)] overflow-hidden text-center"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+                            
+                            <div className="relative z-10">
+                                <div className="w-20 h-20 bg-red-500/10 rounded-3xl mx-auto mb-8 flex items-center justify-center border border-red-500/20 group">
+                                    <AlertTriangle className="w-10 h-10 text-red-500 animate-pulse group-hover:scale-110 transition-transform" />
+                                </div>
+                                
+                                <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-2">
+                                    Delete <span className="text-red-500">Tournament?</span>
+                                </h2>
+                                
+                                <p className="text-slate-400 text-sm font-medium leading-relaxed mb-8 px-4">
+                                    Are you sure? This will permanently remove the tournament and all registered team data. This cannot be undone.
+                                </p>
+
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={confirmDelete}
+                                        disabled={isSubmitting}
+                                        className="w-full py-4 bg-red-500 hover:bg-white text-white hover:text-red-600 font-black uppercase tracking-widest text-xs rounded-2xl transition-all shadow-2xl shadow-red-500/20 flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "YES, DELETE IT"}
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={() => setIsDeleteModalOpen(false)}
+                                        className="w-full py-4 bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all border border-white/5"
+                                    >
+                                        NO, KEEP IT
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
