@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, MapPin, Calendar, Users, IndianRupee, Clock, X, Trash2, Edit, CheckCircle, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Trophy, Plus, MapPin, Calendar, Users, IndianRupee, Clock, X, Trash2, Edit, CheckCircle, Upload, Image as ImageIcon, Loader2, User as UserIcon } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
 import apiClient from '../../../utils/apiClient';
 
-const TournamentCard = ({ tournament, onEdit, onDelete, index }) => (
+const TournamentCard = ({ tournament, onEdit, onDelete, index, onViewRoster }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -45,21 +45,29 @@ const TournamentCard = ({ tournament, onEdit, onDelete, index }) => (
                     <MapPin className="w-4 h-4 text-neon-purple flex-shrink-0" />
                     <span className="truncate">{tournament.location}</span>
                 </div>
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-slate-400 text-sm">
-                        <Calendar className="w-4 h-4 text-neon-blue flex-shrink-0" />
-                        {tournament.date}
+                <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest text-slate-500">
+                        <span>Squad Occupancy</span>
+                        <span className="text-white">{tournament.registeredTeams || 0} / {tournament.totalSlots} JOINED</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-400 text-sm font-bold">
-                        <Users className="w-4 h-4 text-neon-green flex-shrink-0" />
-                        {tournament.totalSlots} Teams
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${((tournament.registeredTeams || 0) / tournament.totalSlots) * 100}%` }}
+                            className="h-full bg-neon-purple rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                        />
                     </div>
                 </div>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                    Entry: <span className="text-white">₹{tournament.entryFee}</span>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => onViewRoster(tournament)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-neon-purple/20 text-slate-400 hover:text-neon-purple rounded-xl transition-all text-[10px] font-black uppercase tracking-widest border border-white/5"
+                    >
+                        <Users className="w-3.5 h-3.5" /> Roster
+                    </button>
                 </div>
                 <div className="flex gap-2">
                     <button 
@@ -87,6 +95,10 @@ export default function Tournaments() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [rosterModalOpen, setRosterModalOpen] = useState(false);
+    const [registrations, setRegistrations] = useState([]);
+    const [selectedTournament, setSelectedTournament] = useState(null);
+    const [isLoadingRoster, setIsLoadingRoster] = useState(false);
     const [toast, setToast] = useState({ message: null, type: 'info' });
     
     const initialFormState = {
@@ -195,6 +207,23 @@ export default function Tournaments() {
         }
     };
 
+    const handleViewRoster = async (tournament) => {
+        setSelectedTournament(tournament);
+        setRosterModalOpen(true);
+        setIsLoadingRoster(true);
+        try {
+            const res = await apiClient.get(`/tournaments/${tournament._id}/registrations`);
+            if (res.data.success) {
+                setRegistrations(res.data.data);
+            }
+        } catch (err) {
+            console.error("Fetch roster error:", err);
+            setToast({ message: "Failed to load roster intel.", type: "error" });
+        } finally {
+            setIsLoadingRoster(false);
+        }
+    };
+
     return (
         <div className="space-y-8 pb-12">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -234,6 +263,7 @@ export default function Tournaments() {
                             index={i} 
                             onDelete={handleDelete} 
                             onEdit={openEditModal} 
+                            onViewRoster={handleViewRoster}
                         />
                     ))}
                 </div>
@@ -408,6 +438,100 @@ export default function Tournaments() {
                                     </span>
                                 </button>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Roster / Registrations Modal */}
+            <AnimatePresence>
+                {rosterModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" 
+                            onClick={() => setRosterModalOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] w-full max-w-4xl p-8 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center mb-8">
+                                <div>
+                                    <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">
+                                        ROSTER <span className="text-neon-purple">INTEL</span>
+                                    </h2>
+                                    <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">{selectedTournament?.name} • Registrations</p>
+                                </div>
+                                <button onClick={() => setRosterModalOpen(false)} className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all border border-white/5">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            {isLoadingRoster ? (
+                                <div className="py-20 text-center">
+                                    <Loader2 className="w-10 h-10 text-neon-purple animate-spin mx-auto mb-4" />
+                                    <p className="text-xs font-black text-slate-500 uppercase tracking-widest animate-pulse">Decrypting Team Ledger...</p>
+                                </div>
+                            ) : registrations.length === 0 ? (
+                                <div className="py-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
+                                    <Users className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No squads have joined this campaign yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-5 px-6 pb-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                        <div className="col-span-2">Team & Captain</div>
+                                        <div>Contact</div>
+                                        <div>Squad Size</div>
+                                        <div className="text-right">Roster Status</div>
+                                    </div>
+                                    {registrations.map((reg, idx) => (
+                                        <div key={reg._id} className="bg-white/5 border border-white/5 rounded-2xl p-6 hover:border-neon-purple/30 transition-all group">
+                                            <div className="grid grid-cols-5 items-center gap-4">
+                                                <div className="col-span-2 flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-xl bg-slate-950 flex flex-col items-center justify-center border border-white/10 text-white font-black text-xs">
+                                                        #{idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-white uppercase italic tracking-tighter group-hover:text-neon-purple transition-colors">{reg.teamName}</h4>
+                                                        <p className="text-xs text-slate-500 flex items-center gap-1 font-bold">
+                                                            <UserIcon className="w-3 h-3" /> Capt. {reg.captainName}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs font-bold text-slate-400">
+                                                    <p>{reg.email}</p>
+                                                    <p className="text-[10px] text-slate-500 font-medium">{reg.contactNumber}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="px-3 py-1 bg-white/5 rounded-lg text-[10px] font-black text-white border border-white/10">
+                                                        {reg.players?.length || 0} PLAYERS
+                                                    </span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-neon-green/10 text-neon-green border border-neon-green/20">
+                                                        Confirmed
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 pt-4 border-t border-white/5">
+                                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Squad Composition:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {reg.players?.map((p, i) => (
+                                                        <span key={i} className="px-2 py-1 bg-slate-950 rounded text-[9px] text-slate-400 border border-white/5 uppercase">
+                                                            {p}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </motion.div>
                     </div>
                 )}

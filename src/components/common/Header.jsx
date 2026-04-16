@@ -108,7 +108,7 @@ const Header = () => {
                                             key={idx}
                                             onClick={() => {
                                                 setShowSearch(false);
-                                                if(item.type === 'Venue') navigate(`/venues/${item._id}`);
+                                                if(item.type === 'Venue') navigate(`/book/${item._id}`);
                                                 else if(item.type === 'Tournament') navigate('/tournaments');
                                                 else navigate('/profile');
                                             }}

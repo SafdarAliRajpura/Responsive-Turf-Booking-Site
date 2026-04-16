@@ -16,6 +16,7 @@ import carbonFibrePattern from '../assets/images/common/carbon-fibre.png';
 
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import apiClient from '../utils/apiClient';
 
 const TournamentCard = ({ tournament, index, onRegister }) => (
     <motion.div
@@ -134,14 +135,22 @@ export default function Tournament() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [tournaments, setTournaments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({ totalPrizes: 0, activeTeams: 0 });
+    const [featured, setFeatured] = useState(null);
 
     const fetchTournaments = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/tournaments');
-            const data = await res.json();
-            if (data.success) {
-                // Formatting for display, adding fallbacks for images
-                const mapped = data.data.map(t => ({
+            const res = await apiClient.get('/tournaments');
+            if (res.data.success) {
+                const rawData = res.data.data;
+                
+                // Calculate Hero Metrics
+                const prizes = rawData.reduce((acc, curr) => acc + (curr.prizePool || 0), 0);
+                const teams = rawData.reduce((acc, curr) => acc + (curr.registeredTeams || 0), 0);
+                setStats({ totalPrizes: prizes, activeTeams: teams });
+
+                // Map Tournaments
+                const mapped = rawData.map(t => ({
                     id: t._id,
                     name: t.name,
                     category: t.category,
@@ -152,9 +161,11 @@ export default function Tournament() {
                     prizePool: t.prizePool,
                     entryFee: t.entryFee,
                     format: t.format,
-                    slotsLeft: t.totalSlots - (t.registeredTeams || 0)
+                    slotsLeft: Math.max(0, parseInt(t.totalSlots || 0) - parseInt(t.registeredTeams || 0))
                 }));
+                
                 setTournaments(mapped);
+                if (mapped.length > 0) setFeatured(mapped[0]);
             }
         } catch (err) {
             console.error("Error fetching tournaments:", err);
@@ -243,16 +254,16 @@ export default function Tournament() {
                         >
                             <div>
                                 <p className="text-4xl font-black text-white flex items-baseline">
-                                    15L<span className="text-lg text-neon-green ml-1">+</span>
+                                    ₹{(stats.totalPrizes / 1000).toFixed(0)}K<span className="text-lg text-neon-green ml-1">+</span>
                                 </p>
                                 <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Prizes Won</p>
                             </div>
                             <div className="h-10 w-px bg-white/10" />
                             <div>
                                 <p className="text-4xl font-black text-white flex items-baseline">
-                                    120<span className="text-lg text-neon-blue ml-1">+</span>
+                                    {stats.activeTeams}<span className="text-lg text-neon-blue ml-1">+</span>
                                 </p>
-                                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Active Teams</p>
+                                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Active Squads</p>
                             </div>
                         </motion.div>
                     </div>
@@ -267,26 +278,35 @@ export default function Tournament() {
                         {/* Decorative Blob Behind */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-neon-yellow/20 to-neon-orange/20 blur-[80px] rounded-full pointer-events-none" />
 
-                        <div className="relative z-10 bg-slate-900 border border-white/10 rounded-[2.5rem] p-4 shadow-2xl transition-all duration-500 group">
-                            <div className="relative rounded-[2rem] overflow-hidden aspect-[4/3]">
-                                <img src={footballNight} alt="Featured" className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-700" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
+                        {featured ? (
+                            <div className="relative z-10 bg-slate-900 border border-white/10 rounded-[2.5rem] p-4 shadow-2xl transition-all duration-500 group cursor-pointer" onClick={() => navigate(`/tournaments/${featured.id}/register`)}>
+                                <div className="relative rounded-[2rem] overflow-hidden aspect-[4/3]">
+                                    <img src={featured.image} alt="Featured" className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-700" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
 
-                                <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                    <span className="text-white font-bold text-xs uppercase tracking-wider">Live Now</span>
-                                </div>
+                                    <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl flex items-center gap-2">
+                                        <span className={`w-2 h-2 rounded-full animate-pulse ${featured.status === 'Open' ? 'bg-neon-green' : 'bg-neon-yellow'}`} />
+                                        <span className="text-white font-bold text-xs uppercase tracking-wider">{featured.status}</span>
+                                    </div>
 
-                                <div className="absolute bottom-6 left-6 right-6">
-                                    <p className="text-neon-yellow font-bold uppercase tracking-widest text-xs mb-2">Featured Event</p>
-                                    <h3 className="text-3xl font-black text-white italic uppercase leading-none mb-2">Summer Cup '24</h3>
-                                    <div className="flex items-center gap-4 text-sm text-slate-300">
-                                        <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> Mumbai</span>
-                                        <span className="flex items-center gap-1"><IndianRupee className="w-4 h-4" /> 50K Prize</span>
+                                    <div className="absolute bottom-6 left-6 right-6">
+                                        <p className="text-neon-yellow font-bold uppercase tracking-widest text-xs mb-2">Featured Event</p>
+                                        <h3 className="text-3xl font-black text-white italic uppercase leading-none mb-2">{featured.name}</h3>
+                                        <div className="flex items-center gap-4 text-sm text-slate-300">
+                                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {featured.location}</span>
+                                            <span className="flex items-center gap-1"><IndianRupee className="w-4 h-4" /> {featured.prizePool} Prize</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="relative z-10 bg-slate-900/50 border border-dashed border-white/10 rounded-[2.5rem] p-4 h-[400px] flex items-center justify-center">
+                                <div className="text-center">
+                                    <Trophy className="w-12 h-12 text-slate-800 mx-auto mb-4 opacity-20" />
+                                    <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Scanning for Featured Glory...</p>
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 </div>
 
