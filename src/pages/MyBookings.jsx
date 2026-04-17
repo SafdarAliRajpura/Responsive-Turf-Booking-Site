@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import apiClient from '../utils/apiClient';
+import Toast from '../components/ui/Toast';
 
 const dummyImage = 'https://images.unsplash.com/photo-1552667466-07770ae110d0?auto=format&fit=crop&q=80&w=800';
 
@@ -176,7 +178,6 @@ const BookingCard = ({ booking, onViewReceipt }) => {
             className="group relative bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden hover:border-neon-green/30 transition-all shadow-xl"
         >
             <div className="flex flex-col md:flex-row">
-                {/* Image Section */}
                 <div className="md:w-1/4 relative h-40 md:h-auto overflow-hidden">
                     <img
                         src={booking.image || dummyImage}
@@ -191,7 +192,6 @@ const BookingCard = ({ booking, onViewReceipt }) => {
                     </div>
                 </div>
 
-                {/* Details Section */}
                 <div className="flex-1 p-6 flex flex-col justify-between">
                     <div className="flex justify-between items-start mb-4">
                         <div>
@@ -229,7 +229,7 @@ const BookingCard = ({ booking, onViewReceipt }) => {
                         </div>
                     </div>
 
-                    <div className="mt-6 flex justify-end">
+                    <div className="mt-6 flex justify-end gap-3">
                         <button
                             onClick={onViewReceipt}
                             className="px-6 py-2 rounded-xl bg-white/5 hover:bg-white text-white hover:text-black font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
@@ -243,44 +243,117 @@ const BookingCard = ({ booking, onViewReceipt }) => {
     );
 };
 
+const TournamentCard = ({ registration }) => {
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-neon-blue/30 transition-all"
+        >
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Trophy size={80} className="text-neon-blue" />
+            </div>
+            
+            <div className="relative z-10">
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <span className="px-3 py-1 bg-neon-blue/10 text-neon-blue border border-neon-blue/20 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 inline-block">
+                            Tournament Squad
+                        </span>
+                        <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+                            {registration.tournamentId?.name || 'Championship'}
+                        </h3>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Status</p>
+                        <p className="text-sm font-black text-neon-green uppercase italic">Enrolled</p>
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-8 p-6 bg-slate-950/50 rounded-3xl border border-white/5">
+                    <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                            <ShieldCheck size={12} className="text-neon-blue"/> Team Name
+                        </p>
+                        <p className="text-lg font-black text-white uppercase italic">{registration.teamName}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                            <Zap size={12} className="text-neon-blue"/> Squad Size
+                        </p>
+                        <p className="text-lg font-black text-white uppercase italic">{registration.players?.length || 0} Athletes</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                            <Target size={12} className="text-neon-blue"/> Captain
+                        </p>
+                        <p className="text-lg font-black text-white uppercase italic truncate">{registration.captainName}</p>
+                    </div>
+                </div>
+
+                <div className="mt-8 flex items-center justify-between text-slate-500 font-bold text-[10px] uppercase tracking-widest border-t border-white/5 pt-6">
+                    <div className="flex items-center gap-2">
+                        <Calendar size={14} className="text-slate-600"/>
+                        Event Date: <span className="text-slate-300">{registration.tournamentId?.date || 'TBA'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <CreditCard size={14} className="text-slate-600"/>
+                        Type: <span className="text-slate-300">{registration.tournamentId?.type || 'Standard'} Elite</span>
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
 
 
 export default function MyBookings() {
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [bookingsData, setBookingsData] = useState([]);
+    const [tournamentsData, setTournamentsData] = useState([]);
+    const [activeTab, setActiveTab] = useState('Matches'); // 'Matches' or 'Squads'
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState({ message: null, type: 'info' });
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const res = await fetch('http://localhost:5000/api/bookings', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const mapped = data.data.map(b => ({
-                        id: b._id,
-                        venue: b.turfName,
-                        location: 'Arena Certified',
-                        date: b.date,
-                        time: b.timeSlot,
-                        price: b.price,
-                        status: b.status,
-                        sport: b.sport,
-                        image: dummyImage
-                    }));
-                    setBookingsData(mapped);
-                }
-            } catch (err) {
-                console.error("Failed to load user bookings:", err);
-            } finally {
-                setLoading(false);
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [bookingRes, tourRes] = await Promise.all([
+                apiClient.get('/bookings'),
+                apiClient.get('/tournaments/my-registrations')
+            ]);
+            
+            if (bookingRes.data?.success) {
+                const mapped = bookingRes.data.data.map(b => ({
+                    id: b._id,
+                    venue: b.turfName,
+                    location: 'Arena Certified',
+                    date: b.date,
+                    time: b.timeSlot,
+                    price: b.price,
+                    status: b.status,
+                    sport: b.sport,
+                    image: dummyImage
+                }));
+                setBookingsData(mapped);
             }
-        };
-        fetchBookings();
+
+            if (tourRes.data?.success) {
+                setTournamentsData(tourRes.data.data);
+            }
+        } catch (err) {
+            console.error("Historical Data Sync Failure:", err);
+            setToast({ message: "Failed to sync match history.", type: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
     }, []);
 
     return (
@@ -316,54 +389,86 @@ export default function MyBookings() {
                         <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-4"
+                            className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-8"
                         >
                             MATCH <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-blue-500">HISTORY</span>
                         </motion.h1>
-                        <div className="flex items-center gap-6 text-slate-500 font-bold text-xs uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse"></span>
-                                Total Bookings: {bookingsData.length}
-                            </div>
+                        
+                        {/* Tactical Tab Navigation */}
+                        <div className="flex gap-4 p-1.5 bg-slate-900/50 backdrop-blur-md border border-white/5 rounded-2xl w-fit">
+                            {['Matches', 'Squads'].map(tab => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${
+                                        activeTab === tab 
+                                        ? 'bg-white text-black shadow-lg shadow-white/10' 
+                                        : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    {tab === 'Matches' ? 'Arena Bookings' : 'Tournament Squads'}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Bookings Timeline (No Sections) */}
+                    {/* Content Area */}
                     <div className="space-y-6">
                         {loading ? (
                             <div className="text-center py-20 flex flex-col items-center gap-4">
                                 <div className="w-10 h-10 border-2 border-white/10 border-t-neon-green rounded-full animate-spin"></div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Retrieving Match Timeline</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Syncing Intelligence Ledger</p>
                             </div>
                         ) : (
-                            <AnimatePresence mode="popLayout">
-                            {bookingsData.length > 0 ? (
-                                bookingsData.map((booking) => (
-                                    <BookingCard
-                                        key={booking.id}
-                                        booking={booking}
-                                        onViewReceipt={() => setSelectedBooking(booking)}
-                                    />
-                                ))
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="text-center py-32 bg-slate-900/20 backdrop-blur-sm rounded-[3rem] border border-white/5 border-dashed"
-                                >
-                                    <h3 className="text-2xl font-black text-white italic uppercase italic mb-2">No Active Matches</h3>
-                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-8">
-                                        Your pitch history is currently clear.
-                                    </p>
-                                    <button
-                                        onClick={() => navigate('/venues')}
-                                        className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-neon-green transition-all shadow-xl"
+                            <AnimatePresence mode="wait">
+                                {activeTab === 'Matches' ? (
+                                    <motion.div 
+                                        key="matches"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        className="space-y-6"
                                     >
-                                        Find Your Next Ground
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                        {bookingsData.length > 0 ? (
+                                            bookingsData.map((booking) => (
+                                                <BookingCard
+                                                    key={booking.id}
+                                                    booking={booking}
+                                                    onViewReceipt={() => setSelectedBooking(booking)}
+                                                />
+                                            ))
+                                        ) : (
+                                            <EmptyState 
+                                                title="No Active Matches" 
+                                                desc="Your pitch history is currently clear." 
+                                                btnText="Find Your Next Ground"
+                                                link="/venues"
+                                            />
+                                        )}
+                                    </motion.div>
+                                ) : (
+                                    <motion.div 
+                                        key="squads"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        className="space-y-6"
+                                    >
+                                        {tournamentsData.length > 0 ? (
+                                            tournamentsData.map((reg) => (
+                                                <TournamentCard key={reg._id} registration={reg} />
+                                            ))
+                                        ) : (
+                                            <EmptyState 
+                                                title="No Squad Registrations" 
+                                                desc="You haven't enlisted in any championships yet." 
+                                                btnText="View Tournaments"
+                                                link="/tournaments"
+                                            />
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         )}
                     </div>
 
@@ -371,6 +476,31 @@ export default function MyBookings() {
             </main>
 
             <Footer />
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({...toast, message: null})} 
+            />
         </div>
+    );
+}
+
+const EmptyState = ({ title, desc, btnText, link }) => {
+    const navigate = useNavigate();
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-32 bg-slate-900/20 backdrop-blur-sm rounded-[3rem] border border-white/5 border-dashed"
+        >
+            <h3 className="text-2xl font-black text-white italic uppercase mb-2">{title}</h3>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-8">{desc}</p>
+            <button
+                onClick={() => navigate(link)}
+                className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-neon-green transition-all shadow-xl"
+            >
+                {btnText}
+            </button>
+        </motion.div>
     );
 }

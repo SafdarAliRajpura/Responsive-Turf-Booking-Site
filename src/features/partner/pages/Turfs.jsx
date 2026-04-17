@@ -100,7 +100,8 @@ export default function Turfs() {
                     status: v.status || "Active",
                     slots: v.slots || [],
                     courts: v.courts || [],
-                    image: (v.images && v.images.length > 0) ? v.images[0] : (v.image || turf1)
+                    image: (v.images && v.images.length > 0) ? v.images[0] : (v.image || turf1),
+                    images: v.images || []
                 }));
                 // Latest goes first visually
                 setTurfs(mapped.reverse());
@@ -182,7 +183,9 @@ export default function Turfs() {
                     location: editingTurf.location,
                     slots: [...editingTurf.slots].sort((a, b) => availableTimeSlots.indexOf(a) - availableTimeSlots.indexOf(b)),
                     courts: editingTurf.courts ? editingTurf.courts.map(({ _id, tempId, ...rest }) => rest) : [],
-                    sports: editingTurf.courts ? Array.from(new Set(editingTurf.courts.map(c => c.category.split(' ')[0]))) : []
+                    sports: editingTurf.courts ? Array.from(new Set(editingTurf.courts.map(c => c.category.split(' ')[0]))) : [],
+                    images: editingTurf.images || [],
+                    image: editingTurf.images && editingTurf.images.length > 0 ? editingTurf.images[0] : editingTurf.image
                 })
             });
             const data = await res.json();
@@ -193,7 +196,9 @@ export default function Turfs() {
                     price: editingTurf.courts && editingTurf.courts.length > 0 ? Number(editingTurf.courts[0].price).toString() : editingTurf.price, 
                     location: editingTurf.location, 
                     slots: editingTurf.slots,
-                    courts: editingTurf.courts
+                    courts: editingTurf.courts,
+                    images: editingTurf.images,
+                    image: editingTurf.images && editingTurf.images.length > 0 ? editingTurf.images[0] : editingTurf.image
                 } : t));
                 setToast({ message: "Turf details updated", type: "success" });
                 setEditingTurf(null);
@@ -335,6 +340,49 @@ export default function Turfs() {
                                     </div>
                                 </div>
                                 
+                                <div className="pt-4 border-t border-white/5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block text-slate-500">Gallery Review</label>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {(editingTurf.images || []).map((img, idx) => (
+                                            <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 group">
+                                                <img src={img} alt="preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newImgs = editingTurf.images.filter((_, i) => i !== idx);
+                                                            setEditingTurf({...editingTurf, images: newImgs});
+                                                        }}
+                                                        className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <label className="aspect-video rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-all text-slate-500 hover:text-white group">
+                                            <Plus className="w-5 h-5 mb-1 group-hover:scale-110 transition-transform" />
+                                            <span className="text-[10px] font-bold uppercase">Add</span>
+                                            <input 
+                                                type="file" 
+                                                multiple 
+                                                className="hidden" 
+                                                onChange={async (e) => {
+                                                    const files = Array.from(e.target.files);
+                                                    const base64s = await Promise.all(files.map(f => {
+                                                        return new Promise((resolve) => {
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => resolve(reader.result);
+                                                            reader.readAsDataURL(f);
+                                                        });
+                                                    }));
+                                                    setEditingTurf({...editingTurf, images: [...(editingTurf.images || []), ...base64s]});
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex justify-between">
                                         Operating Slots
@@ -374,7 +422,7 @@ export default function Turfs() {
                             <button 
                                 onClick={handleSaveEdit}
                                 disabled={submittingEdit}
-                                className="w-full mt-8 bg-neon-purple hover:bg-fuchsia-600 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+                                className="w-full mt-8 bg-neon-purple hover:bg-fuchsia-600 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 shadow-lg shadow-neon-purple/20"
                             >
                                 {submittingEdit ? 'Saving...' : 'Save Changes'}
                             </button>

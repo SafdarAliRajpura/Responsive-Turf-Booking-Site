@@ -155,13 +155,21 @@ export default function AddTurf() {
             return;
         }
 
-        // Convert first file to base64 so it stores cleanly in DB
-        let imageString = "http://localhost:5000/uploads/venue_default.jpg";
+        // Convert all files to base64 so they store cleanly in DB
+        let imagesArray = [];
+        let primaryImage = "http://localhost:5000/uploads/venue_default.jpg";
+        
         if (files.length > 0) {
             try {
-                imageString = await getBase64(files[0]);
+                // Process all files in parallel
+                imagesArray = await Promise.all(
+                    files.map(file => getBase64(file))
+                );
+                primaryImage = imagesArray[0];
             } catch (err) {
-                console.error("Image conversion failed", err);
+                console.error("Gallery processing failed", err);
+                setToast({ message: "Failed to process one or more images.", type: 'error' });
+                return;
             }
         }
 
@@ -179,8 +187,8 @@ export default function AddTurf() {
             distance: '1.2 km', 
             weekendPrice: Number(pricingRules.weekendPrice) || null,
             peakHourPrice: Number(pricingRules.peakHourPrice) || null,
-            image: imageString,
-            images: files.length > 0 ? [imageString] : [],
+            image: primaryImage,
+            images: imagesArray,
             coordinates: formData.coordinates
         };
 

@@ -31,14 +31,19 @@ const TournamentCard = ({ tournament, index, onRegister }) => (
             <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-transparent transition-colors z-10" />
 
             {/* Status Badge */}
-            <div className={`absolute top-4 right-4 z-20 px-3 py-1 rounded-lg border backdrop-blur-md flex items-center gap-2 shadow-lg ${tournament.status === 'Open' ? 'bg-neon-green/20 border-neon-green/50 text-neon-green' :
+            <div className={`absolute top-4 right-4 z-20 px-3 py-1 rounded-lg border backdrop-blur-md flex items-center gap-2 shadow-lg ${
+                tournament.status === 'Open' ? 'bg-neon-green/20 border-neon-green/50 text-neon-green' :
                 tournament.status === 'Filling Fast' ? 'bg-neon-yellow/20 border-neon-yellow/50 text-neon-yellow' :
-                    'bg-slate-800/80 border-white/10 text-slate-400'
-                }`}>
-                <span className={`w-2 h-2 rounded-full ${tournament.status === 'Open' ? 'bg-neon-green animate-pulse' :
+                tournament.status === 'Housefull' ? 'bg-red-500/20 border-red-500/50 text-red-500' :
+                tournament.status === 'Completed' ? 'bg-slate-800/80 border-white/10 text-slate-400' :
+                'bg-slate-800/80 border-white/10 text-slate-400'
+            }`}>
+                <span className={`w-2 h-2 rounded-full ${
+                    tournament.status === 'Open' ? 'bg-neon-green animate-pulse' :
                     tournament.status === 'Filling Fast' ? 'bg-neon-yellow animate-bounce' :
-                        'bg-slate-500'
-                    }`} />
+                    tournament.status === 'Housefull' ? 'bg-red-500' :
+                    'bg-slate-500'
+                }`} />
                 <span className="text-xs font-black uppercase tracking-wider">{tournament.status}</span>
             </div>
 
@@ -105,9 +110,16 @@ const TournamentCard = ({ tournament, index, onRegister }) => (
             <div className="mt-auto">
                 <button
                     onClick={() => onRegister(tournament.id)}
-                    className="w-full py-4 bg-white text-black font-black uppercase tracking-widest rounded-xl hover:bg-neon-green transition-all shadow-lg hover:shadow-neon-green/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group/btn"
+                    disabled={tournament.status === 'Housefull' || tournament.status === 'Completed'}
+                    className={`w-full py-4 font-black uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 group/btn ${
+                        (tournament.status === 'Housefull' || tournament.status === 'Completed') 
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed grayscale' 
+                        : 'bg-white text-black hover:bg-neon-green hover:shadow-neon-green/20 hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
                 >
-                    Register Team <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                    {tournament.status === 'Housefull' ? 'Tournament Full' : 
+                     tournament.status === 'Completed' ? 'Event Ended' : 
+                     <>Register Team <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" /></>}
                 </button>
                 <p className="text-center text-slate-500 text-xs mt-3">
                     {tournament.slotsLeft} spots remaining
@@ -133,6 +145,7 @@ const FilterButton = ({ label, active, onClick }) => (
 export default function Tournament() {
     const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
     const [tournaments, setTournaments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalPrizes: 0, activeTeams: 0 });
@@ -149,23 +162,41 @@ export default function Tournament() {
                 const teams = rawData.reduce((acc, curr) => acc + (curr.registeredTeams || 0), 0);
                 setStats({ totalPrizes: prizes, activeTeams: teams });
 
-                // Map Tournaments
-                const mapped = rawData.map(t => ({
-                    id: t._id,
-                    name: t.name,
-                    category: t.category,
-                    image: t.image || (t.category === 'Cricket' ? cricketImg : (t.category === 'Badminton' ? badmintonImg : footballImg)),
-                    status: t.status,
-                    date: t.date,
-                    location: t.location,
-                    prizePool: t.prizePool,
-                    entryFee: t.entryFee,
-                    format: t.format,
-                    slotsLeft: Math.max(0, parseInt(t.totalSlots || 0) - parseInt(t.registeredTeams || 0))
-                }));
+                // Map Tournaments with Dynamic Logic
+                const mapped = rawData.map(t => {
+                    const slotsLeft = Math.max(0, parseInt(t.totalSlots || 0) - parseInt(t.registeredTeams || 0));
+                    let displayStatus = t.status;
+                    
+                    if (t.status === 'Upcoming' || t.status === 'Ongoing') {
+                        if (slotsLeft === 0) displayStatus = 'Housefull';
+                        else if (slotsLeft < 5) displayStatus = 'Filling Fast';
+                        else displayStatus = 'Open';
+                    }
+
+                    return {
+                        id: t._id,
+                        name: t.name,
+                        category: t.category,
+                        image: t.image || (t.category === 'Cricket' ? cricketImg : (t.category === 'Badminton' ? badmintonImg : footballImg)),
+                        status: displayStatus,
+                        date: t.date,
+                        location: t.location,
+                        prizePool: t.prizePool,
+                        entryFee: t.entryFee,
+                        format: t.teamSize ? `${t.teamSize}v${t.teamSize}` : (t.format || 'Open'),
+                        slotsLeft: slotsLeft
+                    };
+                });
                 
                 setTournaments(mapped);
-                if (mapped.length > 0) setFeatured(mapped[0]);
+                
+                // Smarter Featured Logic: Most prize money among "Open" events
+                const openEvents = mapped.filter(t => t.status === 'Open' || t.status === 'Filling Fast');
+                if (openEvents.length > 0) {
+                    setFeatured(openEvents.sort((a, b) => b.prizePool - a.prizePool)[0]);
+                } else if (mapped.length > 0) {
+                    setFeatured(mapped[0]);
+                }
             }
         } catch (err) {
             console.error("Error fetching tournaments:", err);
@@ -178,9 +209,12 @@ export default function Tournament() {
         fetchTournaments();
     }, []);
 
-    const filteredTournaments = selectedCategory === 'All'
-        ? tournaments
-        : tournaments.filter(t => t.category === selectedCategory);
+    const filteredTournaments = tournaments.filter(t => {
+        const matchesCategory = selectedCategory === 'All' || t.category === selectedCategory;
+        const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                             t.location.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
 
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black overflow-x-hidden flex flex-col">
@@ -319,6 +353,8 @@ export default function Tournament() {
                             <input
                                 type="text"
                                 placeholder="Search events..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 className="bg-transparent border-none text-white placeholder-slate-500 focus:outline-none focus:ring-0 w-full px-4 py-3 font-medium text-lg"
                             />
                         </div>

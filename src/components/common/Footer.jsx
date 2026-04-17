@@ -44,46 +44,6 @@ const Footer = () => {
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
 
-                {/* Newsletter Section */}
-                <div className="mb-20">
-                    <div className="bg-[#0f172a] border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden group">
-                        {/* Subtle background glow */}
-                        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-neon-green/5 rounded-full blur-[100px] pointer-events-none" />
-                        
-                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-                            <div className="md:w-1/2">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="flex -space-x-2">
-                                        {[1,2,3].map(i => (
-                                            <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden">
-                                                <div className="w-full h-full bg-slate-700" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <span className="text-neon-green text-[10px] font-bold uppercase tracking-widest">Join 2,450+ athletes</span>
-                                </div>
-                                <h3 className="text-3xl font-black text-white mb-3 uppercase tracking-tight">Stay Ahead <br/> Of The Game.</h3>
-                                <p className="text-slate-400 text-sm leading-relaxed max-w-sm">Receive exclusive arena discounts, community updates, and pro-level tournament reports.</p>
-                            </div>
-
-                            <div className="md:w-1/2 w-full">
-                                <form className="flex gap-3" onSubmit={(e) => e.preventDefault()}>
-                                    <input
-                                        type="email"
-                                        placeholder="Enter your email..."
-                                        className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-neon-green transition-all"
-                                    />
-                                    <button className="bg-neon-green text-black p-4 rounded-2xl hover:bg-white hover:scale-105 transition-all shadow-[0_0_15px_rgba(57,255,20,0.3)]">
-                                        <Send className="w-5 h-5" />
-                                    </button>
-                                </form>
-                                <p className="mt-4 text-[10px] font-medium text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-neon-green" /> Weekly updates only. No spam.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 {/* Main Footer Content */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">

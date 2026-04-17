@@ -4,15 +4,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     MapPin, IndianRupee,
     CheckCircle, Star,
-    ChevronDown, ArrowLeft, MessageSquare, Send, Navigation
+    ChevronDown, ArrowLeft, ArrowRight, MessageSquare, Send, Navigation
 } from 'lucide-react';
-import { TypeAnimation } from 'react-type-animation';
-import SplitText from '../components/common/SplitText';
 import VenueMap from '../components/common/VenueMap';
 import useNavigation from '../hooks/useNavigation';
 
 // Reuse images
 import carbonFibrePattern from '../assets/images/common/carbon-fibre.png';
+import { 
+    Car, Wifi, Coffee, Zap, 
+    Activity, Luggage, ShowerHead, Award
+} from 'lucide-react';
 
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
@@ -79,11 +81,14 @@ export default function Booking() {
                     const mappedVenue = {
                         name: v.name,
                         location: v.location,
+                        description: v.description || "Experience gold-standard facilities with pro-grade lighting and world-class turf quality at our premier sports arena.",
                         price: v.price,
                         sports: v.sports && v.sports.length > 0 ? v.sports : ["Football"],
                         rating: v.rating || 4.5,
                         slots: v.slots || [],
                         courts: parsedCourts,
+                        amenities: v.amenities || [],
+                        images: (v.images && v.images.length > 0) ? v.images : [v.image || carbonFibrePattern],
                         coordinates: v.coordinates || { lat: 0, lng: 0 }
                     };
                     setVenue(mappedVenue);
@@ -337,7 +342,7 @@ export default function Booking() {
                                 <CheckCircle className="w-10 h-10 text-neon-green" />
                             </div>
                             <h2 className="text-2xl font-black italic uppercase text-white mb-2">
-                                <TypeAnimation sequence={['Match Booked!', 1000]} wrapper="span" cursor={false} repeat={0} />
+                                Match Secured!
                             </h2>
                             <p className="text-slate-400 mb-8 text-sm">Your reservation is confirmed. Get ready to play!</p>
                             {lastBooking && (
@@ -358,12 +363,6 @@ export default function Booking() {
                 )}
             </AnimatePresence>
 
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-neon-blue/5 rounded-full blur-[120px]" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-neon-green/5 rounded-full blur-[120px]" />
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url(${carbonFibrePattern})` }} />
-            </div>
-
             <Header />
 
             <main className="relative z-10 flex-grow max-w-5xl mx-auto px-6 py-12 w-full">
@@ -376,12 +375,42 @@ export default function Booking() {
                         </div>
                         <span className="text-xs font-bold uppercase tracking-wider">Return</span>
                     </button>
-                    <h1 className="text-4xl md:text-5xl font-black italic uppercase text-white mb-4 tracking-tighter"><SplitText>{venue.name}</SplitText></h1>
+                    <h1 className="text-4xl md:text-5xl font-black italic uppercase text-white mb-4 tracking-tighter">{venue.name}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-slate-400 text-sm">
                         <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-neon-pink" /> {venue.location}</div>
                         <div className="flex items-center gap-2 border-l border-white/10 pl-4"><Star className="w-4 h-4 text-neon-yellow fill-current" /> <span className="font-bold text-white">{venue.rating}</span> <span className="text-xs opacity-50">(Community Score)</span></div>
                     </div>
                 </div>
+
+                <div className="max-w-3xl mx-auto space-y-12">
+                    {/* Arena Amenities Pill Row */}
+                    <div className="flex flex-wrap gap-3 justify-center">
+                        {(venue.amenities.length > 0 ? venue.amenities : ['parking', 'wifi', 'showers', 'power_backup']).map(id => {
+                            const icons = {
+                                parking: { label: 'Parking', icon: Car },
+                                wifi: { label: 'Free WiFi', icon: Wifi },
+                                showers: { label: 'Showers', icon: ShowerHead },
+                                power_backup: { label: 'Power', icon: Zap },
+                                canteen: { label: 'Café', icon: Coffee },
+                                locker: { label: 'Locker', icon: Luggage },
+                                first_aid: { label: 'First Aid', icon: Activity }
+                            };
+                            const item = icons[id] || { label: id, icon: Award };
+                            return (
+                                <span key={id} className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                    <item.icon className="w-4 h-4 text-neon-blue" />
+                                    {item.label}
+                                </span>
+                            );
+                        })}
+                    </div>
+
+                    <div className="text-center space-y-6">
+                        <h2 className="text-2xl font-black italic uppercase text-white tracking-widest">Arena Overview</h2>
+                        <p className="text-slate-400 leading-relaxed font-medium text-lg">
+                            {venue.description}
+                        </p>
+                    </div>
 
                 {/* Unified Booking Panel */}
                 <div className="bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden mb-16">
@@ -448,18 +477,34 @@ export default function Booking() {
                                         {selectedCourt ? selectedCourt.match(/₹(\d+)/)?.[1] || venue.price : venue.price}
                                     </h4>
                                 </div>
-                                <button
-                                    onClick={processImmediateBooking}
-                                    disabled={!selectedTime || !selectedCourt || bookingInProgress}
-                                    className={`w-full md:w-auto px-12 py-5 rounded-2xl font-black uppercase tracking-widest transition-all text-sm flex items-center justify-center gap-3 ${!selectedTime || !selectedCourt ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50' : 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_30px_rgba(57,255,20,0.3)] active:scale-95'}`}
-                                >
-                                    {bookingInProgress ? <><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> Processing...</> : <><CheckCircle className="w-5 h-5" /> Confirm Match Booking</>}
-                                </button>
+                                <div className="w-full md:w-auto">
+                                    <button
+                                        onClick={processImmediateBooking}
+                                        disabled={!selectedTime || !selectedCourt || bookingInProgress}
+                                        className={`w-full px-12 py-5 rounded-2xl font-black uppercase tracking-widest transition-all text-sm flex items-center justify-center gap-3 ${!selectedTime || !selectedCourt ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50' : 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_30px_rgba(57,255,20,0.3)] group/btn active:scale-95'}`}
+                                    >
+                                        {bookingInProgress ? (
+                                            <div className="w-5 h-5 border-3 border-black/20 border-t-black rounded-full animate-spin" />
+                                        ) : (
+                                            <>
+                                                Confirm & Secure <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                            </>
+                                        )}
+                                    </button>
+                                    <div className="mt-4 flex items-center justify-between px-2 opacity-40">
+                                        <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-slate-400">
+                                            <Zap className="w-3 h-3 text-neon-yellow" fill="currentColor" /> Instant
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-slate-400">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-neon-green" /> Secure
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
+                </div>
                 {/* Location Section */}
                 <div className="mb-16">
                     <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter flex items-center gap-3 mb-8">

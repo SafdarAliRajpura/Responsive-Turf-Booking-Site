@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import SplitText from '../components/common/SplitText';
 import {
-    Trophy, Users, Search,
+    Trophy, Users,
     MapPin, Star, ArrowRight,
     Shield, Smartphone, Globe, Activity, Quote
 } from 'lucide-react';
@@ -90,7 +90,6 @@ export default function Home() {
     const [categories, setCategories] = useState([]);
     const [eliteReviews, setEliteReviews] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const fetchHomeData = async () => {
@@ -119,12 +118,7 @@ export default function Home() {
         fetchHomeData();
     }, []);
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            navigate(`/venues?search=${encodeURIComponent(searchQuery)}`);
-        }
-    };
+
 
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-neon-green selection:text-black overflow-x-hidden">
@@ -184,19 +178,18 @@ export default function Home() {
                             transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
                             className="flex flex-wrap gap-4"
                         >
-                            <form onSubmit={handleSearch} className="flex-1 bg-slate-900/80 border border-white/10 rounded-2xl p-2 flex items-center max-w-sm focus-within:border-neon-green/50 transition-colors">
-                                <MapPin className="w-5 h-5 text-slate-500 ml-3" />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    placeholder="Find a turf near you..."
-                                    className="bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 w-full px-4 py-2 font-medium"
-                                />
-                                <button type="submit" className="bg-neon-green text-black p-3 rounded-xl hover:bg-white transition-colors">
-                                    <Search className="w-5 h-5" />
-                                </button>
-                            </form>
+                            <button 
+                                onClick={() => navigate('/venues')}
+                                className="px-10 py-5 bg-neon-green text-black font-black uppercase tracking-widest text-sm rounded-[2rem] hover:bg-white hover:shadow-[0_0_30px_rgba(57,255,20,0.4)] transition-all transform active:scale-95"
+                            >
+                                Browse Local Arenas
+                            </button>
+                            <button 
+                                onClick={() => navigate('/tournaments')}
+                                className="px-10 py-5 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-sm rounded-[2rem] hover:bg-white/10 transition-all backdrop-blur-md"
+                            >
+                                Join Tournaments
+                            </button>
                         </motion.div>
 
                         <motion.div
@@ -307,8 +300,8 @@ export default function Home() {
                             viewport={{ once: true }}
                         >
                             <div className="flex items-center gap-3 text-4xl md:text-5xl font-black text-white mb-4">
-                                <SplitText>WHAT'S YOUR</SplitText>
-                                <span className="text-neon-blue inline-flex"><SplitText>GAME?</SplitText></span>
+                                <SplitText>CHOOSE YOUR</SplitText>
+                                <span className="text-neon-blue inline-flex"><SplitText>ARENA</SplitText></span>
                             </div>
                             <p className="text-slate-400 font-medium tracking-wide">Explore premium facilities curated for the competitive edge.</p>
                         </motion.div>
@@ -434,8 +427,8 @@ export default function Home() {
                             <div className="text-left">
                                 <span className="text-neon-blue font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Voice of the Pulse</span>
                                 <div className="flex gap-3 text-4xl md:text-6xl font-black text-white italic truncate">
-                                    <SplitText>PROS</SplitText>
-                                    <span className="text-neon-blue inline-flex"><SplitText>TALK.</SplitText></span>
+                                    <SplitText>ATHLETE</SplitText>
+                                    <span className="text-neon-blue inline-flex"><SplitText>PULSE.</SplitText></span>
                                 </div>
                             </div>
                             <div className="flex flex-col items-start md:items-end gap-2">
@@ -445,16 +438,7 @@ export default function Home() {
 
                         {/* Infinite Scroll Container */}
                         <div className="relative group">
-                            <motion.div 
-                                className="flex gap-6 pr-6 w-max"
-                                animate={{ x: ["0%", "-50%"] }}
-                                transition={{ 
-                                    duration: 30, 
-                                    ease: "linear", 
-                                    repeat: Infinity 
-                                }}
-                                whileHover={{ transition: { duration: 100000 } }} // Effective pause
-                            >
+                            <div className="flex gap-6 pr-6 w-max animate-marquee group-hover:[animation-play-state:paused]">
                                 {/* Double the items for seamless loop */}
                                 {[...eliteReviews, ...eliteReviews].map((review, i) => (
                                     <div
@@ -506,7 +490,7 @@ export default function Home() {
                                         </div>
                                     </div>
                                 ))}
-                            </motion.div>
+                            </div>
                             
                             {/* Gradient Fades for smoothness */}
                             <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-950 to-transparent z-10 pointer-events-none" />
@@ -528,8 +512,8 @@ export default function Home() {
                     >
                         {/* <h2 className="text-5xl font-black text-white mb-6">READY TO <span className="text-neon-green">DOMINATE?</span></h2> */}
                         <div className="flex justify-center flex-wrap gap-3 text-5xl font-black text-white mb-6">
-                            <SplitText>READY TO</SplitText>
-                            <span className="text-neon-green inline-flex"><SplitText>DOMINATE?</SplitText></span>
+                            <SplitText>UNLEASH YOUR</SplitText>
+                            <span className="text-neon-green inline-flex"><SplitText>GAME.</SplitText></span>
                         </div>
                         <p className="text-slate-300 text-lg mb-8">Join thousands of players booking the best turfs in the city. Don't just watch the game, be the game.</p>
                         <div className="flex items-center justify-center gap-4">

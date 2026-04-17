@@ -75,32 +75,34 @@ const VenueCard = ({ venue, index, onBook }) => {
             <div className="relative h-56 overflow-hidden bg-slate-950">
                 <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent transition-colors z-10 pointer-events-none" />
                 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                     <motion.img
-                        key={currentImageIndex}
+                        key={`venue-img-${currentImageIndex}`}
                         src={images[currentImageIndex]}
                         alt={venue.name}
-                        initial={{ opacity: 0, scale: 1.02 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 1.2, ease: "easeInOut" }}
+                        transition={{ duration: 0.8, ease: "easeInOut" }}
                         className="absolute inset-0 w-full h-full object-cover"
                     />
                 </AnimatePresence>
 
                 {/* Left/Right manual controls */}
-                <div className="absolute inset-0 z-20 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 z-30 flex items-center justify-between px-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <button 
-                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev - 1 + images.length) % images.length) }}
-                        className="p-1 rounded-full bg-black/40 text-white hover:bg-neon-green hover:text-black mt-4 backdrop-blur transition-colors"
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImageIndex(prev => (prev - 1 + images.length) % images.length) }}
+                        className="p-2 rounded-full bg-black/70 text-white hover:bg-neon-green hover:text-black backdrop-blur-md transition-all shadow-2xl pointer-events-auto"
                     >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button 
-                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev + 1) % images.length) }}
-                        className="p-1 rounded-full bg-black/40 text-white hover:bg-neon-green hover:text-black mt-4 backdrop-blur transition-colors"
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImageIndex(prev => (prev + 1) % images.length) }}
+                        className="p-2 rounded-full bg-black/70 text-white hover:bg-neon-green hover:text-black backdrop-blur-md transition-all shadow-2xl pointer-events-auto"
                     >
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
 
@@ -177,7 +179,6 @@ const VenueCard = ({ venue, index, onBook }) => {
                 {/* Price & Action */}
                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
                     <div>
-                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Starting from</span>
                         <div className="flex items-center text-white font-black text-xl">
                             <IndianRupee className="w-4 h-4 text-neon-green" />
                             {venue.price}
@@ -289,7 +290,7 @@ export default function Venue() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="text-4xl md:text-5xl font-black italic uppercase mb-6"
+                            className="text-6xl md:text-7xl font-black italic uppercase leading-[0.9] tracking-tighter mb-8"
                         >
                             Find Your <br />
                             <span className="inline-block min-w-[300px] text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-emerald-500">
@@ -337,7 +338,7 @@ export default function Venue() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-                        className="flex gap-2"
+                        className="flex flex-wrap gap-3"
                     >
                         {['All', 'Football', 'Cricket', 'Badminton'].map((cat) => (
                             <FilterTag
@@ -353,8 +354,8 @@ export default function Venue() {
                 {/* Venues Grid */}
                 {loading ? (
                     <div className="text-center py-20 text-slate-500">
-                        <div className="w-12 h-12 border-4 border-slate-700 border-t-neon-green rounded-full animate-spin mx-auto mb-4" />
-                        <p className="tracking-widest uppercase text-xs font-bold text-neon-green">Fetching Live Venues...</p>
+                        <div className="w-16 h-16 border-4 border-slate-900 border-t-neon-green rounded-full animate-spin mx-auto mb-6" />
+                        <p className="tracking-[0.4em] uppercase text-[10px] font-black text-neon-green/60">Locating Premium Arenas...</p>
                     </div>
                 ) : (
                     <>
@@ -371,9 +372,10 @@ export default function Venue() {
 
                         {/* Empty State */}
                         {venues.length === 0 && (
-                            <div className="text-center py-20 text-slate-500">
-                                <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                <p>No venues found matching your criteria.</p>
+                            <div className="text-center py-32 rounded-[3rem] bg-slate-900/20 border border-dashed border-white/5">
+                                <Search className="w-16 h-16 mx-auto mb-6 text-slate-800" />
+                                <h3 className="text-white font-black uppercase italic tracking-tighter text-xl mb-2">No Arenas Matched</h3>
+                                <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">Global database returned zero matches for this search pattern.</p>
                             </div>
                         )}
                     </>

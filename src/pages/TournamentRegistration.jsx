@@ -8,6 +8,7 @@ import {
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import Toast from '../components/ui/Toast';
+import apiClient from '../utils/apiClient';
 
 import tournamentBg from '../assets/images/home/football-night-new.jpg'; // Placeholder
 
@@ -57,8 +58,8 @@ export default function TournamentRegistration() {
     useEffect(() => {
         const fetchTournament = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/tournaments/${id}`);
-                const data = await res.json();
+                const res = await apiClient.get(`/tournaments/${id}`);
+                const data = res.data;
                 if (data.success) {
                     setTournament({
                         name: data.data.name,
@@ -121,22 +122,15 @@ export default function TournamentRegistration() {
         }
 
         try {
-            const response = await fetch(`http://localhost:5000/api/tournaments/${id}/register`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    teamName: formData.teamName,
-                    captainName: formData.captainName,
-                    email: formData.email,
-                    contactNumber: formData.phone,
-                    players: formData.players
-                })
+            const res = await apiClient.post(`/tournaments/${id}/register`, {
+                teamName: formData.teamName,
+                captainName: formData.captainName,
+                email: formData.email,
+                contactNumber: formData.phone,
+                players: formData.players
             });
 
-            const result = await response.json();
+            const result = res.data;
             if (result.success) {
                 setToast({ message: "Registration Successful! See you on the field.", type: 'success' });
                 setTimeout(() => {

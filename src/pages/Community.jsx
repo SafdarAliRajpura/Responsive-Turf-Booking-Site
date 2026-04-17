@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MessageSquare, Calendar,
-    Heart, Share2, MessageCircle, Plus, X, Send
+    Heart, Share2, MessageCircle, Plus, X, Send, MapPin, User,
+    ChevronDown
 } from 'lucide-react';
 import { TypeAnimation } from 'react-type-animation';
 import SplitText from '../components/common/SplitText';
 
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import Toast from '../components/ui/Toast';
 import carbonFibrePattern from '../assets/images/common/carbon-fibre.png';
 import userAvatarImg from '../assets/images/common/user-avatar.jpg';
 import apiClient from '../utils/apiClient';
@@ -18,11 +20,16 @@ export default function Community() {
     const [discussions, setDiscussions] = useState([]);
     const [events, setEvents] = useState([]);
     const [isCreatingPost, setIsCreatingPost] = useState(false);
+    const [isCreatingEvent, setIsCreatingEvent] = useState(false);
     const [newPost, setNewPost] = useState({ title: '', content: '', category: 'General' });
+    const [newEvent, setNewEvent] = useState({ title: '5v5 Friendly Match', date: '', location: '', maxAttendees: 10 });
+    const [venues, setVenues] = useState([]);
     const [user, setUser] = useState(null);
     const [commentText, setCommentText] = useState("");
     const [platformStats, setPlatformStats] = useState({ users: 0, venues: 0, tournaments: 0, recentAvatars: [] });
     const [selectedDiscussion, setSelectedDiscussion] = useState(null);
+    const [activeTab, setActiveTab] = useState('Discussions');
+    const [toast, setToast] = useState({ message: null, type: 'info' });
 
     useEffect(() => {
         const u = localStorage.getItem('user');
@@ -33,13 +40,17 @@ export default function Community() {
 
     const fetchData = async () => {
         try {
-            const [discRes, eventRes, statsRes] = await Promise.all([
+            const [discRes, eventRes, statsRes, venueRes] = await Promise.all([
                 apiClient.get('/community/discussions'),
                 apiClient.get('/community/events'),
-                apiClient.get('/analytics/platform-stats')
+                apiClient.get('/analytics/platform-stats'),
+                apiClient.get('/venues')
             ]);
             setDiscussions(discRes.data);
             setEvents(eventRes.data);
+            if (venueRes.data?.success) setVenues(venueRes.data.data);
+            else setVenues(venueRes.data); // Fallback for different API structures
+            
             if (statsRes.data?.success) {
                 setPlatformStats(statsRes.data.data);
             }
@@ -59,12 +70,12 @@ export default function Community() {
             fetchData();
         } catch (err) {
             console.error('Failed to create post:', err);
-            alert('Please login to post a discussion.');
+            setToast({ message: 'Please login to post a discussion.', type: 'error' });
         }
     };
 
     const handleLike = async (id) => {
-        if (!user) return alert("Please login first.");
+        if (!user) return setToast({ message: "Please login first.", type: 'error' });
         try {
             await apiClient.put(`/community/discussions/${id}/like`);
             fetchData();
@@ -75,16 +86,46 @@ export default function Community() {
 
 
     const handleComment = async (id) => {
-        if (!user) return alert("Please login to participate in the discussion.");
+        if (!user) return setToast({ message: "Please login to participate.", type: 'error' });
         if (!commentText.trim()) return;
 
         try {
             await apiClient.post(`/community/discussions/${id}/comment`, { text: commentText });
             setCommentText("");
+            setToast({ message: "Insight posted!", type: 'success' });
             fetchData();
         } catch (err) {
             console.error('Comment error:', err);
-            alert("Failed to post comment.");
+            setToast({ message: "Failed to post comment.", type: 'error' });
+        }
+    };
+
+    const handleCreateEvent = async (e) => {
+        e.preventDefault();
+        if (!newEvent.title || !newEvent.date || !newEvent.location) {
+            return setToast({ message: "Please fill all fields including Location.", type: 'error' });
+        }
+        try {
+            await apiClient.post('/community/events', newEvent);
+            setToast({ message: "Event Organized successfully!", type: 'success' });
+            setIsCreatingEvent(false);
+            setNewEvent({ title: '', date: '', location: '', maxAttendees: 10 });
+            fetchData();
+        } catch (err) {
+            console.error('Failed to create event:', err);
+            setToast({ message: 'Error organizing event. Are you logged in?', type: 'error' });
+        }
+    };
+
+    const handleJoinEvent = async (id) => {
+        if (!user) return setToast({ message: "Please login to join events.", type: 'error' });
+        try {
+            const res = await apiClient.put(`/community/events/${id}/join`);
+            setToast({ message: res.data.message || "Action Successful", type: 'success' });
+            fetchData();
+        } catch (err) {
+            console.error('Join event error:', err);
+            setToast({ message: "Failed to join event.", type: 'error' });
         }
     };
 
@@ -163,7 +204,13 @@ export default function Community() {
                                 onClick={() => setIsCreatingPost(true)}
                                 className="px-8 py-4 bg-white text-black font-black uppercase tracking-wider rounded-2xl hover:bg-neon-blue hover:text-white transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-neon-blue/40 hover:-translate-y-1 flex items-center gap-2"
                             >
-                                Start Discussion <Plus className="w-5 h-5" />
+                                Start Post <Plus className="w-5 h-5" />
+                            </button>
+                            <button 
+                                onClick={() => setIsCreatingEvent(true)}
+                                className="px-8 py-4 bg-slate-900 border border-white/10 text-white font-black uppercase tracking-wider rounded-2xl hover:border-neon-green/50 hover:text-neon-green transition-all hover:-translate-y-1 flex items-center gap-2"
+                            >
+                                Host Event <Calendar className="w-5 h-5" />
                             </button>
                             <div className="flex -space-x-4">
                                 {(platformStats.recentAvatars?.length > 0 
@@ -247,14 +294,31 @@ export default function Community() {
 
                 <div className="grid lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-8 space-y-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <MessageSquare className="w-6 h-6 text-neon-blue" /> Trending Discussions
-                            </h2>
-                            <button className="text-sm text-neon-blue font-bold hover:text-white transition-colors">View All</button>
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-8">
+                                <button 
+                                    onClick={() => setActiveTab('Discussions')}
+                                    className={`relative py-2 text-xl font-black italic uppercase tracking-tighter transition-all ${activeTab === 'Discussions' ? 'text-white' : 'text-slate-600 hover:text-slate-400'}`}
+                                >
+                                    Discussions
+                                    {activeTab === 'Discussions' && <motion.div layoutId="tab" className="absolute -bottom-1 left-0 right-0 h-1 bg-neon-blue rounded-full shadow-[0_0_10px_rgba(0,183,255,0.5)]" />}
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('Events')}
+                                    className={`relative py-2 text-xl font-black italic uppercase tracking-tighter transition-all ${activeTab === 'Events' ? 'text-white' : 'text-slate-600 hover:text-slate-400'}`}
+                                >
+                                    Global Events
+                                    {activeTab === 'Events' && <motion.div layoutId="tab" className="absolute -bottom-1 left-0 right-0 h-1 bg-neon-green rounded-full shadow-[0_0_10px_rgba(57,255,20,0.5)]" />}
+                                </button>
+                            </div>
+                            <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                {activeTab === 'Discussions' ? `${discussions.length} Threads` : `${events.length} Meetups`}
+                            </div>
                         </div>
 
-                        {discussions.map((post, i) => {
+                        {activeTab === 'Discussions' ? (
+                            <div className="space-y-6">
+                                {discussions.map((post, i) => {
                             const isLiked = user && post.likes.includes(user._id);
                             return (
                                 <motion.div
@@ -291,8 +355,50 @@ export default function Community() {
                                         </button>
                                     </div>
                                 </motion.div>
-                            );
-                        })}
+                                );
+                            })}
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {events.length === 0 ? (
+                                    <div className="py-20 text-center bg-slate-900/40 rounded-3xl border border-dashed border-white/10">
+                                        <Calendar className="w-12 h-12 text-slate-800 mx-auto mb-4" />
+                                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No upcoming community events</p>
+                                    </div>
+                                ) : (
+                                    events.map((event, i) => {
+                                        const isJoined = user && event.attendees?.includes(user._id);
+                                        return (
+                                            <motion.div
+                                                key={event._id}
+                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: i * 0.1 }}
+                                                className="bg-slate-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-8 hover:border-neon-green/30 transition-all flex flex-col md:flex-row gap-8 items-center"
+                                            >
+                                                <div className="flex-1 space-y-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="px-3 py-1 bg-neon-green/10 border border-neon-green/20 text-neon-green text-[10px] font-black uppercase tracking-widest rounded-lg">Live Meetup</span>
+                                                        <span className="text-xs text-slate-500 font-bold">{new Date(event.date).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <h3 className="text-2xl font-black italic uppercase text-white tracking-tight">{event.title}</h3>
+                                                    <div className="flex flex-wrap gap-6 text-sm text-slate-400">
+                                                        <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-neon-pink" /> {event.location}</div>
+                                                        <div className="flex items-center gap-2"><User className="w-4 h-4 text-neon-blue" /> {event.attendees?.length || 0} Joined ({event.maxAttendees || 0} Max)</div>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleJoinEvent(event._id)}
+                                                    className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${isJoined ? 'bg-neon-green/10 text-neon-green border border-neon-green/20' : 'bg-white text-black hover:bg-neon-green hover:shadow-lg'}`}
+                                                >
+                                                    {isJoined ? 'Joined ✔' : 'Reserve Spot'}
+                                                </button>
+                                            </motion.div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="lg:col-span-4 space-y-8">
@@ -380,9 +486,90 @@ export default function Community() {
                             </motion.div>
                         </motion.div>
                     )}
+
+                    {isCreatingEvent && (
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                        >
+                            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-slate-900 border border-white/10 rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-green via-emerald-500 to-teal-500" />
+                                <button onClick={() => setIsCreatingEvent(false)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X className="w-6 h-6" /></button>
+                                
+                                <div className="mb-8">
+                                    <h3 className="text-3xl font-black italic uppercase text-white flex items-center gap-3">
+                                        <Calendar className="w-8 h-8 text-neon-green" /> Organize <span className="text-neon-green">Event</span>
+                                    </h3>
+                                    <p className="text-slate-400 mt-2 font-medium">Create a meetup or trial session for the community.</p>
+                                </div>
+
+                                <form onSubmit={handleCreateEvent} className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Event Type / Title</label>
+                                            <div className="relative group/select">
+                                                <select 
+                                                    value={newEvent.title} 
+                                                    onChange={e => setNewEvent({...newEvent, title: e.target.value})} 
+                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-green transition-all appearance-none cursor-pointer relative z-10"
+                                                    required
+                                                >
+                                                    <option className="bg-slate-900">5v5 Friendly Match</option>
+                                                    <option className="bg-slate-900">Turf Trials & Scouting</option>
+                                                    <option className="bg-slate-900">Pro Strategy Bootcamp</option>
+                                                    <option className="bg-slate-900">Under-The-Lights Challenge</option>
+                                                    <option className="bg-slate-900">Skill Drills Session</option>
+                                                    <option className="bg-slate-900">Weekend Community League</option>
+                                                </select>
+                                                <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within/select:text-neon-green transition-colors z-0" />
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Date</label>
+                                                <input type="date" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-green transition-all appearance-none [&::-webkit-calendar-picker-indicator]:invert" required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Max Athletes</label>
+                                                <input type="number" value={newEvent.maxAttendees} onChange={e => setNewEvent({...newEvent, maxAttendees: e.target.value})} className="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-green transition-all" placeholder="Capacity" required />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Select Arena (Location)</label>
+                                            <div className="relative group/select">
+                                                <select 
+                                                    value={newEvent.location} 
+                                                    onChange={e => setNewEvent({...newEvent, location: e.target.value})} 
+                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-green transition-all appearance-none cursor-pointer relative z-10"
+                                                    required
+                                                >
+                                                    <option value="" className="bg-slate-900">Select a Turf...</option>
+                                                    {venues.map((venue, idx) => (
+                                                        <option key={idx} value={venue.name} className="bg-slate-900">{venue.name} - {venue.location}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within/select:text-neon-green transition-colors z-0" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" className="w-full py-5 bg-white text-black font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-neon-green hover:shadow-neon-green/20 transition-all flex items-center justify-center gap-2">
+                                        Launch Event <Send className="w-4 h-4" />
+                                    </button>
+                                </form>
+                            </motion.div>
+                        </motion.div>
+                    )}
                 </AnimatePresence>
             </main>
             <Footer />
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({...toast, message: null})} 
+            />
         </div>
     );
 }

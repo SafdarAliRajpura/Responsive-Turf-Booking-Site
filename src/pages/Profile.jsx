@@ -1,16 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Trophy, Medal, Star, Shield, MapPin, 
     Calendar, Clock, Edit2, X, Save, 
     User, Camera, Lock, TrendingUp, Zap, Target,
-    MessageSquare, Award
+    MessageSquare, Award, ChevronDown, Upload, Smartphone
 } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import Toast from '../components/ui/Toast';
 import userAvatarImg from '../assets/images/common/user-avatar.jpg';
 import carbonFibrePattern from '../assets/images/common/carbon-fibre.png';
 import apiClient from '../utils/apiClient';
+
+const CountUp = ({ end, duration = 1 }) => {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        let start = 0;
+        const endVal = parseInt(end);
+        if (isNaN(endVal) || endVal <= 0) {
+            setCount(endVal || 0);
+            return;
+        }
+        
+        const totalMilisecDur = duration * 1000;
+        const incrementTime = Math.max(totalMilisecDur / endVal, 10);
+        
+        const timer = setInterval(() => {
+            start += 1;
+            setCount(start);
+            if (start >= endVal) {
+                setCount(endVal);
+                clearInterval(timer);
+            }
+        }, incrementTime);
+        
+        return () => clearInterval(timer);
+    }, [end, duration]);
+    
+    return <span>{count}</span>;
+};
 
 export default function Profile() {
     const [user, setUser] = useState(null);
@@ -18,6 +47,8 @@ export default function Profile() {
     const [editForm, setEditForm] = useState({});
     const [isSaving, setIsSaving] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState({ message: null, type: 'info' });
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         fetchProfile();
@@ -39,6 +70,27 @@ export default function Profile() {
         }
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Size check (2MB limit for base64 efficiency)
+        if (file.size > 2 * 1024 * 1024) {
+            setToast({ message: "Image too large. Max 2MB for tactical gear.", type: 'error' });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            setEditForm({ ...editForm, user_profile: reader.result });
+        };
+        reader.onerror = error => {
+            console.error('File Read Error:', error);
+            setToast({ message: "Failed to process image.", type: 'error' });
+        };
+    };
+
     const handleSaveProfile = async () => {
         setIsSaving(true);
         try {
@@ -48,10 +100,11 @@ export default function Profile() {
                 setUser(updated);
                 localStorage.setItem('user', JSON.stringify(updated));
                 setIsEditing(false);
+                setToast({ message: 'Profile synchronization complete!', type: 'success' });
             }
         } catch (err) {
             console.error('Profile Save Error:', err);
-            alert('Failed to update profile.');
+            setToast({ message: 'Failed to update tactical profile. Verify network.', type: 'error' });
         } finally {
             setIsSaving(false);
         }
@@ -219,50 +272,19 @@ export default function Profile() {
                                         <s.icon className={`w-6 h-6 ${s.color}`} />
                                     </div>
                                     <div>
-                                        <h4 className="text-2xl font-black text-white">{s.val}</h4>
+                                        <h4 className="text-2xl font-black text-white">
+                                            <CountUp end={s.val} />
+                                        </h4>
                                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{s.label}</p>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
 
-                        {/* Recent Badges */}
-                        <div>
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-2xl font-black italic uppercase flex items-center gap-3">
-                                    <Star className="w-6 h-6 text-neon-yellow" /> Hall Of <span className="text-neon-yellow">Fame</span>
-                                </h2>
-                                <button className="text-xs font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest">All Badges</button>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {(user.badges?.length > 0 ? user.badges : [1, 2, 3, 4]).map((badge, i) => {
-                                    const isReal = typeof badge === 'object';
-                                    return (
-                                        <motion.div 
-                                            key={i}
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ delay: 0.4 + (i * 0.1) }}
-                                            className={`aspect-square bg-slate-900 border ${isReal ? 'border-neon-blue/30' : 'border-white/5 opacity-20 grayscale'} rounded-3xl p-4 flex flex-col items-center justify-center text-center group transition-all hover:bg-slate-800`}
-                                        >
-                                            <div className={`w-12 h-12 mb-4 rounded-full flex items-center justify-center ${isReal ? 'bg-neon-blue/20 text-neon-blue shadow-[0_0_20px_rgba(0,243,255,0.2)]' : 'bg-white/5 text-slate-700'}`}>
-                                                <Award className="w-6 h-6" />
-                                            </div>
-                                            <h4 className={`text-xs font-black uppercase tracking-tighter ${isReal ? 'text-white' : 'text-slate-700'}`}>
-                                                {isReal ? badge.name : 'Unknown'}
-                                            </h4>
-                                            {!isReal && <Lock className="w-3 h-3 text-slate-800 mt-2" />}
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
                         </div>
-
-
                     </div>
-                </div>
-            </main>            <AnimatePresence>
+                </main>
+            <AnimatePresence>
                 {isEditing && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -275,7 +297,6 @@ export default function Profile() {
                             <div className="flex justify-between items-center mb-10">
                                 <div>
                                     <h3 className="text-3xl font-black text-white italic uppercase leading-none mb-2">Athlete <span className="text-neon-green">Bio Hub</span></h3>
-                                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Customize your player identity across the network</p>
                                 </div>
                                 <button onClick={() => setIsEditing(false)} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all"><X className="w-6 h-6" /></button>
                             </div>
@@ -294,32 +315,65 @@ export default function Profile() {
 
                                     <div className="space-y-4">
                                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
+                                            <Smartphone className="w-3 h-3" /> Tactical Contact
+                                        </label>
+                                        <input type="text" value={editForm.mobileNumber || ''} onChange={(e) => setEditForm({...editForm, mobileNumber: e.target.value})} placeholder="Mobile Number" className="w-full bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm transition-all" />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
                                             <Target className="w-3 h-3" /> Primary Field Role
                                         </label>
-                                        <select 
-                                            value={editForm.primaryRole || 'Athlete'} 
-                                            onChange={(e) => setEditForm({...editForm, primaryRole: e.target.value})}
-                                            className="w-full bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm"
-                                        >
-                                            <option>Striker</option>
-                                            <option>Midfielder</option>
-                                            <option>Defender</option>
-                                            <option>Goalkeeper</option>
-                                            <option>All-Rounder</option>
-                                            <option>Opening Batsman</option>
-                                            <option>Fast Bowler</option>
-                                            <option>Spin Bowler</option>
-                                            <option>Wicket Keeper</option>
-                                        </select>
+                                        <div className="relative group/select">
+                                            <select 
+                                                value={editForm.primaryRole || 'Athlete'} 
+                                                onChange={(e) => setEditForm({...editForm, primaryRole: e.target.value})}
+                                                className="w-full bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm appearance-none cursor-pointer relative z-10 transition-all font-bold"
+                                            >
+                                                <option className="bg-slate-900">Striker</option>
+                                                <option className="bg-slate-900">Midfielder</option>
+                                                <option className="bg-slate-900">Defender</option>
+                                                <option className="bg-slate-900">Goalkeeper</option>
+                                                <option className="bg-slate-900">All-Rounder</option>
+                                                <option className="bg-slate-900">Opening Batsman</option>
+                                                <option className="bg-slate-900">Fast Bowler</option>
+                                                <option className="bg-slate-900">Spin Bowler</option>
+                                                <option className="bg-slate-900">Wicket Keeper</option>
+                                            </select>
+                                            <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within/select:text-neon-blue opacity-50 transition-colors z-0" />
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
-                                            <Camera className="w-3 h-3" /> Avatar Sync
+                                    <div className="space-y-4 text-center pb-4 border-b border-white/5">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center justify-center gap-2">
+                                            <Camera className="w-3 h-3" /> Digital Avatar
                                         </label>
-                                        <input type="text" value={editForm.user_profile || ''} onChange={(e) => setEditForm({...editForm, user_profile: e.target.value})} placeholder="Profile Image URL..." className="w-full bg-slate-950 border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm" />
+                                        <div className="relative inline-block group/avatar">
+                                            <div className="w-24 h-24 rounded-full bg-slate-950 border-2 border-white/10 overflow-hidden shadow-2xl relative mx-auto">
+                                                <img src={editForm.user_profile || userAvatarImg} alt="Preview" className="w-full h-full object-cover opacity-80" />
+                                                <div 
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all cursor-pointer"
+                                                >
+                                                    <Upload className="w-6 h-6 text-white" />
+                                                </div>
+                                            </div>
+                                            <input 
+                                                type="file" 
+                                                ref={fileInputRef} 
+                                                onChange={handleFileChange} 
+                                                className="hidden" 
+                                                accept="image/*" 
+                                            />
+                                            <button 
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="mt-3 px-4 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-[9px] font-black text-slate-400 uppercase tracking-widest transition-all"
+                                            >
+                                                Upload New Photo
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-4">
@@ -339,21 +393,7 @@ export default function Profile() {
                                 </div>
                             </div>
 
-                            <div className="space-y-4 mb-10">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-blue ml-1 flex items-center gap-2">
-                                    <Star className="w-3 h-3" /> Social Links
-                                </label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="relative">
-                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 uppercase">IG @</span>
-                                        <input type="text" value={editForm.socialLinks?.instagram || ''} onChange={(e) => setEditForm({...editForm, socialLinks: {...editForm.socialLinks, instagram: e.target.value }})} className="w-full bg-slate-950 border border-white/5 rounded-2xl pl-16 pr-6 py-4 text-white focus:outline-none focus:border-neon-pink/50 text-sm" />
-                                    </div>
-                                    <div className="relative">
-                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 uppercase">TWX @</span>
-                                        <input type="text" value={editForm.socialLinks?.twitter || ''} onChange={(e) => setEditForm({...editForm, socialLinks: {...editForm.socialLinks, twitter: e.target.value }})} className="w-full bg-slate-950 border border-white/5 rounded-2xl pl-16 pr-6 py-4 text-white focus:outline-none focus:border-neon-blue/50 text-sm" />
-                                    </div>
-                                </div>
-                            </div>
+
 
                             <button onClick={handleSaveProfile} disabled={isSaving} className="w-full py-5 bg-white text-black font-black uppercase rounded-2xl shadow-xl hover:bg-neon-green transition-all shadow-neon-green/20">
                                 {isSaving ? 'Synchronizing Data...' : 'Commit All Changes'}
@@ -363,6 +403,11 @@ export default function Profile() {
                 )}
             </AnimatePresence>
             <Footer />
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({...toast, message: null})} 
+            />
         </div>
     );
 }
