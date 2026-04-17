@@ -66,12 +66,12 @@ const NotificationDropdown = ({ color = "neon-blue" }) => {
                             <Zap className={`w-4 h-4 ${theme.accent}`} />
                         </div>
                         <div>
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Neural Intel</h4>
-                            <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-0.5">Live Operation Feed</p>
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Activity Hub</h4>
+                            <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-0.5">Notification Feed</p>
                         </div>
                     </div>
                     {unreadCount > 0 && (
-                        <button onClick={markAllRead} className={`text-[10px] font-black uppercase tracking-widest ${theme.accent} hover:brightness-125 transition-all`}>Purge Unread</button>
+                        <button onClick={markAllRead} className={`text-[10px] font-black uppercase tracking-widest ${theme.accent} hover:brightness-125 transition-all`}>Clear Unread</button>
                     )}
                 </div>
 
@@ -128,7 +128,7 @@ const NotificationDropdown = ({ color = "neon-blue" }) => {
                             >
                                 <Bell className="w-10 h-10 text-slate-400" />
                             </motion.div>
-                            <p className="text-xs text-slate-500 font-black uppercase tracking-[0.3em]">No Dynamic Data</p>
+                            <p className="text-xs text-slate-500 font-black uppercase tracking-[0.3em]">No updates yet</p>
                             <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-2">Feed is currently silent</p>
                         </div>
                     )}
@@ -138,13 +138,13 @@ const NotificationDropdown = ({ color = "neon-blue" }) => {
                     <button 
                         onClick={() => {
                             const user = JSON.parse(localStorage.getItem('user'));
-                            if (user?.role === 'admin') navigate('/admin/bookings');
-                            else if (user?.role === 'partner') navigate('/partner/bookings');
-                            else navigate('/bookings');
+                            if (user?.role === 'admin') navigate('/admin/settings');
+                            else if (user?.role === 'partner') navigate('/partner/settings');
+                            else navigate('/settings');
                         }} 
                         className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-3"
                     >
-                        Access Command Center <ChevronRight className="w-3 h-3" />
+                        Manage Account Settings <ChevronRight className="w-3 h-3" />
                     </button>
                 </div>
             </div>

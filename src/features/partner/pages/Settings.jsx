@@ -300,31 +300,9 @@ export default function Settings() {
                                         </button>
                                     </div>
 
-                                    <div className="mt-10 pt-10 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
-                                                <Smartphone className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <p className="text-white font-black uppercase italic tracking-tighter leading-none mb-1">Two-Factor Authentication</p>
-                                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Biometric & SMS Secondary Access</p>
-                                            </div>
-                                        </div>
-                                        <button className="px-6 py-3 border-2 border-slate-800 text-slate-400 hover:text-white hover:border-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
-                                            Enable Layer
-                                        </button>
-                                    </div>
+
                                 </Section>
 
-                                <div className="bg-red-500/5 border border-red-500/10 rounded-[2.5rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 group hover:bg-red-500/10 transition-all">
-                                    <div className="text-center md:text-left">
-                                        <h3 className="text-xl font-black text-red-500 italic uppercase tracking-tighter leading-none mb-2">Off-Chain Decommissioning</h3>
-                                        <p className="text-slate-500 text-xs font-medium">Permanently remove your business from the Arena network.</p>
-                                    </div>
-                                    <button className="px-8 py-4 bg-transparent border-2 border-red-500/30 text-red-500/60 hover:text-white hover:bg-red-500 hover:border-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
-                                        Deactivate Account
-                                    </button>
-                                </div>
                             </motion.div>
                         )}
 

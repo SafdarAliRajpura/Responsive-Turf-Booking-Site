@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -8,6 +8,7 @@ import {
 import NotificationDropdown from '../../../components/common/NotificationDropdown';
 import userAvatarImg from '../../../assets/images/common/user-avatar.jpg';
 import carbonFibrePattern from '../../../assets/images/common/carbon-fibre.png';
+import PremiumLoader from '../../../components/ui/PremiumLoader';
 
 const SidebarItem = ({ icon: Icon, label, path, active, onClick }) => (
     <button
@@ -42,7 +43,7 @@ export default function AdminLayout() {
         if (user.role && user.role.toLowerCase() !== 'admin') {
             navigate('/home'); // Redirect to home if NOT admin
         }
-    }, [navigate]);
+    }, [navigate]); // Stable dependencies
 
     const sidebarItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
@@ -51,7 +52,6 @@ export default function AdminLayout() {
         { icon: Trophy, label: 'Tournaments', path: '/admin/tournaments' },
         { icon: Calendar, label: 'Bookings', path: '/admin/bookings' },
         { icon: MessageSquare, label: 'Inquiries', path: '/admin/inquiries' },
-        { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ];
 
     return (
@@ -137,8 +137,13 @@ export default function AdminLayout() {
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-8 scrollbar-hide">
-                    <Outlet />
+                <main 
+                    key={location.pathname} 
+                    className="flex-1 overflow-y-auto p-8 scrollbar-hide"
+                >
+                    <Suspense fallback={<PremiumLoader />}>
+                        <Outlet />
+                    </Suspense>
                 </main>
 
             </div>

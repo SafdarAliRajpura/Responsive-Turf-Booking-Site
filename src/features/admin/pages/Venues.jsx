@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Star, IndianRupee, Ban, CheckCircle, X } from 'lucide-react';
+import { MapPin, Star, IndianRupee, Ban, CheckCircle, X, ChevronDown, Filter as FilterIcon } from 'lucide-react';
 import footballImg from '../../../assets/images/home/night-football.jpg';
 
 import Toast from '../../../components/ui/Toast';
@@ -10,6 +10,9 @@ export default function Venues() {
     const [venues, setVenues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedVenue, setSelectedVenue] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedSport, setSelectedSport] = useState('All');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     const fetchVenues = async () => {
         try {
@@ -134,7 +137,7 @@ export default function Venues() {
                                 <div className="grid grid-cols-2 gap-6 mb-8">
                                     <div className="bg-slate-950 rounded-2xl p-4 border border-white/5">
                                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Status</p>
-                                        <p className={`font-black ${selectedVenue.status === 'Active' ? 'text-emerald-500' : 'text-red-500'}`}>{selectedVenue.status}</p>
+                                        <p className={`font-black uppercase italic tracking-tighter ${selectedVenue.status === 'Active' ? 'text-emerald-500' : 'text-red-500'}`}>{selectedVenue.status === 'Active' ? 'Operational' : 'Suspended'}</p>
                                     </div>
                                     <div className="bg-slate-950 rounded-2xl p-4 border border-white/5">
                                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Hourly Price</p>
@@ -171,15 +174,84 @@ export default function Venues() {
                 )}
             </AnimatePresence>
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-white">VENUES DIRECTORY</h1>
-                    <p className="text-slate-400">Monitor and enforce regulations on all partner turfs.</p>
+                    <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">NETWORK <span className="text-neon-blue">VENUES</span></h1>
+                    <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">Oversee registered facilities and enforce platform standards.</p>
+                </div>
+            </div>
+
+            {/* Venue Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                    { label: 'Total Listings', val: venues.length, color: 'text-white' },
+                    { label: 'Operational', val: venues.filter(v=>v.status==='Active').length, color: 'text-emerald-500' },
+                    { label: 'Suspended', val: venues.filter(v=>v.status==='Banned').length, color: 'text-red-500' },
+                    { label: 'High Rating', val: venues.filter(v=>v.rating >= 4.5).length, color: 'text-neon-yellow drop-shadow-[0_0_10px_rgba(255,255,0,0.3)]' }
+                ].map((s,i)=>(
+                    <div key={i} className="bg-slate-900/50 backdrop-blur-sm border border-white/5 p-5 rounded-[2rem] hover:bg-white/5 transition-all">
+                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1.5">{s.label}</p>
+                        <h4 className={`text-2xl font-black italic tracking-tighter ${s.color}`}>{s.val}</h4>
+                    </div>
+                ))}
+            </div>
+
+            {/* Search & Filter Bar */}
+            <div className="grid md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 relative">
+                    <input 
+                        type="text" 
+                        placeholder="Search venues by name or location..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-slate-900 border border-white/5 rounded-2xl pl-12 pr-6 py-4 text-white text-xs font-bold focus:border-neon-blue/30 focus:outline-none transition-all"
+                    />
+                    <MapPin className="w-5 h-5 text-slate-600 absolute left-4 top-1/2 -translate-y-1/2" />
+                </div>
+                <div className="relative">
+                    <button 
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className="w-full bg-slate-900 border border-white/5 rounded-2xl px-6 py-4 text-white text-xs font-black uppercase tracking-widest flex items-center justify-between hover:border-white/10 transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <FilterIcon className="w-4 h-4 text-slate-500 group-hover:text-neon-blue transition-colors" />
+                            <span>{selectedSport === 'All' ? 'All Categories' : selectedSport}</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                        {isFilterOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl"
+                            >
+                                {['All', 'Football', 'Cricket', 'Tennis', 'Badminton'].map((sport) => (
+                                    <button
+                                        key={sport}
+                                        onClick={() => {
+                                            setSelectedSport(sport);
+                                            setIsFilterOpen(false);
+                                        }}
+                                        className={`w-full px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-colors flex items-center justify-between ${selectedSport === sport ? 'text-neon-blue bg-neon-blue/5' : 'text-slate-400'}`}
+                                    >
+                                        {sport === 'All' ? 'All Categories' : sport}
+                                        {selectedSport === sport && <div className="w-1.5 h-1.5 rounded-full bg-neon-blue shadow-[0_0_10px_#00f3ff]" />}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {venues.map((venue, i) => (
+                {venues
+                    .filter(v => v.name.toLowerCase().includes(searchTerm.toLowerCase()) || v.location.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .filter(v => selectedSport === 'All' || v.sports.some(s => s.toLowerCase() === selectedSport.toLowerCase()))
+                    .map((venue, i) => (
                     <motion.div
                         key={venue.id}
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -196,9 +268,9 @@ export default function Venues() {
                             </div>
                             <div className={`absolute bottom-4 left-4 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider backdrop-blur-md border ${venue.status === 'Active'
                                 ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
-                                : 'bg-orange-500/20 text-orange-500 border-orange-500/30'
+                                : 'bg-red-500/20 text-red-500 border-red-500/30'
                                 }`}>
-                                {venue.status}
+                                {venue.status === 'Active' ? 'Operational' : 'Suspended'}
                             </div>
                         </div>
 
@@ -231,16 +303,16 @@ export default function Venues() {
                                 {venue.status === 'Banned' ? (
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); handleUpdateStatus(venue.id, 'Active'); }}
-                                        className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-500 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)] transition-colors flex items-center gap-2"
+                                        className="px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-500 border border-emerald-500/20 transition-all flex items-center gap-2"
                                     >
-                                        <CheckCircle className="w-3 h-3" /> Unban Turf
+                                        <CheckCircle className="w-3 h-3" /> Restore facility
                                     </button>
                                 ) : (
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); handleUpdateStatus(venue.id, 'Banned'); }}
-                                        className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)] transition-colors flex items-center gap-2"
+                                        className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-[10px] font-black uppercase tracking-widest text-red-500 border border-red-500/20 transition-all flex items-center gap-2"
                                     >
-                                        <Ban className="w-3 h-3" /> Ban Turf
+                                        <Ban className="w-3 h-3" /> Suspend Facility
                                     </button>
                                 )}
                             </div>

@@ -28,10 +28,10 @@ const ScannerModal = ({ data, error, onClose }) => (
                     <CheckCircle2 size={60} className="text-neon-green mx-auto mb-6 animate-bounce" />
                 )}
                 <h3 className={`text-2xl font-black uppercase italic tracking-tighter mb-2 ${error ? 'text-red-500' : 'text-white'}`}>
-                    {error ? 'Clearance Denied' : 'Clearance Confirmed'}
+                    {error ? 'Verification Failed' : 'Checked In Successfully'}
                 </h3>
                 <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">
-                    {error || 'Athlete is authorized for immediate field entry.'}
+                    {error || 'The player is authorized for field entry.'}
                 </p>
             </div>
 
@@ -42,7 +42,7 @@ const ScannerModal = ({ data, error, onClose }) => (
                             <User size={24} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Athlete Identity</p>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Player Details</p>
                             <p className="text-sm font-bold text-white uppercase italic">
                                 {data.userId?.first_name} {data.userId?.last_name}
                             </p>
@@ -53,7 +53,7 @@ const ScannerModal = ({ data, error, onClose }) => (
                             <Zap size={24} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Match Information</p>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Booking Summary</p>
                             <p className="text-sm font-bold text-white uppercase italic">
                                 {data.sport} • {data.timeSlot}
                             </p>
@@ -67,7 +67,7 @@ const ScannerModal = ({ data, error, onClose }) => (
                     onClick={onClose}
                     className="w-full py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-neon-green transition-all shadow-xl"
                 >
-                    Dismiss Intelligence
+                    Close Result
                 </button>
             </div>
         </motion.div>
@@ -89,7 +89,7 @@ export default function Scanner() {
                 if (text.startsWith('ARENA-')) {
                     handleVerification(text.split('ARENA-')[1]);
                 } else {
-                    setError('Invalid Scan Format: Please verify the official Arena Pass QR.');
+                    setError('Invalid QR: Please scan an official Arena Entry Pass.');
                 }
             }
         },
@@ -110,7 +110,7 @@ export default function Scanner() {
                 setCheckInData(res.data.data);
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Verification link lost. Try again.');
+            setError(err.response?.data?.message || 'Verification failed. Please try again.');
         } finally {
             setIsVerifying(false);
         }
@@ -140,15 +140,15 @@ export default function Scanner() {
                 <motion.span 
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="px-4 py-1.5 bg-neon-green/10 border border-neon-green/30 rounded-full text-[10px] font-black text-neon-green uppercase tracking-[0.3em] mb-4 inline-block relative z-10"
+                    className="px-4 py-1.5 bg-neon-green/10 border border-neon-green/30 rounded-full text-[10px] font-black text-neon-green uppercase tracking-[0.3em] mb-4 flex mx-auto w-fit relative z-10"
                 >
-                    Tactical Surveillance
+                    Live Entry System
                 </motion.span>
                 <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-2 relative z-10">
-                    GATE <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-blue-500">CONTROL</span>
+                    ENTRY <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-blue-500">SCANNER</span>
                 </h1>
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest relative z-10">
-                    Scan Athlete Pass QR Matrix for Match Clearance
+                    Scan Player Entry Pass to confirm booking
                 </p>
             </div>
 
@@ -178,7 +178,7 @@ export default function Scanner() {
                                 <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
                                     <div className="flex flex-col items-center gap-4">
                                         <div className="w-12 h-12 border-4 border-neon-green/20 border-t-neon-green rounded-full animate-spin" />
-                                        <p className="text-[10px] font-black text-white uppercase tracking-[0.4em] animate-pulse">Decrypting Matrix...</p>
+                                        <p className="text-[10px] font-black text-white uppercase tracking-[0.4em] animate-pulse">Verifying Pass...</p>
                                     </div>
                                 </div>
                             )}
@@ -190,7 +190,7 @@ export default function Scanner() {
                                 onClick={() => setManualMode(true)}
                                 className="px-6 py-4 bg-white/10 backdrop-blur-md rounded-2xl hover:bg-white/20 text-white transition-all border border-white/10 text-[10px] font-black uppercase tracking-widest"
                             >
-                                Manual Override
+                                Enter ID Manually
                             </button>
                         </div>
                     </div>
@@ -201,8 +201,8 @@ export default function Scanner() {
                         className="bg-slate-900 border border-white/10 rounded-[3rem] p-10 text-center shadow-2xl"
                     >
                         <ShieldCheck size={48} className="text-neon-green mx-auto mb-6 opacity-50" />
-                        <h2 className="text-2xl font-black uppercase italic mb-2 tracking-tighter">Manual Intelligence</h2>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8">Input Ticket ID for direct ledger clearance</p>
+                        <h2 className="text-2xl font-black uppercase italic mb-2 tracking-tighter">Manual Entry</h2>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8">Enter the Reference ID to confirm entry</p>
 
                         <div className="space-y-4">
                             <input 
@@ -223,7 +223,7 @@ export default function Scanner() {
                                 onClick={() => setManualMode(false)}
                                 className="w-full text-slate-500 text-[9px] font-black uppercase tracking-[0.3em] hover:text-white transition-all"
                             >
-                                Return to Optical Scan
+                                Use Camera Scan
                             </button>
                         </div>
                     </motion.div>
@@ -235,14 +235,14 @@ export default function Scanner() {
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Scanner Status</p>
                         <div className="flex items-center justify-center gap-2">
                              <div className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
-                             <span className="text-sm font-bold text-white uppercase italic">Active Grid</span>
+                             <span className="text-sm font-bold text-white uppercase italic">Scanner Ready</span>
                         </div>
                     </div>
                     <div className="p-6 bg-slate-900 shadow-xl border border-white/5 rounded-3xl text-center">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Encryption</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Connection</p>
                         <div className="flex items-center justify-center gap-2">
                              <ShieldCheck size={16} className="text-neon-blue" />
-                             <span className="text-sm font-bold text-white uppercase italic">Neural Link</span>
+                             <span className="text-sm font-bold text-white uppercase italic">System Linked</span>
                         </div>
                     </div>
                 </div>

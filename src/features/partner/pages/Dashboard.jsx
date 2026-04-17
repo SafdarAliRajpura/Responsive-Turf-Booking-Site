@@ -128,9 +128,9 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black text-white mb-1 uppercase tracking-tight">
-                        Welcome, <span className="text-neon-purple leading-tight">{user?.first_name || 'Fleet Leader'}</span>
+                        Welcome, <span className="text-neon-purple leading-tight">{user?.first_name || 'Partner'}</span>
                     </h1>
-                    <p className="text-slate-400">Your Business Intelligence Console.</p>
+                    <p className="text-slate-400">Welcome back to your partner panel.</p>
                 </div>
             </div>
 
@@ -170,7 +170,7 @@ export default function Dashboard() {
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold text-white uppercase tracking-tight">Recent Activity</h2>
                         <button onClick={() => navigate('/partner/bookings')} className="text-sm font-bold text-neon-purple hover:text-white transition-colors flex items-center gap-1">
-                            Booking Hub <ArrowRight className="w-4 h-4" />
+                            View All Bookings <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
 
@@ -179,7 +179,7 @@ export default function Dashboard() {
                             <thead>
                                 <tr className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-white/5">
                                     <th className="pb-4 px-4">ID</th>
-                                    <th className="pb-4 px-4">Stadia</th>
+                                    <th className="pb-4 px-4">Venue</th>
                                     <th className="pb-4 px-4">Player</th>
                                     <th className="pb-4 px-4">Schedule</th>
                                     <th className="pb-4 px-4">Status</th>
@@ -188,7 +188,7 @@ export default function Dashboard() {
                             </thead>
                             <tbody>
                                 {isLoading ? (
-                                    <tr><td colSpan="7" className="py-8 text-center text-slate-500">Retrieving business matrix...</td></tr>
+                                    <tr><td colSpan="7" className="py-8 text-center text-slate-500">Getting your data...</td></tr>
                                 ) : recentBookings.length === 0 ? (
                                     <tr><td colSpan="7" className="py-12 text-center text-slate-500">No recent activity.</td></tr>
                                 ) : (
@@ -266,7 +266,7 @@ export default function Dashboard() {
                             <div className="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_rgba(57,255,20,0.5)] animate-pulse" />
                             <span className="text-[10px] font-black text-neon-green uppercase tracking-widest">All Core Systems Optimal</span>
                         </div>
-                        <p className="text-xs text-slate-400 font-medium leading-relaxed">Network latency: 12ms. Database consistency verified. Secure operations active.</p>
+                        <p className="text-xs text-slate-400 font-medium leading-relaxed">Our systems are running smoothly. All booking data is synchronized and secure.</p>
                     </div>
                 </div>
 

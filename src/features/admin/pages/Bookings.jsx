@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Search, Filter, Calendar, Clock, MapPin, 
     IndianRupee, CheckCircle, XCircle, X, 
-    User, Target, Trash2, ArrowRight
+    User, Target, Trash2, ArrowRight, ChevronDown
 } from 'lucide-react';
 import apiClient from '../../../utils/apiClient';
 
@@ -11,6 +11,8 @@ export default function Bookings() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
 
     useEffect(() => {
@@ -42,51 +44,113 @@ export default function Bookings() {
         }
     };
 
-    const filteredBookings = bookings.filter(b => 
-        b.user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.turfName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b._id?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredBookings = bookings.filter(b => {
+        const matchesSearch = b.user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            b.turfName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            b._id?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const isPastBooking = new Date(b.date) < new Date() && b.status === 'Confirmed';
+        const effectiveStatus = (b.status === 'Completed' || isPastBooking) ? 'Completed' : b.status;
+        
+        const matchesStatus = statusFilter === 'All' || effectiveStatus === statusFilter;
+        
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="space-y-6 relative overflow-hidden">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-white italic tracking-tighter">ARENA <span className="text-neon-blue uppercase">RESERVATIONS</span></h1>
-                    <p className="text-slate-400 text-sm font-medium">Real-time platform activity and booking orchestration.</p>
+                    <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">NETWORK <span className="text-neon-blue">BOOKINGS</span></h1>
+                    <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">Monitor all platform reservations and financial distribution.</p>
                 </div>
             </div>
 
+            {/* Booking Statistics */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                    { label: 'Total Volume', val: bookings.length, color: 'text-white' },
+                    { label: 'Confirmed', val: bookings.filter(b=>b.status==='Confirmed').length, color: 'text-emerald-500' },
+                    { label: 'Cancelled', val: bookings.filter(b=>b.status==='Cancelled').length, color: 'text-red-500' },
+                    { label: 'Completed', val: bookings.filter(b=>b.status==='Completed' || (new Date(b.date) < new Date() && b.status === 'Confirmed')).length, color: 'text-neon-blue' }
+                ].map((stat, i) => (
+                    <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="bg-slate-900/50 backdrop-blur-sm border border-white/5 p-5 rounded-[2rem] hover:bg-white/5 transition-all"
+                    >
+                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1.5">{stat.label}</p>
+                        <h4 className={`text-2xl font-black italic tracking-tighter ${stat.color}`}>{stat.val}</h4>
+                    </motion.div>
+                ))}
+            </div>
+
             {/* Filters */}
-            <div className="bg-slate-900/50 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex gap-4">
-                <div className="flex-1 relative">
+            <div className="grid md:grid-cols-4 gap-4">
+                <div className="md:col-span-3 relative">
                     <Search className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
                         type="text"
-                        placeholder="Scan entries by User, ID or Turf..."
+                        placeholder="Search by player name, ID or venue..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:border-neon-blue/50 focus:outline-none transition-all"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white text-xs font-bold focus:border-neon-blue/30 focus:outline-none transition-all"
                     />
                 </div>
-                <button className="flex items-center gap-2 px-6 py-2 bg-slate-950/50 border border-white/10 rounded-xl text-slate-400 hover:text-white transition-all font-bold text-sm uppercase tracking-widest">
-                    <Filter className="w-4 h-4" />
-                    <span>Segment</span>
-                </button>
+                
+                <div className="relative">
+                    <button 
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-black uppercase tracking-widest flex items-center justify-between hover:border-white/20 transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Filter className="w-4 h-4 text-slate-500 group-hover:text-neon-blue transition-colors" />
+                            <span>{statusFilter === 'All' ? 'All Status' : statusFilter}</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                        {isFilterOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl"
+                            >
+                                {['All', 'Confirmed', 'Cancelled', 'Completed'].map((status) => (
+                                    <button
+                                        key={status}
+                                        onClick={() => {
+                                            setStatusFilter(status);
+                                            setIsFilterOpen(false);
+                                        }}
+                                        className={`w-full px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-colors flex items-center justify-between ${statusFilter === status ? 'text-neon-blue bg-neon-blue/5' : 'text-slate-400'}`}
+                                    >
+                                        {status === 'All' ? 'All Status' : status}
+                                        {statusFilter === status && <div className="w-1.5 h-1.5 rounded-full bg-neon-blue shadow-[0_0_10px_#00f3ff]" />}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
 
             <div className="bg-slate-900/40 border border-white/5 rounded-[30px] overflow-hidden backdrop-blur-sm shadow-2xl">
                 <table className="w-full text-left">
                     <thead className="bg-slate-950/80 text-slate-500 uppercase text-[10px] font-black tracking-[0.2em] border-b border-white/5">
                         <tr>
-                            <th className="px-8 py-5">TX ID</th>
-                            <th className="px-8 py-5">Athlete</th>
-                            <th className="px-8 py-5">Field & Schedule</th>
-                            <th className="px-8 py-5">Gross</th>
-                            <th className="px-8 py-5">Platform Fee</th>
-                            <th className="px-8 py-5">Partner Share</th>
+                            <th className="px-8 py-5">ID</th>
+                            <th className="px-8 py-5">Player</th>
+                            <th className="px-8 py-5">Venue & Time</th>
+                            <th className="px-8 py-5">Total Amount</th>
+                            <th className="px-8 py-5">Admin (10%)</th>
+                            <th className="px-8 py-5">Partner (90%)</th>
                             <th className="px-8 py-5">Status</th>
-                            <th className="px-8 py-5 text-right">Intel</th>
+                            <th className="px-8 py-5 text-right">Details</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -146,11 +210,14 @@ export default function Bookings() {
                                     <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.1em] border ${
                                         b.status === 'Confirmed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
                                         b.status === 'Cancelled' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                        b.status === 'Completed' ? 'bg-neon-blue/10 text-neon-blue border-neon-blue/20' :
                                         'bg-orange-500/10 text-orange-400 border-orange-500/20'
                                     }`}>
                                         <div className={`w-1.5 h-1.5 rounded-full ${
-                                            b.status === 'Confirmed' ? 'bg-emerald-500' :
-                                            b.status === 'Cancelled' ? 'bg-red-500' : 'bg-orange-400'
+                                            b.status === 'Confirmed' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                            b.status === 'Cancelled' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 
+                                            b.status === 'Completed' ? 'bg-neon-blue shadow-[0_0_8px_rgba(0,243,255,0.5)]' :
+                                            'bg-orange-400'
                                         }`} />
                                         {b.status}
                                     </span>
@@ -158,9 +225,9 @@ export default function Bookings() {
                                 <td className="px-8 py-6 text-right">
                                     <button 
                                         onClick={() => setSelectedBooking(b)}
-                                        className="text-[10px] font-black text-neon-blue hover:text-white uppercase tracking-widest border-b border-neon-blue/0 hover:border-white transition-all pb-0.5"
+                                        className="text-[10px] font-black text-neon-blue hover:text-white uppercase tracking-widest border border-neon-blue/20 hover:border-white/50 px-3 py-1.5 rounded-lg transition-all"
                                     >
-                                        Inspect
+                                        View Details
                                     </button>
                                 </td>
                             </motion.tr>
@@ -199,11 +266,11 @@ export default function Bookings() {
 
                                 <div className="mt-8 space-y-6">
                                     <div>
-                                        <span className="text-[10px] font-black text-neon-blue uppercase tracking-[0.2em] mb-2 block">Reservation Dossier</span>
+                                        <span className="text-[10px] font-black text-neon-blue uppercase tracking-[0.2em] mb-2 block">Booking Details</span>
                                         <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">
                                             {selectedBooking.user}
                                         </h2>
-                                        <p className="text-slate-500 font-mono text-xs uppercase mt-1">ID: {selectedBooking._id}</p>
+                                        <p className="text-slate-500 font-mono text-xs uppercase mt-1">Order ID: {selectedBooking._id}</p>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
@@ -242,10 +309,10 @@ export default function Bookings() {
 
                                     <div className="pt-6 border-t border-white/5">
                                         <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center">
-                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Control Protocol</p>
+                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Status Policy</p>
                                             <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
-                                                Super Admin privileges are restricted to Observation Mode. 
-                                                Status mitigation must be initiated by the designated Arena Partner.
+                                                Note: Super Admins can monitor but status changes are usually managed by Partners. 
+                                                Please proceed with caution if manually overriding.
                                             </p>
                                         </div>
                                     </div>

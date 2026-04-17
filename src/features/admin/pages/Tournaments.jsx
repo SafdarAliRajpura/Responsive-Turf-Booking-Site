@@ -48,18 +48,15 @@ export default function Tournaments() {
         <div className="space-y-6">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">GLOBAL <span className="text-neon-green">CHAMPIONSHIPS</span></h1>
-                    <p className="text-slate-400 font-medium">Platform-wide tournament oversight and roster intelligence.</p>
+                    <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase">TOURNAMENT <span className="text-neon-green">HUB</span></h1>
+                    <p className="text-slate-500 font-medium">Oversee all platform tournaments and manage participant rosters.</p>
                 </div>
-                <button className="px-6 py-3 bg-neon-green/10 border border-neon-green/20 text-neon-green font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-neon-green hover:text-black transition-all shadow-[0_0_20px_rgba(57,255,20,0.1)]">
-                    Audit All Events
-                </button>
             </div>
 
             {loading ? (
-                <div className="h-64 flex flex-col items-center justify-center gap-4">
+                <div className="h-64 flex flex-col items-center justify-center gap-4 text-center">
                     <Loader2 className="w-10 h-10 text-neon-green animate-spin" />
-                    <p className="text-xs font-black text-slate-500 uppercase tracking-widest animate-pulse">Scanning Global Pulse...</p>
+                    <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Synchronizing Tournament Data...</p>
                 </div>
             ) : (
                 <div className="grid lg:grid-cols-2 gap-6">
@@ -89,8 +86,8 @@ export default function Tournaments() {
                                         }`}>
                                             {t.status}
                                         </div>
-                                        <button onClick={() => fetchRoster(t)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white text-slate-400 hover:text-black rounded-xl transition-all text-[9px] font-black uppercase tracking-tighter">
-                                            <Users className="w-3 h-3" /> Inspect Roster
+                                        <button onClick={() => fetchRoster(t)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white text-slate-400 hover:text-black rounded-xl transition-all text-[9px] font-black uppercase tracking-widest border border-white/5">
+                                            <Users className="w-3 h-3" /> View Teams
                                         </button>
                                     </div>
                                     <h3 className="text-xl font-black text-white italic uppercase mb-1 tracking-tighter">{t.name}</h3>
@@ -101,7 +98,7 @@ export default function Tournaments() {
 
                                 <div>
                                     <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
-                                        <span className="text-slate-500">Arena Occupancy</span>
+                                        <span className="text-slate-500 font-bold">Registration Progress</span>
                                         <span className="text-white">{t.registeredTeams || 0}/{t.totalSlots} SQUADS</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
@@ -137,11 +134,11 @@ export default function Tournaments() {
                             <div className="flex justify-between items-center mb-10">
                                 <div>
                                     <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">
-                                        ADMIN <span className="text-neon-green">INSPECTION</span>
+                                        EVENT <span className="text-neon-green">INSIGHTS</span>
                                     </h2>
-                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">{selectedTournament?.name} • Full Squad Ledger</p>
+                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">{selectedTournament?.name} • Participant Roster</p>
                                 </div>
-                                <button onClick={() => setIsRosterOpen(false)} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all border border-white/10">
+                                <button onClick={() => setIsRosterOpen(false)} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all border border-white/10 shadow-lg">
                                     <X className="w-7 h-7" />
                                 </button>
                             </div>
@@ -154,7 +151,7 @@ export default function Tournaments() {
                             ) : registrations.length === 0 ? (
                                 <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[3rem]">
                                     <Users className="w-16 h-16 text-slate-800 mx-auto mb-6 opacity-20" />
-                                    <p className="text-slate-600 font-black uppercase tracking-widest text-sm">No tactical data found for this campaign.</p>
+                                    <p className="text-slate-600 font-black uppercase tracking-widest text-sm">No registrations found for this event.</p>
                                 </div>
                             ) : (
                                 <div className="grid gap-6">
@@ -172,12 +169,12 @@ export default function Tournaments() {
                                             
                                             <div className="grid grid-cols-2 gap-8 flex-1 px-8 border-l border-white/5 h-full">
                                                 <div>
-                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Intel Access</p>
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 font-bold">Primary Contact</p>
                                                     <p className="text-sm font-bold text-white mb-1">{reg.email}</p>
-                                                    <p className="text-[10px] text-slate-400 font-bold tracking-wider">{reg.contactNumber}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em]">{reg.contactNumber}</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Squad Alpha</p>
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 font-bold">Team Roster</p>
                                                     <div className="flex flex-wrap gap-1">
                                                         {reg.players?.slice(0, 3).map((p, i) => (
                                                             <span key={i} className="px-2 py-0.5 bg-white/5 rounded text-[8px] text-slate-400 border border-white/5 uppercase">
@@ -190,8 +187,8 @@ export default function Tournaments() {
                                             </div>
 
                                             <div className="text-right">
-                                                <div className="bg-neon-green/10 px-4 py-2 rounded-xl border border-neon-green/20">
-                                                    <span className="text-neon-green font-black uppercase tracking-widest text-[10px]">VERIFIED ATHLETES</span>
+                                                <div className="bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
+                                                    <span className="text-emerald-500 font-black uppercase tracking-[0.2em] text-[10px]">VERIFIED TEAM</span>
                                                 </div>
                                             </div>
                                         </div>

@@ -47,8 +47,8 @@ export default function Analytics() {
 
     const handleShare = async () => {
         const shareData = {
-            title: 'Partner Analytics Intel',
-            text: `Operational Report: ₹${metrics?.totalRevenue?.toLocaleString()} Gross Revenue | ${metrics?.activePlayers} Active Analysts.`,
+            title: 'Partner Analytics Report',
+            text: `Operational Report: ₹${metrics?.totalRevenue?.toLocaleString()} Gross Revenue | ${metrics?.activePlayers} Registered Athletes.`,
             url: window.location.href
         };
 
@@ -57,7 +57,7 @@ export default function Analytics() {
                 await navigator.share(shareData);
             } else {
                 await navigator.clipboard.writeText(`${shareData.text} \nView Report: ${shareData.url}`);
-                alert('Intelligence Link copied to clipboard.');
+                alert('Report Link copied to clipboard.');
             }
         } catch (err) {
             console.error('Sharing inhibited:', err);
@@ -84,7 +84,7 @@ export default function Analytics() {
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Fiscal_Report_${new Date().toLocaleDateString()}.csv`);
+            link.setAttribute("download", `Analytics_Report_${new Date().toLocaleDateString()}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -99,7 +99,7 @@ export default function Analytics() {
         return (
             <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
                 <Loader2 className="w-10 h-10 text-neon-purple animate-spin" />
-                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Decrypting Business Intelligence...</p>
+                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Gathering your stats...</p>
             </div>
         );
     }
@@ -111,15 +111,15 @@ export default function Analytics() {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white mb-2 uppercase italic tracking-tighter">ANALYTICS <span className="text-neon-purple">INTEL</span></h1>
-                    <p className="text-slate-400 font-medium tracking-tight">Real-time performance metrics and financial ratios.</p>
+                    <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase">BUSINESS <span className="text-neon-purple">ANALYTICS</span></h1>
+                    <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">Comprehensive performance insights and financial tracking.</p>
                 </div>
                 <div className="flex gap-3">
                     <button 
                         onClick={handleShare}
                         className="flex items-center gap-2 px-5 py-3 bg-slate-900 border border-white/10 rounded-2xl text-slate-300 hover:text-white hover:border-white/20 text-xs font-black uppercase tracking-widest transition-all"
                     >
-                        <Share2 className="w-4 h-4" /> Share Intel
+                        <Share2 className="w-4 h-4" /> Share Report
                     </button>
                     <button 
                         onClick={handleDownloadInvoice}
@@ -129,11 +129,11 @@ export default function Analytics() {
                         }`}
                     >
                         {isGenerating ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> Syncing Fiscal Matrix...</>
+                            <><Loader2 className="w-4 h-4 animate-spin" /> Exporting data...</>
                         ) : isGenerated ? (
                             <><CheckCircle className="w-4 h-4" /> Report Exported</>
                         ) : (
-                            <><FileText className="w-4 h-4" /> Auto Invoice</>
+                            <><FileText className="w-4 h-4" /> Export Report</>
                         )}
                     </button>
                 </div>
@@ -163,7 +163,7 @@ export default function Analytics() {
                     icon={Target}
                 />
                 <StatCard 
-                    title="Active Strikers" 
+                    title="Active Players" 
                     value={metrics?.activePlayers || 0} 
                     change={`${metrics?.trends?.players >= 0 ? '+' : ''}${metrics?.trends?.players}%`} 
                     isGood={metrics?.trends?.players >= 0} 
@@ -225,7 +225,7 @@ export default function Analytics() {
                     transition={{ delay: 0.1 }}
                     className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-8"
                 >
-                    <h3 className="font-black text-white text-lg mb-8 uppercase italic tracking-tighter">Stadia Performance</h3>
+                    <h3 className="font-black text-white text-lg mb-8 uppercase italic tracking-tighter">Arena Performance</h3>
                     <div className="space-y-6">
                         {turfPerformance.length > 0 ? turfPerformance.map((turf, idx) => (
                             <motion.div 
@@ -242,7 +242,7 @@ export default function Analytics() {
                                         </div>
                                         <div>
                                             <p className="text-white font-black uppercase italic tracking-tighter text-sm">{turf.name}</p>
-                                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{turf.count || 0} Successful Deployments</p>
+                                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{turf.count || 0} Successful Reservations</p>
                                         </div>
                                     </div>
                                     <p className="text-white font-black text-sm italic tracking-tight">₹{turf.value.toLocaleString()}</p>

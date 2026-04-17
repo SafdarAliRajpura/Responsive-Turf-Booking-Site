@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -9,6 +9,7 @@ import NotificationDropdown from '../../../components/common/NotificationDropdow
 import apiClient from '../../../utils/apiClient';
 import userAvatarImg from '../../../assets/images/common/avatar-1.jpg'; // Placeholder for partner avatar
 import carbonFibrePattern from '../../../assets/images/common/carbon-fibre.png';
+import PremiumLoader from '../../../components/ui/PremiumLoader';
 
 const SidebarItem = ({ icon: Icon, label, path, active, onClick }) => (
     <button
@@ -37,7 +38,7 @@ export default function PartnerLayout() {
     const [allData, setAllData] = React.useState({ venues: [], tournaments: [] });
     const [showResults, setShowResults] = React.useState(false);
 
-    // Enhanced Security Check
+    // Enhanced Security Check - Defined at component level for scope
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
 
@@ -64,7 +65,7 @@ export default function PartnerLayout() {
             };
             fetchData();
         }
-    }, [user, navigate]);
+    }, [navigate, user?.id, user?._id]); // Stable dependencies
 
     React.useEffect(() => {
         if (!searchQuery.trim()) {
@@ -162,13 +163,13 @@ export default function PartnerLayout() {
 
                     <div className="mt-6 flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-white/5">
                         <img 
-                            src={user?.user_profile || userAvatarImg} 
+                            src={JSON.parse(localStorage.getItem('user'))?.user_profile || userAvatarImg} 
                             alt="Partner" 
                             className="w-10 h-10 rounded-lg border border-white/10 bg-white" 
                         />
                         <div className="overflow-hidden">
-                            <p className="text-sm font-bold text-white truncate">{user?.first_name} {user?.last_name}</p>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role}</p>
+                            <p className="text-sm font-bold text-white truncate">{JSON.parse(localStorage.getItem('user'))?.first_name || 'Fleet Lead'}</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">{JSON.parse(localStorage.getItem('user'))?.role}</p>
                         </div>
                     </div>
                 </div>
@@ -279,8 +280,13 @@ export default function PartnerLayout() {
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-8 scrollbar-hide">
-                    <Outlet />
+                <main 
+                    key={location.pathname} 
+                    className="flex-1 overflow-y-auto p-8 scrollbar-hide"
+                >
+                    <Suspense fallback={<PremiumLoader />}>
+                        <Outlet />
+                    </Suspense>
                 </main>
 
             </div>
