@@ -128,7 +128,7 @@ export default function Dashboard() {
     };
 
     // Helper to format currency
-    const formatCurrency = (val) => `₹${Number(val).toLocaleString()}`;
+    const formatCurrency = (val) => `₹${Math.round(Number(val)).toLocaleString()}`;
     const formatTrend = (val) => `${val >= 0 ? '+' : ''}${val}%`;
 
     return (
@@ -166,8 +166,8 @@ export default function Dashboard() {
                     isLoading={isLoading}
                 />
                 <StatCard
-                    title="Admin Earnings (10%)"
-                    value={isLoading ? "..." : formatCurrency(stats.revenue * 0.1)}
+                    title="Admin Earnings (20%)"
+                    value={isLoading ? "..." : formatCurrency(stats.revenue * 0.2)}
                     trend={stats.trends.revenue >= 0 ? 'up' : 'down'}
                     trendValue={formatTrend(stats.trends.revenue)}
                     icon={TrendingUp}

@@ -138,8 +138,8 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     icon={IndianRupee}
-                    title="Net Profit (90%)"
-                    value={`₹${(Number(String(stats.revenue).replace(/[^0-9.-]+/g,"")) * 0.9).toLocaleString()}`}
+                    title="Net Profit (80%)"
+                    value={`₹${(Number(String(stats.revenue).replace(/[^0-9.-]+/g,"")) * 0.8).toLocaleString()}`}
                     change={stats.trends?.revenue || 0} trend={stats.trends?.revenue >= 0 ? 'up' : 'down'} color="neon-green" isLoading={isLoading}
                 />
                 <StatCard
@@ -183,7 +183,7 @@ export default function Dashboard() {
                                     <th className="pb-4 px-4">Player</th>
                                     <th className="pb-4 px-4">Schedule</th>
                                     <th className="pb-4 px-4">Status</th>
-                                    <th className="pb-4 px-4">Earnings (90%)</th>
+                                    <th className="pb-4 px-4">Earnings (80%)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -200,7 +200,7 @@ export default function Dashboard() {
                                             customer={b.user} 
                                             time={b.date} 
                                             status={b.status} 
-                                            amount={(b.price * 0.9).toFixed(2)} 
+                                            amount={Math.round(b.partnerShare || (b.price * 0.8))} 
                                         />
                                     ))
                                 )}

@@ -217,7 +217,7 @@ export default function Community() {
                                     ? platformStats.recentAvatars.slice(0, 5) 
                                     : [1, 2, 3, 4]).map((avatar, i) => (
                                     <div key={i} className="w-12 h-12 rounded-full border-4 border-slate-950 bg-slate-800 overflow-hidden relative shadow-lg group-hover:scale-110 transition-transform cursor-pointer">
-                                        <img src={typeof avatar === 'string' ? avatar : userAvatarImg} alt="User" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                                        <img src={typeof avatar === 'string' ? avatar : userAvatarImg} alt="User" loading="lazy" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
                                     </div>
                                 ))}
                                 <div className="w-12 h-12 rounded-full border-4 border-slate-950 bg-gradient-to-br from-neon-blue to-purple-600 flex items-center justify-center text-[10px] font-black text-white z-10 shadow-xl shadow-neon-blue/20">

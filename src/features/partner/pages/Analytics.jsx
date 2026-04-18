@@ -142,8 +142,8 @@ export default function Analytics() {
             {/* Quick Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard 
-                    title="Net Earnings (90%)" 
-                    value={`₹${((metrics?.totalRevenue || 0) * 0.9).toLocaleString()}`} 
+                    title="Net Earnings (80%)" 
+                    value={`₹${Math.round((metrics?.totalRevenue || 0) * 0.8).toLocaleString()}`} 
                     change={`${metrics?.trends?.revenue >= 0 ? '+' : ''}${metrics?.trends?.revenue}%`} 
                     isGood={metrics?.trends?.revenue >= 0} 
                     icon={TrendingUp}
@@ -157,7 +157,7 @@ export default function Analytics() {
                 />
                 <StatCard 
                     title="Avg. Payout" 
-                    value={`₹${Math.round((metrics?.avgBookingValue || 0) * 0.9)}`} 
+                    value={`₹${Math.round((metrics?.avgBookingValue || 0) * 0.8)}`} 
                     change="+5.2%" 
                     isGood={true} 
                     icon={Target}

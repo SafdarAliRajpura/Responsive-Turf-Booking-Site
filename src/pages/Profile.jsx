@@ -227,7 +227,7 @@ export default function Profile() {
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${getXpProgress()}%` }}
                                                 transition={{ duration: 1, ease: "easeOut" }}
-                                                className={`h-full bg-gradient-to-r ${getTierColor(user.skillLevel)} shadow-[0_0_15px_rgba(0,150,255,0.4)]`}
+                                                className="h-full bg-gradient-to-r from-neon-green to-emerald-600 shadow-[0_0_15px_rgba(57,255,20,0.4)]"
                                             />
                                         </div>
                                         <p className="text-[9px] text-center text-slate-600 font-bold uppercase tracking-tighter">
@@ -294,11 +294,30 @@ export default function Profile() {
                             className="bg-slate-900 border border-white/10 rounded-[40px] p-8 md:p-10 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh] relative"
                         >
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-green to-neon-blue" />
-                            <div className="flex justify-between items-center mb-10">
+                            <div className="flex justify-between items-center mb-6">
                                 <div>
                                     <h3 className="text-3xl font-black text-white italic uppercase leading-none mb-2">Athlete <span className="text-neon-green">Bio Hub</span></h3>
+                                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Update your identity matrix and tactical bio.</p>
                                 </div>
                                 <button onClick={() => setIsEditing(false)} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all"><X className="w-6 h-6" /></button>
+                            </div>
+
+                            {/* Dynamic Progression Insight */}
+                            <div className="mb-10 bg-slate-950/50 border border-white/5 rounded-3xl p-6">
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-3">
+                                    <span className="text-slate-500">Current Standing: <span className="text-white">{user.skillLevel}</span></span>
+                                    <span className="text-neon-blue">Target: {getNextTier()}</span>
+                                </div>
+                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 mb-2">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${getXpProgress()}%` }}
+                                        className="h-full bg-gradient-to-r from-neon-green to-emerald-600 shadow-[0_0_10px_rgba(57,255,20,0.3)]"
+                                    />
+                                </div>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest text-right">
+                                    {getXpProgress().toFixed(0)}% completion to {getNextTier()}
+                                </p>
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-8 mb-10">

@@ -147,8 +147,8 @@ export default function Bookings() {
                             <th className="px-8 py-5">Player</th>
                             <th className="px-8 py-5">Venue & Time</th>
                             <th className="px-8 py-5">Total Amount</th>
-                            <th className="px-8 py-5">Admin (10%)</th>
-                            <th className="px-8 py-5">Partner (90%)</th>
+                            <th className="px-8 py-5">Admin (20%)</th>
+                            <th className="px-8 py-5">Partner (80%)</th>
                             <th className="px-8 py-5">Status</th>
                             <th className="px-8 py-5 text-right">Details</th>
                         </tr>
@@ -197,13 +197,13 @@ export default function Bookings() {
                                 <td className="px-8 py-6 font-black text-neon-green">
                                     <div className="flex items-center gap-1">
                                         <IndianRupee className="w-3 h-3" />
-                                        <span>{b.adminCommission || (Number(b.price) * 0.1).toFixed(2)}</span>
+                                        <span>{Math.round(b.adminCommission || (Number(b.price) * 0.2))}</span>
                                     </div>
                                 </td>
                                 <td className="px-8 py-6 font-black text-white">
                                     <div className="flex items-center gap-1">
                                         <IndianRupee className="w-3 h-3 text-slate-500" />
-                                        <span>{b.partnerShare || (Number(b.price) * 0.9).toFixed(2)}</span>
+                                        <span>{Math.round(b.partnerShare || (Number(b.price) * 0.8))}</span>
                                     </div>
                                 </td>
                                 <td className="px-8 py-6">
@@ -288,12 +288,12 @@ export default function Bookings() {
 
                                     <div className="bg-slate-950/50 border border-white/5 rounded-3xl p-6 space-y-4">
                                         <div className="flex items-center justify-between">
-                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Platform Fee (10%)</p>
-                                             <p className="text-sm font-black text-neon-green">₹{selectedBooking.adminCommission || (Number(selectedBooking.price) * 0.1).toFixed(2)}</p>
+                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Platform Fee (20%)</p>
+                                             <p className="text-sm font-black text-neon-green">₹{Math.round(selectedBooking.adminCommission || (Number(selectedBooking.price) * 0.2))}</p>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Partner Payout (90%)</p>
-                                             <p className="text-sm font-black text-white">₹{selectedBooking.partnerShare || (Number(selectedBooking.price) * 0.9).toFixed(2)}</p>
+                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Partner Payout (80%)</p>
+                                             <p className="text-sm font-black text-white">₹{Math.round(selectedBooking.partnerShare || (Number(selectedBooking.price) * 0.8))}</p>
                                         </div>
                                         <div className="h-px bg-white/5" />
                                         <div className="flex items-start gap-4 pt-2">
