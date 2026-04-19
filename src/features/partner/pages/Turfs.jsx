@@ -226,7 +226,7 @@ export default function Turfs() {
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl p-8 shadow-2xl z-10"
+                            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto scrollbar-hide"
                         >
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-black text-white">Quick Edit Turf</h2>
@@ -266,7 +266,7 @@ export default function Turfs() {
                                             <Plus className="w-4 h-4" /> Add Court
                                         </button>
                                     </div>
-                                    <div className="space-y-3 max-h-40 overflow-y-auto pr-2 scrollbar-hide">
+                                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2 scrollbar-hide">
                                         {(editingTurf.courts || []).map((court, idx) => (
                                             <div key={court._id || court.tempId || idx} className="grid grid-cols-12 gap-2 bg-slate-950 p-3 rounded-xl border border-white/5 items-center">
                                                 <div className="col-span-4">

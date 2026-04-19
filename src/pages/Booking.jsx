@@ -67,15 +67,24 @@ export default function Booking() {
                     let parsedCourts = {};
                     if (v.courts && v.courts.length > 0) {
                         v.courts.forEach(c => {
-                            const sportName = c.category ? c.category.split(' ')[0] : 'Football';
+                            // Extract primary sport from category (e.g., "Football (5v5)" -> "Football")
+                            // Fallback to "Football" if parsing fails
+                            let sportName = "Football";
+                            if (c.category) {
+                                // Try to match from venue's sports list first
+                                const matchingSport = v.sports?.find(s => c.category.toLowerCase().includes(s.toLowerCase()));
+                                sportName = matchingSport || c.category.split(' ')[0];
+                            }
+                            
                             if (!parsedCourts[sportName]) parsedCourts[sportName] = [];
                             parsedCourts[sportName].push(`${c.name} (${c.category}) - ₹${c.price}/hr`);
                         });
                     } else {
-                        parsedCourts = {
-                            "Football": ["Turf A (5v5) - ₹1200/hr", "Turf B (7v7) - ₹1500/hr"],
-                            "Cricket": ["Net 1 (Pace) - ₹800/hr"]
-                        };
+                        // Fallback logic for legacy turfs without court mapping
+                        parsedCourts = {};
+                        (v.sports || ["Football"]).forEach(s => {
+                            parsedCourts[s] = [`Main Arena (${s}) - ₹${v.price}/hr`];
+                        });
                     }
 
                     const mappedVenue = {

@@ -16,12 +16,13 @@ export const NotificationProvider = ({ children }) => {
             if (!token) return;
 
             const res = await apiClient.get('/notifications');
-            setNotifications(res.data);
-            const unread = res.data.filter(n => !n.isRead).length;
+            const notificationsArray = res.data.data || [];
+            setNotifications(notificationsArray);
+            const unread = notificationsArray.filter(n => !n.isRead).length;
             
             // If new unread notifications arrive, trigger a toast for the most recent one
-            if (unread > unreadCount && res.data[0]) {
-                const newNotif = res.data[0];
+            if (unread > unreadCount && notificationsArray[0]) {
+                const newNotif = notificationsArray[0];
                 if (!newNotif.isRead) {
                     setLatestToast(newNotif);
                     // Clear toast after 5 seconds
