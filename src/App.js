@@ -21,6 +21,7 @@ const PartnerAnalytics = lazy(() => import('./features/partner/pages/Analytics')
 const PartnerSettings = lazy(() => import('./features/partner/pages/Settings'));
 const PartnerTournaments = lazy(() => import('./features/partner/pages/Tournaments'));
 const PartnerScanner = lazy(() => import('./features/partner/pages/Scanner'));
+const PartnerIoTDeck = lazy(() => import('./features/partner/pages/IoTControlDeck'));
 const PartnerLayout = lazy(() => import('./features/partner/layouts/PartnerLayout'));
 
 // Lazy Loaded Public Pages
@@ -98,6 +99,7 @@ function App() {
           <Route path="tournaments" element={<PartnerTournaments />} />
           <Route path="settings" element={<PartnerSettings />} />
           <Route path="scanner" element={<PartnerScanner />} />
+          <Route path="iot" element={<PartnerIoTDeck />} />
         </Route>
 
         {/* Protected User UI Routes - Blocked for Admins/Partners */}

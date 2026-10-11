@@ -140,7 +140,7 @@ const NotificationDropdown = ({ color = "neon-blue" }) => {
                             const user = JSON.parse(localStorage.getItem('user'));
                             if (user?.role === 'admin') navigate('/admin/settings');
                             else if (user?.role === 'partner') navigate('/partner/settings');
-                            else navigate('/settings');
+                            else navigate('/profile');
                         }} 
                         className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-3"
                     >

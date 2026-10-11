@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, MapPin, Calendar, Settings,
-    LogOut, Bell, Search, Briefcase, Plus, TrendingUp, Trophy, Maximize
+    LogOut, Bell, Search, Briefcase, Plus, TrendingUp, Trophy, Maximize, Cpu
 } from 'lucide-react';
 import NotificationDropdown from '../../../components/common/NotificationDropdown';
 import apiClient from '../../../utils/apiClient';
@@ -97,6 +97,7 @@ export default function PartnerLayout() {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/partner/dashboard' },
         { icon: MapPin, label: 'My Turfs', path: '/partner/turfs' },
         { icon: Calendar, label: 'Bookings', path: '/partner/bookings' },
+        { icon: Cpu, label: 'IoT Control Deck', path: '/partner/iot' },
         { icon: Maximize, label: 'Entry Scanner', path: '/partner/scanner' },
         { icon: Trophy, label: 'Tournaments', path: '/partner/tournaments' },
         { icon: TrendingUp, label: 'Analytics', path: '/partner/analytics' },

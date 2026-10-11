@@ -32,7 +32,12 @@ export default function Booking() {
     const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
     const [submittingReview, setSubmittingReview] = useState(false);
 
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const getLocalTodayDate = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    const [selectedDate, setSelectedDate] = useState(getLocalTodayDate());
     const [selectedTime, setSelectedTime] = useState(null);
     const [selectedSport, setSelectedSport] = useState("Football");
     const [selectedCourt, setSelectedCourt] = useState('');
@@ -319,9 +324,19 @@ export default function Booking() {
 
     const isSlotBooked = (t) => {
         if (!selectedCourt) return false;
+        
+        const targetMins = parseTimeToMinutes(t);
+
+        // REAL-TIME CHECK: If the selected date is today, disable past time slots
+        const todayStr = getLocalTodayDate();
+        if (selectedDate === todayStr) {
+            const now = new Date();
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+            if (targetMins <= currentMins) return true;
+        }
+
         return bookedSlots.some(b => {
              if (!b.timeSlot.includes(selectedCourt)) return false;
-             const targetMins = parseTimeToMinutes(t);
              const bTimeStr = b.timeSlot.substring(0, 8);
              const bStartMins = parseTimeToMinutes(bTimeStr);
              return targetMins === bStartMins;

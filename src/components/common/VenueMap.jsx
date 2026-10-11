@@ -52,9 +52,10 @@ export default function VenueMap({ coordinates }) {
         className="w-full h-full"
         attributionControl={false}
       >
-        {/* CartoDB Voyager — vibrant Google Maps-like color style, free, no key */}
+        {/* OpenStreetMap — completely free, no API key needed, no watermark */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
         {/* Soft pulsing radius ring */}
         <Circle
