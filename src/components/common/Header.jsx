@@ -175,6 +175,14 @@ const Header = () => {
                     >
                         <span className={isActive('/bookings') ? 'text-neon-green' : ''}>My Bookings</span>
                     </button>
+                    <button
+                        onClick={() => navigate('/tactics')}
+                        className={`transition-colors flex items-center gap-1.5 ${isActive('/tactics') ? 'text-white' : 'hover:text-white'}`}
+                        style={isActive('/tactics') ? { textShadow: '0 0 10px rgba(57, 255, 20, 0.5)' } : {}}
+                    >
+                        <span className={isActive('/tactics') ? 'text-neon-green' : ''}>Playbook</span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-neon-green/10 text-neon-green border border-neon-green/30 text-[8px] font-black uppercase tracking-wider">PRO</span>
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-4">

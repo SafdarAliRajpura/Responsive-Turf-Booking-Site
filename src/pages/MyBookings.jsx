@@ -4,7 +4,7 @@ import {
     Calendar, MapPin, IndianRupee, CheckCircle,
     Zap, Share2, Download, X, 
     ShieldCheck, Smartphone, Target,
-    CreditCard, Trophy
+    CreditCard, Trophy, BookOpen
 } from 'lucide-react';
 
 import Header from '../components/common/Header';
@@ -161,6 +161,7 @@ const ReceiptModal = ({ booking, onClose }) => {
 };
 
 const BookingCard = ({ booking, onViewReceipt }) => {
+    const navigate = useNavigate();
     const statusColors = {
         'Pending': 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
         'Upcoming': 'bg-neon-blue/20 text-neon-blue border-neon-blue/30',
@@ -229,7 +230,13 @@ const BookingCard = ({ booking, onViewReceipt }) => {
                         </div>
                     </div>
 
-                    <div className="mt-6 flex justify-end gap-3">
+                    <div className="mt-6 flex flex-wrap justify-end gap-3">
+                        <button
+                            onClick={() => navigate(`/tactics/${booking._id || booking.id}`)}
+                            className="px-5 py-2 rounded-xl bg-neon-green/10 hover:bg-neon-green text-neon-green hover:text-black font-black text-[10px] uppercase tracking-widest transition-all border border-neon-green/30 flex items-center gap-1.5 shadow-[0_0_15px_rgba(57,255,20,0.15)] hover:scale-105 active:scale-95"
+                        >
+                            <BookOpen size={13} /> Tactical Playbook
+                        </button>
                         <button
                             onClick={onViewReceipt}
                             className="px-6 py-2 rounded-xl bg-white/5 hover:bg-white text-white hover:text-black font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"

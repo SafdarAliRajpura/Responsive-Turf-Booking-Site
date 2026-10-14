@@ -36,6 +36,7 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Booking = lazy(() => import('./pages/Booking'));
 const Community = lazy(() => import('./pages/Community'));
 const Profile = lazy(() => import('./pages/Profile'));
+const TacticBoard = lazy(() => import('./features/tactics/TacticBoard'));
 
 // Lazy Loaded Admin Modules
 const AdminLayout = lazy(() => import('./features/admin/layouts/AdminLayout'));
@@ -113,6 +114,8 @@ function App() {
         <Route path="/community" element={<PublicUserGuard><Community /></PublicUserGuard>} />
         <Route path="/book/:id" element={<PublicUserGuard><Booking /></PublicUserGuard>} />
         <Route path="/profile" element={<PublicUserGuard><Profile /></PublicUserGuard>} />
+        <Route path="/tactics" element={<PublicUserGuard><TacticBoard /></PublicUserGuard>} />
+        <Route path="/tactics/:bookingId" element={<PublicUserGuard><TacticBoard /></PublicUserGuard>} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>
