@@ -277,6 +277,16 @@ export default function TacticBoard() {
                                     {sport === 'Cricket' ? 'Cage Board' : 'Playbook'}
                                 </span>
                             </h1>
+                            <div className="mt-1 flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="bg-transparent border-b border-white/10 hover:border-white/30 focus:border-neon-green text-xs sm:text-sm font-bold text-slate-300 focus:text-white outline-none transition-colors px-1 py-0.5 w-64 sm:w-80 truncate"
+                                    placeholder="Tactical Plan Name..."
+                                    title="Click to rename playbook"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -330,8 +340,25 @@ export default function TacticBoard() {
                         }}
                     />
 
+                    {/* Tactical Briefing Notes */}
+                    <div className="w-full max-w-4xl mt-6 p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                <span>📝</span> Tactical Briefing & Strategy Instructions
+                            </label>
+                            <span className="text-[9px] text-slate-500 font-mono">Auto-saved with playbook</span>
+                        </div>
+                        <textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            rows="2"
+                            placeholder={sport === 'Cricket' ? "e.g. Keep 2 overs of pace in powerplay, target leg stump yorkers during death overs..." : "e.g. High press in first 10 minutes, overlap through wing-backs on counter-attack..."}
+                            className="w-full bg-slate-950/80 border border-white/5 rounded-2xl p-3.5 text-xs text-slate-200 placeholder-slate-600 focus:border-neon-green outline-none resize-none transition-colors"
+                        />
+                    </div>
+
                     {/* Design Pattern Academic Attribution Banner */}
-                    <div className="w-full max-w-4xl mt-8 p-6 rounded-3xl bg-slate-900/50 border border-white/5 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                    <div className="w-full max-w-4xl mt-6 p-6 rounded-3xl bg-slate-900/50 border border-white/5 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-xl bg-neon-blue/10 border border-neon-blue/20 text-neon-blue flex items-center justify-center font-black">
                                 <Layers className="w-4 h-4" />

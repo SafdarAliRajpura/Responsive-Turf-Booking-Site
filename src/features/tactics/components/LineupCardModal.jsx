@@ -3,6 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Share2, Copy, Check, Crown, Sparkles, MapPin, Calendar } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
+const ROLE_BADGE_COLORS = {
+    GK: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    DEF: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+    MID: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    FWD: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+    WK: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    BAT: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    BOW: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+    AR: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+};
+
 export default function LineupCardModal({
     isOpen,
     onClose,
@@ -119,10 +130,10 @@ export default function LineupCardModal({
                         <div className="flex items-center justify-between border-b border-white/10 pb-4">
                             <div>
                                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-neon-green">
-                                    Official Tactical Briefing
+                                    {sport === 'Cricket' ? 'Official Box Cricket Briefing' : 'Official Tactical Briefing'}
                                 </span>
                                 <h3 className="text-xl font-black italic uppercase text-white tracking-tight">
-                                    {title || 'Matchday Starting Squad'}
+                                    {title || (sport === 'Cricket' ? 'Box Cricket Squad' : 'Matchday Starting Squad')}
                                 </h3>
                             </div>
                             <div className="px-3 py-1.5 rounded-xl bg-neon-green/10 border border-neon-green/30 text-neon-green font-mono font-black text-xs uppercase tracking-wider">
@@ -134,7 +145,7 @@ export default function LineupCardModal({
                         <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950/70 p-3.5 rounded-2xl border border-white/5 font-bold">
                             <div className="flex items-center gap-2 text-slate-300">
                                 <MapPin className="w-4 h-4 text-neon-blue shrink-0" />
-                                <span className="truncate">{venueName || 'Premier Arena'}</span>
+                                <span className="truncate">{venueName || (sport === 'Cricket' ? 'Turf Box Arena' : 'Premier Arena')}</span>
                             </div>
                             <div className="flex items-center gap-2 text-slate-300">
                                 <Calendar className="w-4 h-4 text-neon-pink shrink-0" />
@@ -193,7 +204,7 @@ export default function LineupCardModal({
                                         {p.number}
                                     </div>
                                     <span className="absolute top-full mt-0.5 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white bg-black/80 px-1.5 rounded-full whitespace-nowrap">
-                                        {p.name.split(' ')[0]}
+                                        {p.name ? p.name.split(' ')[0] : 'Player'}
                                     </span>
                                 </div>
                             ))}
@@ -207,7 +218,7 @@ export default function LineupCardModal({
                             <div className="grid grid-cols-2 gap-2 text-xs">
                                 {starters.map((p) => (
                                     <div key={p.id} className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5">
-                                        <span className="w-5 h-5 rounded-md bg-emerald-500/20 text-emerald-400 font-mono font-black text-[10px] flex items-center justify-center shrink-0">
+                                        <span className={`w-5 h-5 rounded-md font-mono font-black text-[10px] flex items-center justify-center shrink-0 border ${ROLE_BADGE_COLORS[p.role] || 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
                                             #{p.number}
                                         </span>
                                         <div className="flex items-center gap-1 min-w-0">
@@ -222,7 +233,7 @@ export default function LineupCardModal({
 
                         {/* Footer Branding */}
                         <div className="flex items-center justify-between pt-4 border-t border-white/5 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                            <span>Arena Pro Tactical Hub</span>
+                            <span>{sport === 'Cricket' ? 'Arena Pro Cricket Suite' : 'Arena Pro Tactical Hub'}</span>
                             <span className="text-neon-green">Verified Lineup</span>
                         </div>
                     </div>

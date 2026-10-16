@@ -326,10 +326,23 @@ export const FORMATION_CATALOG = SPORT_CATALOGS.Football.formations;
  * Strategy Context Invoker
  * Dispatches coordinates for selected sport, format, and formation ID
  */
-export function getFormationPositions(sport = 'Football', pitchFormat, formationId) {
+export function getFormationPositions(sportOrFormat = 'Football', pitchFormat, formationId) {
+    let sport = 'Football';
+    let format = pitchFormat;
+    let formation = formationId;
+
+    if (sportOrFormat === 'Football' || sportOrFormat === 'Cricket') {
+        sport = sportOrFormat;
+    } else {
+        // Fallback: first argument was pitchFormat (e.g. '5v5')
+        sport = 'Football';
+        format = sportOrFormat;
+        formation = pitchFormat;
+    }
+
     const sportConfig = SPORT_CATALOGS[sport] || SPORT_CATALOGS.Football;
-    const format = pitchFormat || sportConfig.defaultFormat;
-    const list = sportConfig.formations[format] || sportConfig.formations[sportConfig.defaultFormat];
-    const matched = list.find(f => f.id === formationId) || list[0];
+    const resolvedFormat = format || sportConfig.defaultFormat;
+    const list = sportConfig.formations[resolvedFormat] || sportConfig.formations[sportConfig.defaultFormat];
+    const matched = list.find(f => f.id === formation) || list[0];
     return matched.strategy.calculatePositions();
 }

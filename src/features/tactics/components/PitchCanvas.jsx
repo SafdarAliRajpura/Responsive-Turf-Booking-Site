@@ -31,31 +31,49 @@ export default function PitchCanvas({
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [editForm, setEditForm] = useState({ name: '', number: '', role: 'MID', isCaptain: false });
 
+    // Drag detection ref to differentiate click vs drag
+    const dragStartPos = useRef(null);
+    const hasDragged = useRef(false);
+
     // Drawing state
     const [isDrawing, setIsDrawing] = useState(false);
     const [currentStroke, setCurrentStroke] = useState([]);
 
-    // Open Player Edit Modal
+    // Open Player Edit Modal (only if athlete was clicked, not dragged)
     const handlePlayerClick = (e, player) => {
         e.stopPropagation();
         if (activeTool !== 'select') return;
+        if (hasDragged.current) {
+            hasDragged.current = false;
+            return;
+        }
+
+        // Align role with sport
+        let currentRole = player.role;
+        if (sport === 'Cricket' && !['WK', 'BAT', 'BOW', 'AR'].includes(currentRole)) {
+            currentRole = 'AR';
+        } else if (sport === 'Football' && !['GK', 'DEF', 'MID', 'FWD'].includes(currentRole)) {
+            currentRole = 'MID';
+        }
+
         setSelectedPlayer(player);
         setEditForm({
             name: player.name,
             number: player.number,
-            role: player.role,
+            role: currentRole,
             isCaptain: !!player.isCaptain
         });
     };
 
     const handleSavePlayerEdit = () => {
         if (!selectedPlayer) return;
+        const parsedNumber = parseInt(editForm.number, 10);
         const updated = players.map(p => {
             if (p.id === selectedPlayer.id) {
                 return {
                     ...p,
                     name: editForm.name.trim() || p.name,
-                    number: parseInt(editForm.number) || p.number,
+                    number: !isNaN(parsedNumber) ? parsedNumber : p.number,
                     role: editForm.role,
                     isCaptain: editForm.isCaptain
                 };
@@ -92,6 +110,11 @@ export default function PitchCanvas({
         if (activeTool !== 'select') return;
         e.preventDefault();
         e.stopPropagation();
+        dragStartPos.current = { 
+            x: e.clientX ?? e.touches?.[0]?.clientX ?? 0, 
+            y: e.clientY ?? e.touches?.[0]?.clientY ?? 0 
+        };
+        hasDragged.current = false;
         setDraggingPlayerId(playerId);
     };
 
@@ -101,6 +124,17 @@ export default function PitchCanvas({
         const handleGlobalPlayerMove = (e) => {
             const pt = getPitchCoords(e);
             if (!pt) return;
+
+            // Check if pointer has moved enough to be counted as drag
+            if (dragStartPos.current) {
+                const clientX = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+                const clientY = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+                const dist = Math.hypot(clientX - dragStartPos.current.x, clientY - dragStartPos.current.y);
+                if (dist > 5) {
+                    hasDragged.current = true;
+                }
+            }
+
             const x = Math.max(6, Math.min(94, pt.x));
             const y = Math.max(6, Math.min(94, pt.y));
             onPlayersChange(players.map(p => (p.id === draggingPlayerId ? { ...p, x, y } : p)));
@@ -108,6 +142,7 @@ export default function PitchCanvas({
 
         const handleGlobalPlayerUp = () => {
             setDraggingPlayerId(null);
+            dragStartPos.current = null;
             if (onActionCompleted) onActionCompleted();
         };
 

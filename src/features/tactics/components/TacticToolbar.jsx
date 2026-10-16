@@ -70,7 +70,7 @@ export default function TacticToolbar({
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="relative min-w-[220px]">
                         <select
-                            value={selectedFormation}
+                            value={formations.some(f => f.id === selectedFormation) ? selectedFormation : (formations[0]?.id || '')}
                             onChange={(e) => onFormationChange(e.target.value)}
                             className="w-full appearance-none bg-slate-950 border border-white/10 rounded-2xl px-4 py-2.5 pr-10 text-xs font-bold text-white focus:border-neon-green outline-none cursor-pointer"
                         >
