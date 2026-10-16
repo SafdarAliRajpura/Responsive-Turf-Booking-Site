@@ -4,9 +4,11 @@ import {
     RotateCcw, Undo2, Redo2, Trash2, Save, Share2, 
     ChevronDown 
 } from 'lucide-react';
-import { FORMATION_CATALOG } from '../patterns/FormationStrategies';
+import { SPORT_CATALOGS } from '../patterns/FormationStrategies';
 
 export default function TacticToolbar({
+    sport = 'Football',
+    onSportChange,
     pitchFormat,
     onPitchFormatChange,
     selectedFormation,
@@ -23,39 +25,63 @@ export default function TacticToolbar({
     onOpenExportModal,
     isSaving
 }) {
-    const formations = FORMATION_CATALOG[pitchFormat] || FORMATION_CATALOG['5v5'];
+    const sportConfig = SPORT_CATALOGS[sport] || SPORT_CATALOGS.Football;
+    const formats = sportConfig.formats;
+    const formations = sportConfig.formations[pitchFormat] || sportConfig.formations[sportConfig.defaultFormat] || [];
 
     return (
         <div className="w-full max-w-4xl bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 sm:p-6 shadow-2xl mb-6 space-y-4">
-            {/* Top Row: Pitch Format, Formations, and Export */}
+            {/* Top Row: Sport Switcher, Pitch Format, Formations, and Export */}
             <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
-                {/* Pitch Format Tabs (5v5 / 7v7 / 11v11) */}
-                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-950 border border-white/5">
-                    {['5v5', '7v7', '11v11'].map((fmt) => (
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Sport Selector Pill Tab (Football vs Turf Box Cricket) */}
+                    <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-950 border border-white/10 shadow-inner">
                         <button
-                            key={fmt}
-                            onClick={() => onPitchFormatChange(fmt)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${pitchFormat === fmt ? 'bg-neon-green text-black shadow-[0_0_15px_rgba(57,255,20,0.3)]' : 'text-slate-400 hover:text-white'}`}
+                            onClick={() => onSportChange('Football')}
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${sport === 'Football' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'text-slate-400 hover:text-white'}`}
                         >
-                            {fmt}
+                            <span>⚽</span>
+                            <span>Football</span>
                         </button>
-                    ))}
+                        <button
+                            onClick={() => onSportChange('Cricket')}
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${sport === 'Cricket' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            <span>🏏</span>
+                            <span>Box Cricket</span>
+                        </button>
+                    </div>
+
+                    {/* Pitch Format Tabs (Adaptive per Sport) */}
+                    <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-950 border border-white/5">
+                        {formats.map((fmt) => (
+                            <button
+                                key={fmt}
+                                onClick={() => onPitchFormatChange(fmt)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${pitchFormat === fmt ? 'bg-white text-black shadow-md' : 'text-slate-400 hover:text-white'}`}
+                            >
+                                {fmt}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Formation Picker Dropdown */}
-                <div className="relative min-w-[200px]">
-                    <select
-                        value={selectedFormation}
-                        onChange={(e) => onFormationChange(e.target.value)}
-                        className="w-full appearance-none bg-slate-950 border border-white/10 rounded-2xl px-4 py-2.5 pr-10 text-xs font-bold text-white focus:border-neon-green outline-none cursor-pointer"
-                    >
-                        {formations.map((f) => (
-                            <option key={f.id} value={f.id}>
-                                {f.label}
-                            </option>
-                        ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative min-w-[220px]">
+                        <select
+                            value={selectedFormation}
+                            onChange={(e) => onFormationChange(e.target.value)}
+                            className="w-full appearance-none bg-slate-950 border border-white/10 rounded-2xl px-4 py-2.5 pr-10 text-xs font-bold text-white focus:border-neon-green outline-none cursor-pointer"
+                        >
+                            {formations.map((f) => (
+                                <option key={f.id} value={f.id}>
+                                    {f.label}
+                                </option>
+                            ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                 </div>
 
                 {/* Save & Lineup Export Actions */}
@@ -95,34 +121,34 @@ export default function TacticToolbar({
                         <span>Move</span>
                     </button>
 
-                    {/* Pass Arrow */}
+                    {/* Pass / Delivery Arrow */}
                     <button
                         onClick={() => onToolChange('pass')}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${activeTool === 'pass' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-400/50 shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'bg-slate-950 border-white/5 text-slate-400 hover:text-white'}`}
-                        title="Draw Passing Line (Cyan Arrow)"
+                        title={sport === 'Cricket' ? 'Plot Delivery / Bowling Line (Cyan Arrow)' : 'Draw Passing Line (Cyan Arrow)'}
                     >
                         <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Pass</span>
+                        <span>{sport === 'Cricket' ? 'Delivery' : 'Pass'}</span>
                     </button>
 
-                    {/* Run Trail */}
+                    {/* Run / Shot Trail */}
                     <button
                         onClick={() => onToolChange('run')}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${activeTool === 'run' ? 'bg-amber-500/20 text-amber-400 border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-slate-950 border-white/5 text-slate-400 hover:text-white'}`}
-                        title="Draw Off-The-Ball Run (Dashed Yellow)"
+                        title={sport === 'Cricket' ? 'Plot Shot Path / Batter Sprint (Dashed Yellow)' : 'Draw Off-The-Ball Run (Dashed Yellow)'}
                     >
                         <Activity className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Run</span>
+                        <span>{sport === 'Cricket' ? 'Shot / Run' : 'Run'}</span>
                     </button>
 
-                    {/* Press Zone */}
+                    {/* Press / Field Zone */}
                     <button
                         onClick={() => onToolChange('press')}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${activeTool === 'press' ? 'bg-rose-500/20 text-rose-400 border-rose-400/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]' : 'bg-slate-950 border-white/5 text-slate-400 hover:text-white'}`}
-                        title="Draw Pressing Zone (Red Zone)"
+                        title={sport === 'Cricket' ? 'Establish Fielding Catch / Guard Zone (Red Zone)' : 'Draw Pressing Zone (Red Zone)'}
                     >
                         <Target className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Press</span>
+                        <span>{sport === 'Cricket' ? 'Field Zone' : 'Press'}</span>
                     </button>
                 </div>
 
@@ -170,6 +196,39 @@ export default function TacticToolbar({
                         <span className="hidden sm:inline">Reset Form</span>
                     </button>
                 </div>
+            </div>
+
+            {/* Live Tool Guidance Pill */}
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/5 text-[11px] font-medium">
+                <div className="flex items-center gap-2">
+                    {activeTool === 'select' && (
+                        <span className="text-slate-300 flex items-center gap-2">
+                            <MousePointer2 className="w-3.5 h-3.5 text-neon-green shrink-0" />
+                            <span><strong className="text-white">Move Mode:</strong> Click & drag athletes anywhere on the turf to adjust positioning. Click any player to edit details.</span>
+                        </span>
+                    )}
+                    {activeTool === 'pass' && (
+                        <span className="text-cyan-300 flex items-center gap-2">
+                            <ArrowRight className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                            <span><strong className="text-cyan-200">{sport === 'Cricket' ? 'Delivery Mode:' : 'Pass Mode:'}</strong> Click & drag across the turf to draw a {sport === 'Cricket' ? 'Bowling Delivery Lane' : 'Passing Lane'} (Solid Cyan Arrow ➔).</span>
+                        </span>
+                    )}
+                    {activeTool === 'run' && (
+                        <span className="text-amber-300 flex items-center gap-2">
+                            <Activity className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span><strong className="text-amber-200">{sport === 'Cricket' ? 'Shot Mode:' : 'Run Mode:'}</strong> Click & drag across the turf to plot a {sport === 'Cricket' ? 'Shot Trajectory / Runner Path' : 'Off-The-Ball Run'} (Dashed Yellow Arrow ⇢).</span>
+                        </span>
+                    )}
+                    {activeTool === 'press' && (
+                        <span className="text-rose-300 flex items-center gap-2">
+                            <Target className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                            <span><strong className="text-rose-200">{sport === 'Cricket' ? 'Field Zone Mode:' : 'Press Mode:'}</strong> Click & drag outwards to mark a {sport === 'Cricket' ? 'Sweeper / Catcher Zone' : 'Pressing Trap'} (Red Circle ⭕).</span>
+                        </span>
+                    )}
+                </div>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-slate-500 hidden md:inline shrink-0">
+                    Active: <span className="text-white font-black">{activeTool.toUpperCase()}</span>
+                </span>
             </div>
         </div>
     );

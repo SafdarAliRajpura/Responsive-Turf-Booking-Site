@@ -7,6 +7,7 @@ export default function LineupCardModal({
     isOpen,
     onClose,
     title,
+    sport = 'Football',
     venueName,
     matchDate,
     matchTime,
@@ -25,21 +26,22 @@ export default function LineupCardModal({
 
     // Format text representation for WhatsApp / Clipboard
     const getFormattedText = () => {
-        let text = `⚽ *ARENA PRO MATCHDAY SQUAD* ⚽\n`;
-        text += `🏟️ *Venue:* ${venueName || 'Premier Arena'}\n`;
+        const isCricket = sport === 'Cricket';
+        let text = isCricket ? `🏏 *ARENA PRO TURF BOX CRICKET SQUAD* 🏏\n` : `⚽ *ARENA PRO MATCHDAY SQUAD* ⚽\n`;
+        text += `🏟️ *Venue:* ${venueName || (isCricket ? 'Turf Box Arena' : 'Premier Arena')}\n`;
         text += `📅 *Date:* ${matchDate || 'Upcoming Match'} | ⏰ ${matchTime || 'Prime Slot'}\n`;
-        text += `📋 *Formation:* ${formation} (${pitchFormat})\n\n`;
-        text += `*STARTING LINEUP:*\n`;
-        starters.forEach(p => {
-            text += `• #${p.number} ${p.name} [${p.role}]${p.isCaptain ? ' 👑 (C)' : ''}\n`;
+        text += `📋 *${isCricket ? 'Fielding Setup' : 'Formation'}:* ${formation} (${pitchFormat}${isCricket ? ' Turf Cage' : ''})\n\n`;
+        text += `*STARTING SQUAD:*\n`;
+        starters.forEach((p, idx) => {
+            text += `${isCricket ? `${idx + 1}. ` : '• '}#${p.number} ${p.name} [${p.role}]${p.isCaptain ? ' 👑 (C)' : ''}\n`;
         });
         if (subs.length > 0) {
-            text += `\n*BENCH:*\n`;
+            text += `\n*BENCH / IMPACT PLAYERS:*\n`;
             subs.forEach(p => {
                 text += `• #${p.number} ${p.name}\n`;
             });
         }
-        text += `\n🚀 Verified on Arena Pro Elite`;
+        text += `\n🚀 Generated on Arena Pro Tactical Suite`;
         return text;
     };
 
@@ -140,29 +142,57 @@ export default function LineupCardModal({
                             </div>
                         </div>
 
-                        {/* Mini Tactical Pitch Rendering */}
-                        <div className="relative w-full aspect-[4/3] bg-emerald-950/40 rounded-2xl border border-emerald-500/30 overflow-hidden shadow-inner">
-                            {/* SVG Mini Pitch Markings */}
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-white/20" strokeWidth="1.5" fill="none">
-                                <rect x="6%" y="6%" width="88%" height="88%" rx="8" />
-                                <line x1="6%" y1="50%" x2="94%" y2="50%" strokeDasharray="3 3" />
-                                <circle cx="50%" cy="50%" r="14%" />
-                                <rect x="28%" y="6%" width="44%" height="18%" />
-                                <rect x="28%" y="76%" width="44%" height="18%" />
-                            </svg>
+                        {/* Mini Tactical Pitch Rendering (Square for Cricket Cage vs Rectangular for Football) */}
+                        <div className={`relative w-full ${sport === 'Cricket' ? 'aspect-square max-w-[320px] mx-auto' : 'aspect-[4/3]'} bg-emerald-950/40 rounded-2xl border border-emerald-500/30 overflow-hidden shadow-inner`}>
+                            {sport === 'Cricket' ? (
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-white/20" strokeWidth="1.5" fill="none">
+                                    {/* Square Cage Boundary */}
+                                    <rect x="6%" y="6%" width="88%" height="88%" rx="8" />
+                                    <rect x="8.5%" y="8.5%" width="83%" height="83%" rx="6" strokeDasharray="3 3" strokeOpacity="0.3" />
+                                    {/* Central Pitch Strip */}
+                                    <rect x="42%" y="22%" width="16%" height="56%" rx="3" fill="rgba(16,185,129,0.12)" stroke="rgba(255,255,255,0.3)" />
+                                    {/* Fielding Ring */}
+                                    <circle cx="50%" cy="50%" r="35%" strokeDasharray="4 3" strokeOpacity="0.3" />
+                                    {/* Creases */}
+                                    <line x1="38%" y1="28%" x2="62%" y2="28%" stroke="white" strokeWidth="1.5" strokeOpacity="0.6" />
+                                    <line x1="38%" y1="72%" x2="62%" y2="72%" stroke="white" strokeWidth="1.5" strokeOpacity="0.6" />
+                                    {/* Top Stumps */}
+                                    <circle cx="48%" cy="24%" r="2" fill="#F59E0B" stroke="#F59E0B" />
+                                    <circle cx="50%" cy="24%" r="2" fill="#F59E0B" stroke="#F59E0B" />
+                                    <circle cx="52%" cy="24%" r="2" fill="#F59E0B" stroke="#F59E0B" />
+                                    {/* Bottom Stumps */}
+                                    <circle cx="48%" cy="76%" r="2" fill="#F59E0B" stroke="#F59E0B" />
+                                    <circle cx="50%" cy="76%" r="2" fill="#F59E0B" stroke="#F59E0B" />
+                                    <circle cx="52%" cy="76%" r="2" fill="#F59E0B" stroke="#F59E0B" />
+                                </svg>
+                            ) : (
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-white/20" strokeWidth="1.5" fill="none">
+                                    <rect x="6%" y="6%" width="88%" height="88%" rx="8" />
+                                    <line x1="6%" y1="50%" x2="94%" y2="50%" strokeDasharray="3 3" />
+                                    <circle cx="50%" cy="50%" r="14%" />
+                                    <rect x="28%" y="6%" width="44%" height="18%" />
+                                    <rect x="28%" y="76%" width="44%" height="18%" />
+                                </svg>
+                            )}
 
                             {/* Mini Player Nodes */}
                             {starters.map((p) => (
                                 <div
                                     key={p.id}
-                                    style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                                    className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
+                                    style={{ 
+                                        left: `${p.x}%`, 
+                                        top: `${p.y}%`,
+                                        transform: 'translate(-50%, -50%)'
+                                    }}
+                                    className="absolute w-7 h-7 flex items-center justify-center pointer-events-none"
                                 >
-                                    {p.isCaptain && <Crown className="w-2.5 h-2.5 text-amber-300 fill-current mb-0.5" />}
-                                    <div className="w-7 h-7 rounded-full bg-slate-900 border border-emerald-400 flex items-center justify-center text-[10px] font-black text-white shadow-md">
+                                    {p.isCaptain && (
+                                        <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-2.5 h-2.5 text-amber-300 fill-current" />
+                                    )}
+                                    <div className="w-full h-full rounded-full bg-slate-900 border border-emerald-400 flex items-center justify-center text-[10px] font-black text-white shadow-md">
                                         {p.number}
                                     </div>
-                                    <span className="text-[8px] font-bold text-white bg-black/80 px-1.5 rounded-full mt-0.5 whitespace-nowrap">
+                                    <span className="absolute top-full mt-0.5 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white bg-black/80 px-1.5 rounded-full whitespace-nowrap">
                                         {p.name.split(' ')[0]}
                                     </span>
                                 </div>
@@ -171,14 +201,19 @@ export default function LineupCardModal({
 
                         {/* Roster List Columns */}
                         <div className="space-y-2">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Starting Roster:</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                {sport === 'Cricket' ? 'Playing Squad & Roles:' : 'Starting Roster:'}
+                            </span>
                             <div className="grid grid-cols-2 gap-2 text-xs">
                                 {starters.map((p) => (
                                     <div key={p.id} className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5">
                                         <span className="w-5 h-5 rounded-md bg-emerald-500/20 text-emerald-400 font-mono font-black text-[10px] flex items-center justify-center shrink-0">
                                             #{p.number}
                                         </span>
-                                        <span className="font-bold text-slate-200 truncate">{p.name}</span>
+                                        <div className="flex items-center gap-1 min-w-0">
+                                            <span className="font-bold text-slate-200 truncate">{p.name}</span>
+                                            <span className="text-[9px] text-slate-400 font-mono font-bold">[{p.role}]</span>
+                                        </div>
                                         {p.isCaptain && <span className="text-[9px] text-amber-400 font-black ml-auto">(C)</span>}
                                     </div>
                                 ))}

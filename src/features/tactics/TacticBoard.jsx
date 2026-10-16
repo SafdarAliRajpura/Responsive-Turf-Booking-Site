@@ -9,7 +9,7 @@ import apiClient from '../../utils/apiClient';
 import PitchCanvas from './components/PitchCanvas';
 import TacticToolbar from './components/TacticToolbar';
 import LineupCardModal from './components/LineupCardModal';
-import { getFormationPositions, FORMATION_CATALOG } from './patterns/FormationStrategies';
+import { getFormationPositions, SPORT_CATALOGS } from './patterns/FormationStrategies';
 import { TacticCaretaker } from './patterns/TacticMemento';
 
 export default function TacticBoard() {
@@ -17,11 +17,12 @@ export default function TacticBoard() {
     const navigate = useNavigate();
 
     // Core Board State
+    const [sport, setSport] = useState('Football');
     const [pitchFormat, setPitchFormat] = useState('5v5');
     const [formation, setFormation] = useState('1-2-1');
     const [title, setTitle] = useState('Friday Night Matchday Squad');
     const [notes, setNotes] = useState('');
-    const [players, setPlayers] = useState(() => getFormationPositions('5v5', '1-2-1'));
+    const [players, setPlayers] = useState(() => getFormationPositions('Football', '5v5', '1-2-1'));
     const [drawings, setDrawings] = useState([]);
     const [activeTool, setActiveTool] = useState('select'); // 'select' | 'pass' | 'run' | 'press'
     
@@ -47,6 +48,7 @@ export default function TacticBoard() {
     // Take snapshot of active board state for Undo/Redo
     const pushStateToMemento = (overrideState = {}) => {
         const stateToSave = {
+            sport,
             players,
             drawings,
             formation,
@@ -64,30 +66,39 @@ export default function TacticBoard() {
     useEffect(() => {
         const loadBookingTactic = async () => {
             if (!bookingId) return;
-            setLoadingBooking(true);
             try {
                 const res = await apiClient.get(`/tactics/booking/${bookingId}`);
                 if (res.data.success) {
+                    let detectedSport = 'Football';
                     if (res.data.booking) {
                         setBookingData(res.data.booking);
                         setTitle(`${res.data.booking.turfName} Lineup`);
+                        if (res.data.booking.sport && res.data.booking.sport.toLowerCase().includes('cricket')) {
+                            detectedSport = 'Cricket';
+                        }
                     }
 
                     // If existing tactic exists in database, hydrate it
                     if (res.data.data) {
                         const t = res.data.data;
+                        const tacticSport = t.sport || detectedSport;
+                        setSport(tacticSport);
                         if (t.pitchFormat) setPitchFormat(t.pitchFormat);
                         if (t.formation) setFormation(t.formation);
                         if (t.title) setTitle(t.title);
                         if (t.players && t.players.length > 0) setPlayers(t.players);
                         if (t.drawings) setDrawings(t.drawings);
                         if (t.notes) setNotes(t.notes);
+                    } else if (detectedSport === 'Cricket') {
+                        // Brand new cricket booking: initialize with cricket defaults
+                        setSport('Cricket');
+                        setPitchFormat('7v7');
+                        setFormation('7-ring');
+                        setPlayers(getFormationPositions('Cricket', '7v7', '7-ring'));
                     }
                 }
             } catch (err) {
                 console.warn('No existing tactic found or error loading:', err.message);
-            } finally {
-                setLoadingBooking(false);
             }
         };
 
@@ -95,14 +106,35 @@ export default function TacticBoard() {
     }, [bookingId]);
 
     // ----------------------------------------------------
-    // FORMATION STRATEGY SWITCHING
+    // SPORT & FORMATION STRATEGY SWITCHING
     // ----------------------------------------------------
+    const handleSportChange = (newSport) => {
+        if (newSport === sport) return;
+        pushStateToMemento();
+        setSport(newSport);
+        const sportConfig = SPORT_CATALOGS[newSport] || SPORT_CATALOGS.Football;
+        const newFormat = sportConfig.defaultFormat;
+        const newFormation = sportConfig.formations[newFormat][0].id;
+        setPitchFormat(newFormat);
+        setFormation(newFormation);
+        const newPositions = getFormationPositions(newSport, newFormat, newFormation);
+        setPlayers(newPositions);
+        setDrawings([]);
+        updateCaretakerButtons();
+        setToast({ 
+            message: `Switched to ${newSport === 'Cricket' ? 'Turf Box Cricket (Square Arena Mode)' : 'Football (Rectangular Stadium Mode)'}`, 
+            type: 'info' 
+        });
+    };
+
     const handlePitchFormatChange = (newFormat) => {
         pushStateToMemento();
         setPitchFormat(newFormat);
-        const defaultFormation = FORMATION_CATALOG[newFormat][0].id;
+        const sportConfig = SPORT_CATALOGS[sport] || SPORT_CATALOGS.Football;
+        const list = sportConfig.formations[newFormat] || sportConfig.formations[sportConfig.defaultFormat];
+        const defaultFormation = list[0].id;
         setFormation(defaultFormation);
-        const newPositions = getFormationPositions(newFormat, defaultFormation);
+        const newPositions = getFormationPositions(sport, newFormat, defaultFormation);
         setPlayers(newPositions);
         updateCaretakerButtons();
     };
@@ -110,7 +142,7 @@ export default function TacticBoard() {
     const handleFormationChange = (newFormation) => {
         pushStateToMemento();
         setFormation(newFormation);
-        const newPositions = getFormationPositions(pitchFormat, newFormation);
+        const newPositions = getFormationPositions(sport, pitchFormat, newFormation);
         
         // Preserve existing player custom names & numbers while transitioning coordinates
         const merged = newPositions.map((pos, idx) => {
@@ -129,7 +161,7 @@ export default function TacticBoard() {
 
     const handleResetPositions = () => {
         pushStateToMemento();
-        const fresh = getFormationPositions(pitchFormat, formation);
+        const fresh = getFormationPositions(sport, pitchFormat, formation);
         setPlayers(fresh);
         updateCaretakerButtons();
         setToast({ message: 'Formation positions reset to default coordinates.', type: 'info' });
@@ -147,9 +179,10 @@ export default function TacticBoard() {
     // GOF MEMENTO UNDO / REDO OPERATIONS
     // ----------------------------------------------------
     const handleUndo = () => {
-        const currentState = { players, drawings, formation, pitchFormat, title };
+        const currentState = { sport, players, drawings, formation, pitchFormat, title };
         const prevState = caretakerRef.current.undo(currentState);
         if (prevState) {
+            if (prevState.sport) setSport(prevState.sport);
             setPlayers(prevState.players);
             setDrawings(prevState.drawings);
             setFormation(prevState.formation);
@@ -160,9 +193,10 @@ export default function TacticBoard() {
     };
 
     const handleRedo = () => {
-        const currentState = { players, drawings, formation, pitchFormat, title };
+        const currentState = { sport, players, drawings, formation, pitchFormat, title };
         const nextState = caretakerRef.current.redo(currentState);
         if (nextState) {
+            if (nextState.sport) setSport(nextState.sport);
             setPlayers(nextState.players);
             setDrawings(nextState.drawings);
             setFormation(nextState.formation);
@@ -187,7 +221,8 @@ export default function TacticBoard() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [players, drawings, formation, pitchFormat]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sport, players, drawings, formation, pitchFormat]);
 
     // ----------------------------------------------------
     // SAVE TACTIC TO DATABASE
@@ -198,6 +233,7 @@ export default function TacticBoard() {
             const payload = {
                 bookingId: bookingId || null,
                 title: title.trim() || 'Tactical Plan',
+                sport,
                 pitchFormat,
                 formation,
                 players,
@@ -233,10 +269,13 @@ export default function TacticBoard() {
                         </button>
                         <div>
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon-green/10 border border-neon-green/20 text-neon-green text-[10px] font-black uppercase tracking-widest mb-1">
-                                <BookOpen className="w-3.5 h-3.5" /> TacticBoard Pro • Tactical Suite
+                                <BookOpen className="w-3.5 h-3.5" /> TacticBoard Pro • Multi-Sport Tactical Engine
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter text-white">
-                                Arena <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green via-emerald-400 to-teal-400">Playbook</span>
+                                {sport === 'Cricket' ? 'Box Cricket ' : 'Arena '}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green via-emerald-400 to-teal-400">
+                                    {sport === 'Cricket' ? 'Cage Board' : 'Playbook'}
+                                </span>
                             </h1>
                         </div>
                     </div>
@@ -245,7 +284,7 @@ export default function TacticBoard() {
                     {bookingData && (
                         <div className="flex items-center gap-4 p-3 px-5 rounded-2xl bg-slate-900 border border-white/10 text-xs shadow-xl">
                             <div className="w-9 h-9 rounded-xl bg-neon-green/10 text-neon-green flex items-center justify-center font-black">
-                                🏟️
+                                {sport === 'Cricket' ? '🏏' : '🏟️'}
                             </div>
                             <div>
                                 <p className="font-black text-white uppercase">{bookingData.turfName}</p>
@@ -259,6 +298,8 @@ export default function TacticBoard() {
                 <div className="flex flex-col items-center">
                     {/* Interactive Toolbar */}
                     <TacticToolbar
+                        sport={sport}
+                        onSportChange={handleSportChange}
                         pitchFormat={pitchFormat}
                         onPitchFormatChange={handlePitchFormatChange}
                         selectedFormation={formation}
@@ -278,6 +319,7 @@ export default function TacticBoard() {
 
                     {/* Pitch Canvas */}
                     <PitchCanvas
+                        sport={sport}
                         players={players}
                         onPlayersChange={setPlayers}
                         drawings={drawings}
@@ -296,11 +338,11 @@ export default function TacticBoard() {
                             </div>
                             <div>
                                 <span className="font-bold text-white block uppercase tracking-wider text-[11px]">Architectural Design Patterns Applied</span>
-                                <span className="text-[10px] text-slate-500 font-mono">GoF Strategy Pattern (Formations) + GoF Memento Pattern (Undo/Redo History Stack)</span>
+                                <span className="text-[10px] text-slate-500 font-mono">GoF Strategy Pattern (Sport Formations: Football & Box Cricket) + GoF Memento Pattern (Undo/Redo History Stack)</span>
                             </div>
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400/80 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                            Ready for Evaluation
+                            Academic Grade
                         </span>
                     </div>
                 </div>
@@ -311,7 +353,8 @@ export default function TacticBoard() {
                 isOpen={isExportModalOpen}
                 onClose={() => setIsExportModalOpen(false)}
                 title={title}
-                venueName={bookingData?.turfName || 'Arena Pro Stadium'}
+                sport={sport}
+                venueName={bookingData?.turfName || (sport === 'Cricket' ? 'Turf Box Arena' : 'Arena Pro Stadium')}
                 matchDate={bookingData?.date || 'Upcoming Match'}
                 matchTime={bookingData?.timeSlot?.split(' - ')[0] || 'Prime Slot'}
                 pitchFormat={pitchFormat}
