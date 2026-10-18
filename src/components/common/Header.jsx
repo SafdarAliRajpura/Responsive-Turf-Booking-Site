@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Zap, Menu, LogOut, LayoutDashboard, User as UserIcon, Search, MapPin, Trophy, Target } from 'lucide-react';
+import { 
+    Zap, Menu, X, LogOut, LayoutDashboard, User as UserIcon, 
+    Search, MapPin, Trophy, Target, ChevronDown, BookOpen, Activity, Ticket
+} from 'lucide-react';
 import userAvatarImg from '../../assets/images/common/user-avatar.jpg';
 import NotificationDropdown from './NotificationDropdown';
 import apiClient from '../../utils/apiClient';
@@ -52,6 +55,12 @@ const Header = () => {
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
     const userProfilePic = user?.user_profile || userAvatarImg;
+    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+    // Close mobile menu on route change
+    React.useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const isActive = (path) => location.pathname === path;
 
@@ -127,7 +136,7 @@ const Header = () => {
                     )}
                 </div>
 
-                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+                <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
                     <button
                         onClick={() => navigate('/home')}
                         className={`transition-colors ${isActive('/home') ? 'text-white text-shadow-neon' : 'hover:text-white'}`}
@@ -163,22 +172,60 @@ const Header = () => {
                     >
                         <span className={isActive('/bookings') ? 'text-neon-green' : ''}>My Bookings</span>
                     </button>
-                    <button
-                        onClick={() => navigate('/tactics')}
-                        className={`transition-colors flex items-center gap-1.5 ${isActive('/tactics') ? 'text-white' : 'hover:text-white'}`}
-                        style={isActive('/tactics') ? { textShadow: '0 0 10px rgba(57, 255, 20, 0.5)' } : {}}
-                    >
-                        <span className={isActive('/tactics') ? 'text-neon-green' : ''}>Playbook</span>
-                        <span className="px-1.5 py-0.5 rounded-md bg-neon-green/10 text-neon-green border border-neon-green/30 text-[8px] font-black uppercase tracking-wider">PRO</span>
-                    </button>
-                    <button
-                        onClick={() => navigate('/scorecards')}
-                        className={`transition-colors flex items-center gap-1.5 ${isActive('/scorecards') ? 'text-white' : 'hover:text-white'}`}
-                        style={isActive('/scorecards') ? { textShadow: '0 0 10px rgba(0, 240, 255, 0.5)' } : {}}
-                    >
-                        <span className={isActive('/scorecards') ? 'text-neon-blue' : ''}>ScoreHub</span>
-                        <span className="px-1.5 py-0.5 rounded-md bg-neon-blue/10 text-neon-blue border border-neon-blue/30 text-[8px] font-black uppercase tracking-wider">LIVE</span>
-                    </button>
+
+                    {/* Arena Pro Dropdown: Groups Playbook and ScoreHub */}
+                    <div className="relative group/dropdown">
+                        <button
+                            className={`transition-colors flex items-center gap-1.5 py-1 ${
+                                isActive('/tactics') || isActive('/scorecards') ? 'text-white' : 'hover:text-white'
+                            }`}
+                            style={isActive('/tactics') || isActive('/scorecards') ? { textShadow: '0 0 10px rgba(57, 255, 20, 0.5)' } : {}}
+                        >
+                            <span className={isActive('/tactics') || isActive('/scorecards') ? 'text-neon-green font-bold' : ''}>
+                                Arena Pro
+                            </span>
+                            <ChevronDown size={13} className="text-slate-400 group-hover/dropdown:rotate-180 transition-transform duration-200" />
+                        </button>
+
+                        {/* Floating Glassmorphic Dropdown */}
+                        <div className="absolute right-0 top-full mt-3 w-64 bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-2xl p-2 opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-200 z-50">
+                            <button
+                                onClick={() => navigate('/tactics')}
+                                className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left ${
+                                    isActive('/tactics') ? 'bg-neon-green/15 text-white' : 'hover:bg-white/5 text-slate-300 hover:text-white'
+                                }`}
+                            >
+                                <div className="w-8 h-8 rounded-lg bg-neon-green/10 border border-neon-green/30 flex items-center justify-center text-neon-green flex-shrink-0">
+                                    <BookOpen size={15} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-black uppercase tracking-tight">Playbook</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-neon-green/10 text-neon-green text-[8px] font-black uppercase">PRO</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 truncate">Tactics board & lineups</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/scorecards')}
+                                className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left mt-1 ${
+                                    isActive('/scorecards') ? 'bg-neon-blue/15 text-white' : 'hover:bg-white/5 text-slate-300 hover:text-white'
+                                }`}
+                            >
+                                <div className="w-8 h-8 rounded-lg bg-neon-blue/10 border border-neon-blue/30 flex items-center justify-center text-neon-blue flex-shrink-0">
+                                    <Activity size={15} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-black uppercase tracking-tight">ScoreHub</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-neon-blue/10 text-neon-blue text-[8px] font-black uppercase">LIVE</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 truncate">Match ledger & story cards</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -205,6 +252,9 @@ const Header = () => {
                             <div className="p-2 space-y-1">
                                 {user && (
                                     <>
+                                        <button onClick={() => navigate('/bookings')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                                            <Ticket className="w-4 h-4 text-neon-green" /> My Bookings
+                                        </button>
                                         <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
                                             <UserIcon className="w-4 h-4" /> Profile
                                         </button>
@@ -232,12 +282,81 @@ const Header = () => {
                             </div>
                         </div>
                     </div>
-                    <button className="md:hidden text-white">
-                        <Menu className="w-6 h-6" />
+                    <button 
+                        onClick={() => setMobileMenuOpen(prev => !prev)}
+                        className="md:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all border border-white/5"
+                    >
+                        {mobileMenuOpen ? <X className="w-5 h-5 text-neon-green" /> : <Menu className="w-5 h-5" />}
                     </button>
                 </div>
             </div>
 
+            {/* Mobile Slide-Down Drawer */}
+            {mobileMenuOpen && (
+                <div className="md:hidden mt-4 pt-4 border-t border-white/10 animate-in slide-in-from-top-3 duration-200">
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                        <button
+                            onClick={() => navigate('/home')}
+                            className={`p-3 rounded-xl text-left font-bold text-xs flex items-center gap-2 ${
+                                isActive('/home') ? 'bg-neon-green/15 text-neon-green border border-neon-green/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <Zap size={14} className="text-neon-green" /> Home
+                        </button>
+                        <button
+                            onClick={() => navigate('/venues')}
+                            className={`p-3 rounded-xl text-left font-bold text-xs flex items-center gap-2 ${
+                                isActive('/venues') ? 'bg-neon-green/15 text-neon-green border border-neon-green/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <MapPin size={14} className="text-neon-pink" /> Venues
+                        </button>
+                        <button
+                            onClick={() => navigate('/tournaments')}
+                            className={`p-3 rounded-xl text-left font-bold text-xs flex items-center gap-2 ${
+                                isActive('/tournaments') ? 'bg-neon-green/15 text-neon-green border border-neon-green/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <Trophy size={14} className="text-neon-yellow" /> Tournaments
+                        </button>
+                        <button
+                            onClick={() => navigate('/community')}
+                            className={`p-3 rounded-xl text-left font-bold text-xs flex items-center gap-2 ${
+                                isActive('/community') ? 'bg-neon-green/15 text-neon-green border border-neon-green/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <Target size={14} className="text-neon-blue" /> Community
+                        </button>
+                        <button
+                            onClick={() => navigate('/bookings')}
+                            className={`p-3 rounded-xl text-left font-bold text-xs flex items-center gap-2 ${
+                                isActive('/bookings') ? 'bg-neon-green/15 text-neon-green border border-neon-green/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <Ticket size={14} className="text-emerald-400" /> Bookings
+                        </button>
+                        <button
+                            onClick={() => navigate('/tactics')}
+                            className={`p-3 rounded-xl text-left font-bold text-xs flex items-center gap-2 ${
+                                isActive('/tactics') ? 'bg-neon-green/15 text-neon-green border border-neon-green/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <BookOpen size={14} className="text-neon-green" /> Playbook PRO
+                        </button>
+                        <button
+                            onClick={() => navigate('/scorecards')}
+                            className={`col-span-2 p-3 rounded-xl text-left font-bold text-xs flex items-center justify-between ${
+                                isActive('/scorecards') ? 'bg-neon-blue/15 text-neon-blue border border-neon-blue/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <span className="flex items-center gap-2">
+                                <Activity size={14} className="text-neon-blue" /> ScoreHub Match Ledger
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-neon-blue/20 text-neon-blue text-[8px] font-black uppercase">LIVE</span>
+                        </button>
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };
