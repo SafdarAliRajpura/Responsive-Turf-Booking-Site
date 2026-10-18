@@ -1,8 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Zap, Menu, Bell, LogOut, LayoutDashboard, User as UserIcon, MessageSquare, Heart, Calendar, Search, MapPin, Trophy, Target } from 'lucide-react';
+import { Zap, Menu, LogOut, LayoutDashboard, User as UserIcon, Search, MapPin, Trophy, Target } from 'lucide-react';
 import userAvatarImg from '../../assets/images/common/user-avatar.jpg';
-import { useNotifications } from '../../context/NotificationContext';
 import NotificationDropdown from './NotificationDropdown';
 import apiClient from '../../utils/apiClient';
 
@@ -53,17 +52,6 @@ const Header = () => {
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
     const userProfilePic = user?.user_profile || userAvatarImg;
-
-    const { notifications, unreadCount, markAsRead, markAllRead } = useNotifications();
-
-    const getIcon = (type) => {
-        switch (type) {
-            case 'LIKE': return <Heart className="w-4 h-4 text-neon-pink fill-current" />;
-            case 'COMMENT': return <MessageSquare className="w-4 h-4 text-neon-blue" />;
-            case 'BOOKING': return <Calendar className="w-4 h-4 text-neon-green" />;
-            default: return <Bell className="w-4 h-4 text-white" />;
-        }
-    };
 
     const isActive = (path) => location.pathname === path;
 
@@ -182,6 +170,14 @@ const Header = () => {
                     >
                         <span className={isActive('/tactics') ? 'text-neon-green' : ''}>Playbook</span>
                         <span className="px-1.5 py-0.5 rounded-md bg-neon-green/10 text-neon-green border border-neon-green/30 text-[8px] font-black uppercase tracking-wider">PRO</span>
+                    </button>
+                    <button
+                        onClick={() => navigate('/scorecards')}
+                        className={`transition-colors flex items-center gap-1.5 ${isActive('/scorecards') ? 'text-white' : 'hover:text-white'}`}
+                        style={isActive('/scorecards') ? { textShadow: '0 0 10px rgba(0, 240, 255, 0.5)' } : {}}
+                    >
+                        <span className={isActive('/scorecards') ? 'text-neon-blue' : ''}>ScoreHub</span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-neon-blue/10 text-neon-blue border border-neon-blue/30 text-[8px] font-black uppercase tracking-wider">LIVE</span>
                     </button>
                 </div>
 

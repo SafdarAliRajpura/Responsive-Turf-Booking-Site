@@ -37,6 +37,7 @@ const Booking = lazy(() => import('./pages/Booking'));
 const Community = lazy(() => import('./pages/Community'));
 const Profile = lazy(() => import('./pages/Profile'));
 const TacticBoard = lazy(() => import('./features/tactics/TacticBoard'));
+const ScoreHub = lazy(() => import('./features/scorecard/ScoreHub'));
 
 // Lazy Loaded Admin Modules
 const AdminLayout = lazy(() => import('./features/admin/layouts/AdminLayout'));
@@ -116,6 +117,8 @@ function App() {
         <Route path="/profile" element={<PublicUserGuard><Profile /></PublicUserGuard>} />
         <Route path="/tactics" element={<PublicUserGuard><TacticBoard /></PublicUserGuard>} />
         <Route path="/tactics/:bookingId" element={<PublicUserGuard><TacticBoard /></PublicUserGuard>} />
+        <Route path="/scorecards" element={<PublicUserGuard><ScoreHub /></PublicUserGuard>} />
+        <Route path="/scorecards/:bookingId" element={<PublicUserGuard><ScoreHub /></PublicUserGuard>} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>

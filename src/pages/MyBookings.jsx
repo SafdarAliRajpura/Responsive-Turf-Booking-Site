@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    Calendar, MapPin, IndianRupee, CheckCircle,
-    Zap, Share2, Download, X, 
-    ShieldCheck, Smartphone, Target,
-    CreditCard, Trophy, BookOpen
+    Calendar, MapPin, IndianRupee,
+    Zap, Download, X, 
+    ShieldCheck, Target,
+    CreditCard, Trophy, BookOpen, Activity
 } from 'lucide-react';
 
 import Header from '../components/common/Header';
@@ -238,6 +238,12 @@ const BookingCard = ({ booking, onViewReceipt }) => {
                             <BookOpen size={13} /> Tactical Playbook
                         </button>
                         <button
+                            onClick={() => navigate(`/scorecards/${booking._id || booking.id}`)}
+                            className="px-5 py-2 rounded-xl bg-neon-blue/10 hover:bg-neon-blue text-neon-blue hover:text-black font-black text-[10px] uppercase tracking-widest transition-all border border-neon-blue/30 flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.15)] hover:scale-105 active:scale-95"
+                        >
+                            <Activity size={13} /> Score Ledger
+                        </button>
+                        <button
                             onClick={onViewReceipt}
                             className="px-6 py-2 rounded-xl bg-white/5 hover:bg-white text-white hover:text-black font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
                         >
@@ -323,7 +329,6 @@ export default function MyBookings() {
     const [activeTab, setActiveTab] = useState('Matches'); // 'Matches' or 'Squads'
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ message: null, type: 'info' });
-    const navigate = useNavigate();
 
     const fetchData = async () => {
         setLoading(true);
