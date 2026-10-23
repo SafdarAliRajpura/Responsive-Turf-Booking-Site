@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
     Zap, Menu, X, LogOut, LayoutDashboard, User as UserIcon, 
-    Search, MapPin, Trophy, Target, ChevronDown, BookOpen, Activity, Ticket
+    Search, MapPin, Trophy, Target, ChevronDown, BookOpen, Activity, Ticket, Flame
 } from 'lucide-react';
 import userAvatarImg from '../../assets/images/common/user-avatar.jpg';
 import NotificationDropdown from './NotificationDropdown';
@@ -177,11 +177,11 @@ const Header = () => {
                     <div className="relative group/dropdown">
                         <button
                             className={`transition-colors flex items-center gap-1.5 py-1 ${
-                                isActive('/tactics') || isActive('/scorecards') ? 'text-white' : 'hover:text-white'
+                                isActive('/tactics') || isActive('/scorecards') || isActive('/draft') ? 'text-white' : 'hover:text-white'
                             }`}
-                            style={isActive('/tactics') || isActive('/scorecards') ? { textShadow: '0 0 10px rgba(57, 255, 20, 0.5)' } : {}}
+                            style={isActive('/tactics') || isActive('/scorecards') || isActive('/draft') ? { textShadow: '0 0 10px rgba(57, 255, 20, 0.5)' } : {}}
                         >
-                            <span className={isActive('/tactics') || isActive('/scorecards') ? 'text-neon-green font-bold' : ''}>
+                            <span className={isActive('/tactics') || isActive('/scorecards') || isActive('/draft') ? 'text-neon-green font-bold' : ''}>
                                 Arena Pro
                             </span>
                             <ChevronDown size={13} className="text-slate-400 group-hover/dropdown:rotate-180 transition-transform duration-200" />
@@ -222,6 +222,24 @@ const Header = () => {
                                         <span className="px-1.5 py-0.5 rounded bg-neon-blue/10 text-neon-blue text-[8px] font-black uppercase">LIVE</span>
                                     </div>
                                     <p className="text-[10px] text-slate-400 truncate">Match ledger & story cards</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/draft')}
+                                className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left mt-1 ${
+                                    isActive('/draft') ? 'bg-neon-yellow/15 text-white' : 'hover:bg-white/5 text-slate-300 hover:text-white'
+                                }`}
+                            >
+                                <div className="w-8 h-8 rounded-lg bg-neon-yellow/10 border border-neon-yellow/30 flex items-center justify-center text-neon-yellow flex-shrink-0">
+                                    <Flame size={15} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-black uppercase tracking-tight">Draft Room</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-neon-yellow/10 text-neon-yellow text-[8px] font-black uppercase">NEW</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 truncate">Coin toss & live squad draft</p>
                                 </div>
                             </button>
                         </div>
@@ -342,6 +360,14 @@ const Header = () => {
                             }`}
                         >
                             <BookOpen size={14} className="text-neon-green" /> Playbook PRO
+                        </button>
+                        <button
+                            onClick={() => navigate('/draft')}
+                            className={`p-3 rounded-xl text-left font-bold text-xs flex items-center gap-2 ${
+                                isActive('/draft') ? 'bg-neon-yellow/15 text-neon-yellow border border-neon-yellow/30' : 'bg-slate-900/60 text-slate-300'
+                            }`}
+                        >
+                            <Flame size={14} className="text-neon-yellow" /> Draft Room
                         </button>
                         <button
                             onClick={() => navigate('/scorecards')}

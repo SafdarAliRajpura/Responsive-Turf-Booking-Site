@@ -4,7 +4,7 @@ import {
     Calendar, MapPin, IndianRupee,
     Zap, Download, X, 
     ShieldCheck, Target,
-    CreditCard, Trophy, BookOpen, Activity
+    CreditCard, Trophy, BookOpen, Activity, Flame
 } from 'lucide-react';
 
 import Header from '../components/common/Header';
@@ -242,6 +242,12 @@ const BookingCard = ({ booking, onViewReceipt }) => {
                             className="px-5 py-2 rounded-xl bg-neon-blue/10 hover:bg-neon-blue text-neon-blue hover:text-black font-black text-[10px] uppercase tracking-widest transition-all border border-neon-blue/30 flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.15)] hover:scale-105 active:scale-95"
                         >
                             <Activity size={13} /> Score Ledger
+                        </button>
+                        <button
+                            onClick={() => navigate(`/draft/${booking._id || booking.id}`)}
+                            className="px-5 py-2 rounded-xl bg-neon-yellow/10 hover:bg-neon-yellow text-neon-yellow hover:text-black font-black text-[10px] uppercase tracking-widest transition-all border border-neon-yellow/30 flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,230,0,0.15)] hover:scale-105 active:scale-95"
+                        >
+                            <Flame size={13} /> Draft Room
                         </button>
                         <button
                             onClick={onViewReceipt}
