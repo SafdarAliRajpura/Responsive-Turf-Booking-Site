@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, UserPlus, Sparkles, Trash2, Clipboard } from 'lucide-react';
 
 export default function PlayerPoolDrawer({
@@ -19,6 +19,10 @@ export default function PlayerPoolDrawer({
     const [showImporter, setShowImporter] = useState(false);
     const [rawText, setRawText] = useState('');
 
+    useEffect(() => {
+        setRole(sport === 'Cricket' ? 'All-Rounder' : sport === 'Football' ? 'Forward' : 'Player');
+    }, [sport]);
+
     const sportRoles = sport === 'Cricket'
         ? ['Batsman', 'Bowler', 'All-Rounder', 'Wicket-Keeper']
         : sport === 'Football'
@@ -29,6 +33,7 @@ export default function PlayerPoolDrawer({
         e.preventDefault();
         if (!name.trim()) return;
         onAddPlayer({
+            id: `p-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
             name: name.trim(),
             role: role || sportRoles[0],
             ovr: Number(ovr) || 80
@@ -48,12 +53,14 @@ export default function PlayerPoolDrawer({
                 const match = clean.match(/^(.*?)\s*\((.*?)\)$/);
                 if (match) {
                     parsed.push({
+                        id: `p-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                         name: match[1].trim(),
                         role: match[2].trim() || sportRoles[0],
                         ovr: Math.floor(Math.random() * 12) + 78
                     });
                 } else {
                     parsed.push({
+                        id: `p-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                         name: clean,
                         role: sportRoles[Math.floor(Math.random() * sportRoles.length)],
                         ovr: Math.floor(Math.random() * 12) + 78

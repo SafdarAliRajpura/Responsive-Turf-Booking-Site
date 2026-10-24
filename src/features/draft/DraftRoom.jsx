@@ -50,18 +50,19 @@ export default function DraftRoom() {
 
     // Rosters & Pools
     const [unpickedPool, setUnpickedPool] = useState([
-        { name: 'Sameer Khan', role: 'Batsman', ovr: 86 },
-        { name: 'Amit Sharma', role: 'Bowler', ovr: 84 },
-        { name: 'Kunal Patel', role: 'All-Rounder', ovr: 88 },
-        { name: 'Farhan Ali', role: 'Wicket-Keeper', ovr: 82 },
-        { name: 'Rohan Mehra', role: 'Bowler', ovr: 80 },
-        { name: 'Dev Sen', role: 'Batsman', ovr: 85 },
-        { name: 'Zaid Sheikh', role: 'All-Rounder', ovr: 83 },
-        { name: 'Tanmay Roy', role: 'Bowler', ovr: 79 }
+        { id: 'p1', name: 'Sameer Khan', role: 'Batsman', ovr: 86 },
+        { id: 'p2', name: 'Amit Sharma', role: 'Bowler', ovr: 84 },
+        { id: 'p3', name: 'Kunal Patel', role: 'All-Rounder', ovr: 88 },
+        { id: 'p4', name: 'Farhan Ali', role: 'Wicket-Keeper', ovr: 82 },
+        { id: 'p5', name: 'Rohan Mehra', role: 'Bowler', ovr: 80 },
+        { id: 'p6', name: 'Dev Sen', role: 'Batsman', ovr: 85 },
+        { id: 'p7', name: 'Zaid Sheikh', role: 'All-Rounder', ovr: 83 },
+        { id: 'p8', name: 'Tanmay Roy', role: 'Bowler', ovr: 79 }
     ]);
     const [teamA, setTeamA] = useState([]);
     const [teamB, setTeamB] = useState([]);
     const [pickHistory, setPickHistory] = useState([]);
+    const [savedDraftId, setSavedDraftId] = useState(null);
 
     // Turn & Timer (15-second draft clock)
     const [activeCaptain, setActiveCaptain] = useState('A');
@@ -120,7 +121,7 @@ export default function DraftRoom() {
         }
 
         // Remove from unpicked pool
-        const updatedPool = unpickedPool.filter(p => p.name !== player.name);
+        const updatedPool = unpickedPool.filter(p => player.id ? p.id !== player.id : p.name !== player.name);
         setUnpickedPool(updatedPool);
 
         const nextPickCount = pickHistory.length + 1;
@@ -146,22 +147,26 @@ export default function DraftRoom() {
 
         const interval = setInterval(() => {
             setTimerSeconds(prev => {
-                if (prev <= 1) {
-                    // Timer expired: auto-pick highest OVR remaining player for active captain
-                    if (unpickedPool.length > 0) {
-                        const highestOvrPlayer = [...unpickedPool].sort((a, b) => (b.ovr || 80) - (a.ovr || 80))[0];
-                        handlePickPlayer(highestOvrPlayer);
-                    }
-                    return 15;
-                }
-                // Play heartbeat audio
+                if (prev <= 1) return 0;
                 draftAudio.playClockTick(prev <= 5);
                 return prev - 1;
             });
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [stateKey, isTimerRunning, unpickedPool, handlePickPlayer]);
+    }, [stateKey, isTimerRunning]);
+
+    // Auto-pick highest OVR remaining athlete when clock hits 0
+    useEffect(() => {
+        if (stateKey !== 'DRAFTING' || !isTimerRunning) return;
+        if (timerSeconds === 0) {
+            if (unpickedPool.length > 0) {
+                const highestOvrPlayer = [...unpickedPool].sort((a, b) => (b.ovr || 80) - (a.ovr || 80))[0];
+                handlePickPlayer(highestOvrPlayer);
+            }
+            setTimerSeconds(15);
+        }
+    }, [timerSeconds, stateKey, isTimerRunning, unpickedPool, handlePickPlayer]);
 
     // Coin Toss Outcome Handler
     const handleTossComplete = ({ tossWinner: winner, firstPicker: picker }) => {
@@ -231,6 +236,7 @@ export default function DraftRoom() {
     const handleSaveDraft = async () => {
         try {
             const payload = {
+                _id: savedDraftId || null,
                 bookingId: bookingId || null,
                 sport,
                 turfName,
@@ -249,6 +255,9 @@ export default function DraftRoom() {
 
             const res = await apiClient.post('/drafts', payload);
             if (res.data?.success) {
+                if (res.data?.data?._id) {
+                    setSavedDraftId(res.data.data._id);
+                }
                 setToast({ message: 'Drafted rosters successfully committed to server!', type: 'success' });
             }
         } catch (err) {
@@ -389,13 +398,36 @@ export default function DraftRoom() {
                                         {timerSeconds}s
                                     </span>
                                 </div>
-                                <div className="w-48 h-3 rounded-full bg-slate-950 border border-white/10 overflow-hidden">
+                                <div className="w-40 h-3 rounded-full bg-slate-950 border border-white/10 overflow-hidden">
                                     <div
                                         className={`h-full transition-all duration-1000 ${
                                             timerSeconds <= 5 ? 'bg-rose-500' : 'bg-neon-green'
                                         }`}
                                         style={{ width: `${(timerSeconds / 15) * 100}%` }}
                                     />
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (unpickedPool.length > 0) {
+                                                const highest = [...unpickedPool].sort((a, b) => (b.ovr || 80) - (a.ovr || 80))[0];
+                                                handlePickPlayer(highest);
+                                            }
+                                        }}
+                                        className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-black text-[10px] uppercase tracking-wider transition-all"
+                                        title="Auto-pick highest rated athlete"
+                                    >
+                                        Auto ⚡
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleAutoBalance}
+                                        className="px-2.5 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500 text-purple-300 hover:text-white font-black text-[10px] uppercase tracking-wider border border-purple-500/30 transition-all"
+                                        title="Auto-balance all remaining athletes"
+                                    >
+                                        Auto-Fill 🪄
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -516,7 +548,16 @@ export default function DraftRoom() {
 
                                 <button
                                     type="button"
-                                    onClick={() => navigate(bookingId ? `/tactics/${bookingId}` : '/tactics')}
+                                    onClick={() => navigate(bookingId ? `/tactics/${bookingId}` : '/tactics', {
+                                        state: {
+                                            draftedTeamA: teamA,
+                                            draftedTeamB: teamB,
+                                            teamAName,
+                                            teamBName,
+                                            sport,
+                                            turfName
+                                        }
+                                    })}
                                     className="px-4 py-2.5 rounded-xl bg-neon-green/15 hover:bg-neon-green text-neon-green hover:text-black border border-neon-green/30 font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5"
                                 >
                                     <BookOpen size={13} /> Open in Playbook
@@ -524,7 +565,18 @@ export default function DraftRoom() {
 
                                 <button
                                     type="button"
-                                    onClick={() => navigate(bookingId ? `/scorecards/${bookingId}` : '/scorecards')}
+                                    onClick={() => navigate(bookingId ? `/scorecards/${bookingId}` : '/scorecards', {
+                                        state: {
+                                            draftedTeamA: teamA,
+                                            draftedTeamB: teamB,
+                                            teamAName,
+                                            teamBName,
+                                            captainA,
+                                            captainB,
+                                            sport,
+                                            turfName
+                                        }
+                                    })}
                                     className="px-4 py-2.5 rounded-xl bg-neon-blue/15 hover:bg-neon-blue text-neon-blue hover:text-black border border-neon-blue/30 font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5"
                                 >
                                     <Activity size={13} /> Open in ScoreHub

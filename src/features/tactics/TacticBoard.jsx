@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Layers } from 'lucide-react';
 import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
@@ -15,6 +15,7 @@ import { TacticCaretaker } from './patterns/TacticMemento';
 export default function TacticBoard() {
     const { bookingId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Core Board State
     const [sport, setSport] = useState('Football');
@@ -104,6 +105,30 @@ export default function TacticBoard() {
 
         loadBookingTactic();
     }, [bookingId]);
+
+    // Hydrate drafted players from Draft Room
+    useEffect(() => {
+        if (location.state?.draftedTeamA && location.state.draftedTeamA.length > 0) {
+            const drafted = location.state.draftedTeamA;
+            if (location.state.sport && location.state.sport !== sport) {
+                setSport(location.state.sport);
+            }
+            if (location.state.teamAName) {
+                setTitle(`${location.state.teamAName} Tactical Lineup`);
+            }
+            setPlayers(prev => prev.map((p, idx) => {
+                if (drafted[idx]) {
+                    return {
+                        ...p,
+                        name: drafted[idx].name,
+                        role: drafted[idx].role || p.role
+                    };
+                }
+                return p;
+            }));
+            setToast({ message: `Loaded ${drafted.length} drafted athletes into tactical playbook!`, type: 'success' });
+        }
+    }, [location.state, sport]);
 
     // ----------------------------------------------------
     // SPORT & FORMATION STRATEGY SWITCHING

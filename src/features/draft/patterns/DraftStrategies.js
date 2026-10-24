@@ -91,8 +91,8 @@ export class AlternateDraftStrategy extends DraftStrategy {
         const newTeamA = [...teamA];
         const newTeamB = [...teamB];
         unpickedPool.forEach((p, idx) => {
-            if (idx % 2 === 0) newTeamA.push(p);
-            else newTeamB.push(p);
+            if (newTeamA.length <= newTeamB.length) newTeamA.push({ ...p, pickedAtRound: newTeamA.length + 1 });
+            else newTeamB.push({ ...p, pickedAtRound: newTeamB.length + 1 });
         });
         return { teamA: newTeamA, teamB: newTeamB, unpickedPool: [] };
     }
@@ -127,9 +127,19 @@ export class AutoFairBalanceStrategy extends DraftStrategy {
         // Distribute role by role to ensure equal role counts
         Object.keys(roleGroups).forEach(role => {
             const players = roleGroups[role].sort((a, b) => (b.ovr || 80) - (a.ovr || 80));
-            players.forEach((player, idx) => {
-                if (idx % 2 === 0) newTeamA.push(player);
-                else newTeamB.push(player);
+            players.forEach((player) => {
+                const sumA = newTeamA.reduce((sum, p) => sum + (p.ovr || 80), 0);
+                const sumB = newTeamB.reduce((sum, p) => sum + (p.ovr || 80), 0);
+
+                if (newTeamA.length < newTeamB.length) {
+                    newTeamA.push({ ...player, pickedAtRound: newTeamA.length + 1 });
+                } else if (newTeamB.length < newTeamA.length) {
+                    newTeamB.push({ ...player, pickedAtRound: newTeamB.length + 1 });
+                } else if (sumA <= sumB) {
+                    newTeamA.push({ ...player, pickedAtRound: newTeamA.length + 1 });
+                } else {
+                    newTeamB.push({ ...player, pickedAtRound: newTeamB.length + 1 });
+                }
             });
         });
 

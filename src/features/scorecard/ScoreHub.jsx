@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Trophy, Plus, Search, 
@@ -19,6 +19,7 @@ import { ScorecardFactory } from './patterns/ScorecardStrategies';
 export default function ScoreHub() {
     const { bookingId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Scorecards and stats
     const [scorecards, setScorecards] = useState([]);
@@ -103,6 +104,18 @@ export default function ScoreHub() {
 
         loadBookingAndOpenModal();
     }, [bookingId]);
+
+    // Pre-populate scorecard entry when arriving from Draft Room
+    useEffect(() => {
+        if (location.state?.teamAName && !bookingId) {
+            setBookingPrefill({
+                venue: location.state.turfName || 'Arena Pro Turf',
+                date: new Date().toISOString().split('T')[0],
+                sport: location.state.sport || 'Cricket'
+            });
+            setIsEntryModalOpen(true);
+        }
+    }, [location.state, bookingId]);
 
     // Handle delete scorecard
     const handleDeleteScorecard = async (id) => {
